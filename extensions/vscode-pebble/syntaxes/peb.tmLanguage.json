@@ -9,6 +9,8 @@
     { "include": "#literal" },
     { "include": "#injunction" },
     { "include": "#keyword" },
+    { "include": "#function" },
+    { "include": "#type_label" },
     { "include": "#identifier" }
   ],
   "repository": {
@@ -107,6 +109,27 @@
     "keyword": {
       "name": "keyword.control",
       "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return)(?<![$@])\\b"
+    },
+    "function": {
+      "name": "entity.name.function",
+      "match": "(?<![\\d$@])\\w+(?<![\\d$@])(?=\\s*\\()"
+    },
+    "type_label": {
+      "begin": "(?<=\\w+\\s*\\:)\\s*",
+      "patterns": [{ "include": "#type" }],
+      "end": "(?=(;|,|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+    },
+    "type": {
+      "patterns": [{ "include": "#type_name" }, { "include": "#type_argument" }]
+    },
+    "type_name": {
+      "name": "type meta.type entity.name.type",
+      "match": "\\b(?<![\\d$@])\\w+(?<![\\d$@])\\b\\s*"
+    },
+    "type_argument": {
+      "begin": "\\<\\s*",
+      "patterns": [{ "include": "#type" }],
+      "end": "\\>"
     },
     "identifier": {
       "name": "identifier meta.identifier variable.identifier",

@@ -1,13 +1,4 @@
-// print "Hello world!"
-/*
-
-   kwhsuhs
-*/
-
-"Abudabi #{djbuhid} "
-
-'\n'
-
-for (word in word) {
-   
+@public @struct Person {
+   name: string;
+   gender: string;
 }
