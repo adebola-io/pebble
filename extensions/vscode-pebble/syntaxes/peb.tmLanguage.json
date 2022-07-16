@@ -1,33 +1,58 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Pebble",
-  "patterns": [
-    {
-      "include": "#keywords"
-    },
-    {
-      "include": "#strings"
-    }
-  ],
+  "patterns": [{ "include": "#comment" }, { "include": "#string" }],
   "repository": {
-    "keywords": {
+    "comment": {
       "patterns": [
-        {
-          "name": "keyword.control.peb",
-          "match": "\\b(if|while|for|return)\\b"
-        }
+        { "include": "#doc_comment" },
+        { "include": "#line_comment" },
+        { "include": "#block_comment" }
       ]
     },
-    "strings": {
-      "name": "string.quoted.double.peb",
+    "doc_comment": {
+      "name": "comment.doc",
+      "begin": "^\\s*##",
+      "end": "\n"
+    },
+    "line_comment": {
+      "name": "comment.line",
+      "begin": "//",
+      "end": "\n"
+    },
+    "block_comment": {
+      "name": "comment.block",
+      "begin": "\\/\\*",
+      "end": "\\*\\/"
+    },
+    "string": {
+      "name": "string.quoted meta.string",
       "begin": "\"",
-      "end": "\"",
       "patterns": [
-        {
-          "name": "constant.character.escape.peb",
-          "match": "\\\\."
+        { "include": "#string_character_escape" },
+        { "include": "#string_template_expression" }
+      ],
+      "end": "\""
+    },
+    "string_character_escape": {
+      "name": "constant.character.escape",
+      "match": "\\\\(x[\\dA-Fa-f]{2}|u([\\dA-Fa-f]{4}|\\{[\\dA-Fa-f]+\\})|[0-2][0-7]{0,2}|(3[0-6]|37|[4-7])[0-7]?|.|$)"
+    },
+    "string_template_expression": {
+      "name": "meta.template.expression",
+      "begin": "#{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.expression.embedded-expression-start constant.language.embedded.start"
         }
-      ]
+      },
+      "patterns": [{ "include": "$self" }],
+      "end": "}",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.expression.embedded-expression-end constant.language.embedded.end"
+        }
+      }
     }
   },
   "scopeName": "source.peb"
