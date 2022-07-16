@@ -1,5 +1,0 @@
-@public @struct Person {
-   name: string;
-   gender: string;
-   contacts: Array<Person>
-}

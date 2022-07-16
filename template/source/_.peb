@@ -1,0 +1,17 @@
+@use { Window } from "piles:window";
+
+@public @struct Person {
+   name: string;
+   gender: string;
+   contacts: Array<Person>
+}
+
+@utilize Person {
+   constructor(name: string, gender: string, cb: () => Array) {
+      self.name = name;
+      self.gender = gender;
+   }
+   sayHello() {
+      println "#{self.name} says Hello!";
+   }
+}

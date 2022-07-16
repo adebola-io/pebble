@@ -10,6 +10,8 @@
     { "include": "#injunction" },
     { "include": "#keyword" },
     { "include": "#function" },
+    { "include": "#inferred_function" },
+    { "include": "#return_type" },
     { "include": "#type_label" },
     { "include": "#identifier" }
   ],
@@ -51,16 +53,16 @@
     },
     "string_template_expression": {
       "name": "meta.template.expression",
-      "begin": "#{",
+      "begin": "(#\\{)",
       "beginCaptures": {
-        "0": {
+        "1": {
           "name": "punctuation.expression.embedded-expression-start constant.language.embedded.start"
         }
       },
       "patterns": [{ "include": "$self" }],
-      "end": "}",
+      "end": "(\\})",
       "endCaptures": {
-        "0": {
+        "1": {
           "name": "punctuation.expression.embedded-expression-end constant.language.embedded.end"
         }
       }
@@ -108,11 +110,20 @@
     },
     "keyword": {
       "name": "keyword.control",
-      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return)(?![$@])\\b"
+      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return|match|case)(?![$@])\\b"
     },
     "function": {
       "name": "entity.name.function",
       "match": "(?<![\\d$@])\\w+(?<![\\d$@])(?=\\s*\\()"
+    },
+    "inferred_function": {
+      "name": "entity.name.function",
+      "match": "(?<![\\d$@])\\w+(?![\\d$@])(?=\\s*\\:\\s*\\((\\s|\\S)*\\))"
+    },
+    "return_type": {
+      "begin": "(?<=\\s*\\((\\s|\\S)*\\)\\s*)\\=\\>\\s*",
+      "patterns": [{ "include": "#type" }],
+      "end": "(?=(;|,|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
     },
     "type_label": {
       "begin": "(?<=\\w+\\s*\\:)\\s*",
