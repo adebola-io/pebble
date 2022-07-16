@@ -103,12 +103,12 @@
       "match": "\\b(?<![\\d$@])(true|false|self|nothing|lib|new)(?![$@])\\b"
     },
     "injunction": {
-      "name": "keyword.injunction",
-      "match": "\\b(?<![$@])@(use|public|prepend|type|let|function|constant|enum|struct|utilize|interface|implement)(?<![$@])\\b"
+      "name": "meta.injunction keyword.injunction",
+      "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|constant|enum|struct|utilize|interface|implement)(?![$@])\\b"
     },
     "keyword": {
       "name": "keyword.control",
-      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return)(?<![$@])\\b"
+      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return)(?![$@])\\b"
     },
     "function": {
       "name": "entity.name.function",
@@ -124,7 +124,7 @@
     },
     "type_name": {
       "name": "type meta.type entity.name.type",
-      "match": "\\b(?<![\\d$@])\\w+(?<![\\d$@])\\b\\s*"
+      "match": "\\b(?<![\\d$@])\\w+(?![\\d$@])\\b\\s*"
     },
     "type_argument": {
       "begin": "\\<\\s*",
@@ -133,7 +133,7 @@
     },
     "identifier": {
       "name": "identifier meta.identifier variable.identifier",
-      "match": "\\b(?<![\\d$@])\\w+(?<![\\d$@])\\b"
+      "match": "\\b(?<![\\d$@])\\w+(?![\\d$@])\\b"
     }
   },
   "scopeName": "source.peb"
