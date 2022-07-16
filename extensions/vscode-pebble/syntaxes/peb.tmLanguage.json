@@ -1,7 +1,12 @@
 {
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "Pebble",
-  "patterns": [{ "include": "#comment" }, { "include": "#string" }],
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#string" },
+    { "include": "#character" },
+    { "include": "#number" }
+  ],
   "repository": {
     "comment": {
       "patterns": [
@@ -53,6 +58,39 @@
           "name": "punctuation.expression.embedded-expression-end constant.language.embedded.end"
         }
       }
+    },
+    "character": {
+      "name": "character constant.character meta.character string",
+      "match": "'(.{1}|(\\\\(x[\\dA-Fa-f]{2}|u([\\dA-Fa-f]{4}|\\{[\\dA-Fa-f]+\\})|[0-2][0-7]{0,2}|(3[0-6]|37|[4-7])[0-7]?|.|$)))'",
+      "captures": {
+        "2": {
+          "name": "constant.character.escape"
+        }
+      }
+    },
+    "number": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex",
+          "match": "\\b(?<!\\$)0(?:x|X)[\\dA-Fa-f]+(n)?\\b(?!\\$)"
+        },
+        {
+          "name": "constant.numeric.octal",
+          "match": "\\b(?<!\\$)0(?:o|O)[0-7]+(n)?\\b(?!\\$)"
+        },
+        {
+          "name": "constant.numeric.binary",
+          "match": "\\b(?<!\\$)0(?:b|B)[0-1]+(n)?\\b(?!\\$)"
+        },
+        {
+          "name": "constant.numeric.decimal",
+          "match": "\\b\\d+((\\.\\d+)|n)?\\b(?!\\$)"
+        },
+        {
+          "name": "constant.numeric.exponent",
+          "match": "\\b\\d+e\\d+\\b(?!\\$)"
+        }
+      ]
     }
   },
   "scopeName": "source.peb"
