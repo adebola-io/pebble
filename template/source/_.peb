@@ -1,0 +1,32 @@
+@public @struct Stack<T> {
+   _arr: Array<T> = [];
+   @public size = 0;
+   @public isEmpty = true;
+}
+
+@utilize Stack<T> {
+   ## Pushes a piece of data onto the top of the stack.
+   @public push(data: T) {
+      self.size++;
+      self._arr.push(data);
+      self.isEmpty = self.isEmpty && false;
+   }
+   ## Removes the data on the top of the stack and returns it.
+   @public pop() => T {
+      if (self.isEmpty) {
+         crash lib.Error::StackReadError;
+      } else {
+         self.size--;
+         self.isEmpty = self.size == 0;
+         return self._arr.pop();
+      }
+   }
+   ## Peeks at the data on the top of the stack without removing it.
+   @public top() => T {
+      if (self.isEmpty) {
+         crash lib.Error::StackReadError;
+      } else {
+         return self._arr.last()
+      }
+   }
+}

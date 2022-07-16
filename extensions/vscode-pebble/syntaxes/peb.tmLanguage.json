@@ -12,7 +12,9 @@
     { "include": "#instantiator" },
     { "include": "#function" },
     { "include": "#inferred_function" },
+    { "include": "#enumerated" },
     { "include": "#return_type" },
+    { "include": "#custom_type" },
     { "include": "#type_label" },
     { "include": "#identifier" }
   ],
@@ -105,6 +107,11 @@
       "name": "constant.language.literal",
       "match": "\\b(?<![\\d$@])(true|false|self|nothing|lib|new)(?![$@])\\b"
     },
+    "custom_type": {
+      "begin": "(?<=(@(enum|struct|utilize|interface|implement|type))\\s+)",
+      "patterns": [{ "include": "#type" }],
+      "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+    },
     "injunction": {
       "name": "meta.injunction keyword.injunction",
       "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|constant|enum|struct|utilize|interface|implement)(?![$@])\\b"
@@ -115,28 +122,39 @@
     },
     "function": {
       "name": "entity.name.function",
-      "match": "(?<![\\d$@])\\w+(?<![\\d$@])(?=\\s*\\()"
+      "match": "(?<![\\d@])\\w+(?=\\s*\\()"
     },
     "inferred_function": {
       "name": "entity.name.function",
-      "match": "(?<![\\d$@])\\w+(?![\\d$@])(?=\\s*\\:\\s*\\((\\s|\\S)*\\))"
+      "match": "(?<![\\d@])\\w+(?=\\s*\\:\\s*\\((\\s|\\S)*\\))"
+    },
+    "enumerated": {
+      "match": "((?<![\\d@])\\w+)\\s*\\:\\:\\s*((?<![\\d$@])\\w+)",
+      "captures": {
+        "1": {
+          "name": "entity.name.type"
+        },
+        "2": {
+          "name": "variable.identifier"
+        }
+      }
     },
     "return_type": {
       "begin": "(?<=\\s*\\((\\s|\\S)*\\)\\s*)\\=\\>\\s*",
       "patterns": [{ "include": "#type" }],
-      "end": "(?=(;|,|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+      "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
     },
     "type_label": {
       "begin": "(?<=\\w+\\s*\\:)\\s*",
       "patterns": [{ "include": "#type" }],
-      "end": "(?=(;|,|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+      "end": "(?=(\\;|\\,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
     },
     "type": {
       "patterns": [{ "include": "#type_name" }, { "include": "#type_argument" }]
     },
     "type_name": {
       "name": "type meta.type entity.name.type",
-      "match": "\\b(?<![\\d$@])\\w+(?![\\d$@])\\b\\s*"
+      "match": "\\b(?<![\\d@])\\w+\\b\\s*"
     },
     "type_argument": {
       "begin": "\\<\\s*",
@@ -145,11 +163,11 @@
     },
     "instantiator": {
       "name": "meta.struct struct entity.name.class",
-      "match": "(?<=new\\s+((\\w+.)*)?)(?<![\\d$@])\\w+(?<![\\d$@])(?=\\s*\\()"
+      "match": "(?<=new\\s+((\\w+.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
     },
     "identifier": {
       "name": "identifier meta.identifier variable.identifier",
-      "match": "\\b(?<![\\d$@])\\w+(?![\\d$@])\\b"
+      "match": "\\b(?<![\\d$@])\\w+(?!@)\\b"
     }
   },
   "scopeName": "source.peb"
