@@ -9,6 +9,7 @@
     { "include": "#literal" },
     { "include": "#injunction" },
     { "include": "#keyword" },
+    { "include": "#instantiator" },
     { "include": "#function" },
     { "include": "#inferred_function" },
     { "include": "#return_type" },
@@ -141,6 +142,10 @@
       "begin": "\\<\\s*",
       "patterns": [{ "include": "#type" }],
       "end": "\\>"
+    },
+    "instantiator": {
+      "name": "meta.struct struct entity.name.class",
+      "match": "(?<=new\\s+((\\w+.)*)?)(?<![\\d$@])\\w+(?<![\\d$@])(?=\\s*\\()"
     },
     "identifier": {
       "name": "identifier meta.identifier variable.identifier",

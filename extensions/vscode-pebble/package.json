@@ -1,25 +1,40 @@
 {
-    "name": "vscode-pebble",
-    "displayName": "vscode-pebble",
-    "description": "The Pebble Programming Language",
-    "version": "0.0.1",
-    "engines": {
-        "vscode": "^1.54.0"
-    },
-    "categories": [
-        "Programming Languages"
+  "name": "vscode-pebble",
+  "displayName": "vscode-pebble",
+  "description": "The Pebble Programming Language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.54.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "peb",
+        "aliases": [
+          "Pebble",
+          "peb"
+        ],
+        "extensions": [
+          ".peb"
+        ],
+        "configuration": "./language-configuration.json"
+      }
     ],
-    "contributes": {
-        "languages": [{
-            "id": "peb",
-            "aliases": ["Pebble", "peb"],
-            "extensions": [".peb"],
-            "configuration": "./language-configuration.json"
-        }],
-        "grammars": [{
-            "language": "peb",
-            "scopeName": "source.peb",
-            "path": "./syntaxes/peb.tmLanguage.json"
-        }]
-    }
+    "grammars": [
+      {
+        "language": "peb",
+        "scopeName": "source.peb",
+        "path": "./syntaxes/peb.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "peb",
+        "path": "./snippets/pebble.code-snippets"
+      }
+    ]
+  }
 }

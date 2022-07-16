@@ -1,0 +1,39 @@
+{
+  "Public Declaration": {
+    "prefix": "@pub",
+    "description": "Creates a new public declaration.",
+    "body": "@public $1"
+  },
+  "Function Declaration": {
+    "prefix": "@func",
+    "description": "Creates a new function declaration",
+    "body": ["@function ${1:name}() {", "   $2", "}"]
+  },
+  "Function Declaration with parameters": {
+    "prefix": "@funcp",
+    "description": "Creates a new function declaration with parameters",
+    "body": ["@function ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
+  },
+  "Use Declaration": {
+    "prefix": "@use",
+    "description": "Autofills syntax for use imports.",
+    "body": ["@use { $1 } from \"$2\";"]
+  },
+  "Utilizer": {
+    "prefix": "@util",
+    "description": "Build a utilizer block.",
+    "body": [
+      "@utilize ${1:Structure} {",
+      "   constructor() {",
+      "      $2",
+      "   }",
+      "   $3",
+      "}"
+    ]
+  },
+  "Struct": {
+    "prefix": ["@str", "@struct"],
+    "description": "Creates a new structure.",
+    "body": ["@struct ${1:Name} {", "   $2", "}"]
+  }
+}
