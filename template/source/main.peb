@@ -8,3 +8,6 @@
 
 '\n'
 
+for (word in word) {
+   
+}

@@ -7,6 +7,8 @@
     { "include": "#character" },
     { "include": "#number" },
     { "include": "#literal" },
+    { "include": "#injunction" },
+    { "include": "#keyword" },
     { "include": "#identifier" }
   ],
   "repository": {
@@ -97,6 +99,14 @@
     "literal": {
       "name": "constant.language.literal",
       "match": "\\b(?<![\\d$@])(true|false|self|nothing|lib|new)(?![$@])\\b"
+    },
+    "injunction": {
+      "name": "keyword.injunction",
+      "match": "\\b(?<![$@])@(use|public|prepend|type|let|function|constant|enum|struct|utilize|interface|implement)(?<![$@])\\b"
+    },
+    "keyword": {
+      "name": "keyword.control",
+      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return)(?<![$@])\\b"
     },
     "identifier": {
       "name": "identifier meta.identifier variable.identifier",
