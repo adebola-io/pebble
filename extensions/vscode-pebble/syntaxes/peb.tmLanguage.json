@@ -5,7 +5,9 @@
     { "include": "#comment" },
     { "include": "#string" },
     { "include": "#character" },
-    { "include": "#number" }
+    { "include": "#number" },
+    { "include": "#literal" },
+    { "include": "#identifier" }
   ],
   "repository": {
     "comment": {
@@ -91,6 +93,14 @@
           "match": "\\b\\d+e\\d+\\b(?!\\$)"
         }
       ]
+    },
+    "literal": {
+      "name": "constant.language.literal",
+      "match": "\\b(?<![\\d$@])(true|false|self|nothing|lib|new)(?![$@])\\b"
+    },
+    "identifier": {
+      "name": "identifier meta.identifier variable.identifier",
+      "match": "\\b(?<![\\d$@])\\w+(?<![\\d$@])\\b"
     }
   },
   "scopeName": "source.peb"
