@@ -118,7 +118,7 @@
     },
     "keyword": {
       "name": "keyword.control",
-      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|restore|println|if|else|from|as|return|match|case)(?![$@])\\b"
+      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case)(?![$@])\\b"
     },
     "function": {
       "name": "entity.name.function",
