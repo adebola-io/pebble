@@ -1,7 +1,10 @@
 mod helpers;
 mod token;
 use helpers::*;
-use token::Token::{self, *};
+use token::{
+    Comment, CommentKind,
+    Token::{self, *},
+};
 #[derive(Debug)]
 pub struct ScannerError {
     pub message: String,
@@ -28,6 +31,7 @@ struct Scanner {
     index: usize,
     end: bool,
     store: [usize; 4],
+    comments: Vec<Comment>,
 }
 
 impl Scanner {
@@ -35,6 +39,7 @@ impl Scanner {
         Scanner {
             source: content,
             tokens: vec![],
+            comments: vec![],
             current: '\0',
             pos: [1, 0],
             index: 0,
@@ -47,6 +52,10 @@ impl Scanner {
         self.set();
         while !self.end {
             match self.current {
+                '/' => match self.lookahead(1) {
+                    Some('*') => self.scan_block_comment()?,
+                    _ => {}
+                },
                 '@' => self.scan_injunction()?,
                 _ => {}
             }
@@ -73,12 +82,35 @@ impl Scanner {
             self.shift();
         }
     }
+    /// Advance by a particular length.
+    fn next_by(&mut self, l: usize) {
+        for _ in 0..l {
+            self.next();
+        }
+    }
     /// Shift the line tracker.
     fn shift(&mut self) {
         if self.current == '\n' {
             self.pos[0] += 1;
+            self.pos[1] = 0;
         } else {
             self.pos[1] += 1;
+        }
+    }
+    fn lookahead(&self, i: usize) -> Option<char> {
+        if self.index + i > self.source.len() {
+            None
+        } else {
+            Some(self.source[self.index + i])
+        }
+    }
+    fn expects(&self, pattern: &str) -> bool {
+        let end = self.index + pattern.len();
+        if end > self.source.len() {
+            false
+        } else {
+            let section: String = self.source[self.index..end].iter().collect();
+            section == pattern.to_string()
         }
     }
     /// Emits an error encountered during scanning.
@@ -98,6 +130,27 @@ impl Scanner {
     fn loc_end(&mut self) {
         self.store[2] = self.pos[0];
         self.store[3] = self.pos[1];
+    }
+    fn scan_block_comment(&mut self) -> Result<(), ScannerError> {
+        self.loc_start();
+        self.next_by(2);
+        let mut value = String::new();
+        while !(self.end || self.expects("*/")) {
+            value.push(self.current);
+            self.next()
+        }
+        if self.end {
+            self.error("Unclosed block comment.")?
+        }
+        self.next_by(2);
+        self.loc_end();
+        self.comments.push(Comment {
+            kind: CommentKind::Block,
+            value,
+            loc: self.store,
+        });
+        println!("{:?}", self.comments);
+        Ok(())
     }
     fn scan_injunction(&mut self) -> Result<(), ScannerError> {
         self.loc_start();

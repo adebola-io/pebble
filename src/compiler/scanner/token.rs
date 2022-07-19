@@ -6,12 +6,15 @@ pub enum StringInnerToken {
 }
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
+pub struct Comment {
+    /// The kind of comment tokenized, either block, line or doc.
+    pub kind: CommentKind,
+    pub value: String,
+    pub loc: [usize; 4],
+}
+#[allow(dead_code)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
-    Comment {
-        /// The kind of comment tokenized, either block, line or doc.
-        kind: CommentKind,
-        value: String,
-    },
     /// A token that begins with an @ symbol.
     Injunction {
         value: String,
