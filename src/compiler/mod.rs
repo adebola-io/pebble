@@ -1,5 +1,5 @@
 use super::cli::exit_with_error;
-mod lexer;
+mod scanner;
 
 pub fn run(file: String) {
     let error;
@@ -15,4 +15,16 @@ pub fn run(file: String) {
         exit_with_error(error.as_str());
     }
     println!("Compiling {}...", file);
+    let content = std::fs::read_to_string(file).unwrap_or_else(|err| {
+        let err = err.to_string();
+        exit_with_error(err.as_str());
+    });
+    let tokens = scanner::scan(content).unwrap_or_else(|err| {
+        println!(
+            "Error encountered while scanning file on {}:{}",
+            err.line, err.column
+        );
+        exit_with_error(err.message.as_str());
+    });
+    println!("{:?}", tokens);
 }

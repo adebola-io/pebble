@@ -1,0 +1,140 @@
+mod helpers;
+mod token;
+use helpers::*;
+use token::Token::{self, *};
+#[derive(Debug)]
+pub struct ScannerError {
+    pub message: String,
+    pub line: usize,
+    pub column: usize,
+}
+
+type ScanResult = Result<Vec<Token>, ScannerError>;
+
+pub fn scan(content: String) -> ScanResult {
+    let content: Vec<char> = content.chars().collect();
+    let mut scanner = Scanner::new(content);
+    scanner.run()?;
+    Ok(scanner.tokens)
+}
+
+struct Scanner {
+    source: Vec<char>,
+    /// The current character in the stream.
+    current: char,
+    tokens: Vec<Token>,
+    /// The tracker for the lines and columns in the source text.
+    pos: [usize; 2],
+    index: usize,
+    end: bool,
+    store: [usize; 4],
+}
+
+impl Scanner {
+    fn new(content: Vec<char>) -> Self {
+        Scanner {
+            source: content,
+            tokens: vec![],
+            current: '\0',
+            pos: [1, 0],
+            index: 0,
+            store: [0, 0, 0, 0],
+            end: false,
+        }
+    }
+    /// Run the scanner.
+    fn run(&mut self) -> Result<(), ScannerError> {
+        self.set();
+        while !self.end {
+            match self.current {
+                '@' => self.scan_injunction()?,
+                _ => {}
+            }
+            self.next();
+        }
+        Ok(())
+    }
+    /// Set the scanner to the positions to start scanning.
+    fn set(&mut self) {
+        if let Some(c) = self.source.get(self.index) {
+            self.current = *c;
+        } else {
+            self.end = true;
+        };
+        self.shift();
+    }
+    /// Advance to the next character in the stream.
+    fn next(&mut self) {
+        self.index += 1;
+        if self.index >= self.source.len() {
+            self.end = true;
+        } else {
+            self.current = self.source[self.index];
+            self.shift();
+        }
+    }
+    /// Shift the line tracker.
+    fn shift(&mut self) {
+        if self.current == '\n' {
+            self.pos[0] += 1;
+        } else {
+            self.pos[1] += 1;
+        }
+    }
+    /// Emits an error encountered during scanning.
+    fn error(&self, message: &str) -> Result<(), ScannerError> {
+        Err(ScannerError {
+            message: message.to_string(),
+            line: self.pos[0],
+            column: self.pos[1],
+        })
+    }
+    /// Takes a snapshot of the position of the scanner at a point during the scanning.
+    fn loc_start(&mut self) {
+        self.store[0] = self.pos[0];
+        self.store[1] = self.pos[1];
+    }
+    /// Takes a snapshot of the position of the scanner at a point during the scanning.
+    fn loc_end(&mut self) {
+        self.store[2] = self.pos[0];
+        self.store[3] = self.pos[1];
+    }
+    fn scan_injunction(&mut self) -> Result<(), ScannerError> {
+        self.loc_start();
+        self.next();
+        if !is_identifier_char(self.current) || self.current.is_digit(10) {
+            self.error("The scannner expected an identifier character.")?
+        }
+        let mut value = String::new();
+        while !self.end && is_identifier_char(self.current) {
+            value.push(self.current);
+            self.next();
+        }
+        self.loc_end();
+        if !is_injunction_value(&value) {
+            let message = format!("Unrecognized injunction \"{}\".", value);
+            self.error(message.as_str())?
+        }
+        self.tokens.push(Injunction {
+            value,
+            loc: self.store,
+        });
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn it_scans_injunction_token() {
+        let tokens = scan("@public ".to_string()).unwrap();
+        assert_eq!(
+            tokens[0],
+            Injunction {
+                value: String::from("public"),
+                loc: [1, 1, 1, 8]
+            }
+        );
+    }
+}

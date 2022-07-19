@@ -19,7 +19,7 @@ compile <filename>    Run the Pebble compiler on an entry file.
             compiler::run(file);
         }
         _ => {
-            eprintln!("Unknown command.");
+            eprintln!("Unknown command \"{}\".", command);
             println!("{}", help);
             std::process::exit(1);
         }

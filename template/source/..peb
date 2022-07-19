@@ -24,13 +24,24 @@
    ## Peeks at the data on the top of the stack without removing it.
    @public top() => T {
       if (self.isEmpty) {
-         crash lib.Error::StackReadError;
+         crash core.Error::StackReadError;
       } else {
          return self._arr.last()
       }
+   }
+   ## Clear all values in the stack.
+   @public clear() {
+      self._arr.clear();
+      self.size = 0;
+      self.isEmpty = false;
    }
 }
 
 @function main() {
    @let stack: Stack<number> = new Stack();  
+   stack.push(1);
+   stack.push(9);
+   stack.push(13);
+   stack.pop();
+   println stack.pop();
 }
