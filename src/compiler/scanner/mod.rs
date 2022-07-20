@@ -18,6 +18,7 @@ pub fn scan(content: String) -> ScanResult {
     let content: Vec<char> = content.chars().collect();
     let mut scanner = Scanner::new(content);
     scanner.run()?;
+    println!("{:?}", scanner.comments);
     Ok(scanner.tokens)
 }
 
@@ -51,9 +52,13 @@ impl Scanner {
     fn run(&mut self) -> Result<(), ScannerError> {
         self.set();
         while !self.end {
+            if self.sees("##") {
+                println!("Hello.");
+            }
             match self.current {
                 '/' => match self.lookahead(1) {
                     Some('*') => self.scan_block_comment()?,
+                    Some('/') => self.scan_line_comment()?,
                     _ => {}
                 },
                 '@' => self.scan_injunction()?,
@@ -113,6 +118,9 @@ impl Scanner {
             section == pattern.to_string()
         }
     }
+    fn sees(&self, _pattern: &str) -> bool {
+        true
+    }
     /// Emits an error encountered during scanning.
     fn error(&self, message: &str) -> Result<(), ScannerError> {
         Err(ScannerError {
@@ -149,7 +157,25 @@ impl Scanner {
             value,
             loc: self.store,
         });
-        println!("{:?}", self.comments);
+        Ok(())
+    }
+    fn scan_line_comment(&mut self) -> Result<(), ScannerError> {
+        self.loc_start();
+        self.next_by(2);
+        let mut value = String::new();
+        while !(self.end || self.current == '\n') {
+            value.push(self.current);
+            self.next();
+        }
+        if !self.end {
+            self.next();
+        }
+        self.loc_end();
+        self.comments.push(Comment {
+            kind: CommentKind::Line,
+            value,
+            loc: self.store,
+        });
         Ok(())
     }
     fn scan_injunction(&mut self) -> Result<(), ScannerError> {
