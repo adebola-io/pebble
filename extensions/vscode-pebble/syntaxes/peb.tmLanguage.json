@@ -114,7 +114,7 @@
     },
     "injunction": {
       "name": "meta.injunction keyword.injunction",
-      "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|constant|enum|struct|utilize|interface|implement)(?![$@])\\b"
+      "match": "(?<![\\w$@])@(use|public|prepend|type|variable|function|constant|enum|struct|utilize|interface|implement)(?![$@])\\b"
     },
     "keyword": {
       "name": "keyword.control",

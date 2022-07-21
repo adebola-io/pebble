@@ -3,6 +3,7 @@ mod token;
 use helpers::*;
 use token::{
     Comment, CommentKind,
+    StringInnerToken::{self, *},
     Token::{self, *},
 };
 #[derive(Debug)]
@@ -16,9 +17,8 @@ type ScanResult = Result<Vec<Token>, ScannerError>;
 
 pub fn scan(content: String) -> ScanResult {
     let content: Vec<char> = content.chars().collect();
-    let mut scanner = Scanner::new(content);
-    scanner.run()?;
-    println!("{:?}", scanner.comments);
+    let mut scanner = Scanner::new();
+    scanner.scan(content)?;
     Ok(scanner.tokens)
 }
 
@@ -36,9 +36,9 @@ struct Scanner {
 }
 
 impl Scanner {
-    fn new(content: Vec<char>) -> Self {
+    fn new() -> Self {
         Scanner {
-            source: content,
+            source: vec![],
             tokens: vec![],
             comments: vec![],
             current: '\0',
@@ -49,20 +49,20 @@ impl Scanner {
         }
     }
     /// Run the scanner.
-    fn run(&mut self) -> Result<(), ScannerError> {
+    fn scan(&mut self, content: Vec<char>) -> Result<(), ScannerError> {
+        self.source = content;
         self.set();
         while !self.end {
-            if self.sees("##") {
-                println!("Hello.");
-            }
-            match self.current {
-                '/' => match self.lookahead(1) {
-                    Some('*') => self.scan_block_comment()?,
-                    Some('/') => self.scan_line_comment()?,
+            if self.expects("//") {
+                self.scan_line_comment()?
+            } else if self.expects("/*") {
+                self.scan_block_comment()?
+            } else {
+                match self.current {
+                    '"' => self.scan_string()?,
+                    '@' => self.scan_injunction()?,
                     _ => {}
-                },
-                '@' => self.scan_injunction()?,
-                _ => {}
+                }
             }
             self.next();
         }
@@ -82,6 +82,7 @@ impl Scanner {
         self.index += 1;
         if self.index >= self.source.len() {
             self.end = true;
+            self.current = '\0'
         } else {
             self.current = self.source[self.index];
             self.shift();
@@ -102,8 +103,8 @@ impl Scanner {
             self.pos[1] += 1;
         }
     }
-    fn lookahead(&self, i: usize) -> Option<char> {
-        if self.index + i > self.source.len() {
+    fn _lookahead(&self, i: usize) -> Option<char> {
+        if self.index + i >= self.source.len() {
             None
         } else {
             Some(self.source[self.index + i])
@@ -117,9 +118,6 @@ impl Scanner {
             let section: String = self.source[self.index..end].iter().collect();
             section == pattern.to_string()
         }
-    }
-    fn sees(&self, _pattern: &str) -> bool {
-        true
     }
     /// Emits an error encountered during scanning.
     fn error(&self, message: &str) -> Result<(), ScannerError> {
@@ -200,6 +198,60 @@ impl Scanner {
         });
         Ok(())
     }
+    fn scan_string(&mut self) -> Result<(), ScannerError> {
+        self.loc_start();
+        self.next();
+        let mut inner = vec![];
+        while !(self.end || self.expects("\"")) {
+            if self.expects("#{") {
+                self.next_by(2);
+                inner.push(self.scan_string_expression()?);
+                self.next();
+            } else {
+                inner.push(self.scan_string_sequence()?);
+                self.next();
+            }
+        }
+        if self.end {
+            self.error("Unterminated string literal.")?;
+        }
+        self.next();
+        self.loc_end();
+        self.tokens.push(StringToken {
+            inner,
+            loc: self.store,
+        });
+        Ok(())
+    }
+    fn scan_string_sequence(&mut self) -> Result<StringInnerToken, ScannerError> {
+        let start = self.pos.clone();
+        let mut value = String::new();
+        while !(self.end || self.expects("\"")) {
+            value.push(self.current);
+            if let Some('#') = self._lookahead(1) {
+                if let Some('{') = self._lookahead(2) {
+                    break;
+                }
+            }
+            if let Some('\"') = self._lookahead(1) {
+                break;
+            } else {
+                self.next();
+            }
+        }
+        let end = self.pos.clone();
+        let loc = [start[0], start[1], end[0], end[1]];
+        Ok(StringSequence { value, loc })
+    }
+    fn scan_string_expression(&mut self) -> Result<StringInnerToken, ScannerError> {
+        let start = self.pos.clone();
+        let end = self.pos.clone();
+        let loc = [start[0], start[1], end[0], end[1]];
+        Ok(StringExpression {
+            tokens: vec![],
+            loc,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -215,5 +267,19 @@ mod tests {
                 loc: [1, 1, 1, 8]
             }
         );
+    }
+    #[test]
+    fn it_scans_string_token() {
+        let tokens = scan("\"Hello from the other side.\"".to_string()).unwrap();
+        assert_eq!(
+            tokens[0],
+            StringToken {
+                inner: vec![StringSequence {
+                    loc: [1, 2, 1, 27],
+                    value: String::from("Hello from the other side.")
+                }],
+                loc: [1, 1, 1, 28]
+            }
+        )
     }
 }

@@ -1,8 +1,8 @@
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub enum StringInnerToken {
-    Sequence,
-    Expression,
+    StringSequence { value: String, loc: [usize; 4] },
+    StringExpression { tokens: Vec<Token>, loc: [usize; 4] },
 }
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
@@ -30,6 +30,7 @@ pub enum Token {
     },
     StringToken {
         inner: Vec<StringInnerToken>,
+        loc: [usize; 4],
     },
     Identifier {
         value: String,

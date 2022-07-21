@@ -5,7 +5,7 @@ pub const INJUNCTIONS: &'static [&'static str; 12] = &[
     "public",
     "utilize",
     "constant",
-    "let",
+    "variable",
     "enum",
     "function",
     "type",

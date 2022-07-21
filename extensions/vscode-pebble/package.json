@@ -2,6 +2,7 @@
   "name": "vscode-pebble",
   "displayName": "vscode-pebble",
   "description": "The Pebble Programming Language",
+  "icon": "./icon.png",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.54.0"

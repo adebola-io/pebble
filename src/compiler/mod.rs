@@ -26,5 +26,5 @@ pub fn run(file: String) {
         );
         exit_with_error(err.message.as_str());
     });
-    println!("{:?}", tokens);
+    println!("{:#?}", tokens);
 }
