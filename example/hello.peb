@@ -1,8 +1,19 @@
-/*
-   This is a block comment.
-*/ 
+## The structure of a person.
+@public @struct Person {
+   name: string,
+   age: number,
+   gender: string,
+}
+@utilize Person {
+   constructor(name: string, age: number, gender: string) {
+      self.name = name;
+      self.age = age;
+      self.gender = gender;
+   }
+   sayHello () {
+      println self.name + " says Hello";
+   }
+}
 
-// This is a line comment.
-## ms
-
-" #{self.hdhd}"
+@variable person1 = new Person();
+person1.sayHello();

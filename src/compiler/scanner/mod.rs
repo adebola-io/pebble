@@ -2,11 +2,13 @@ mod helpers;
 mod token;
 use helpers::*;
 use token::{
+    BracketKind::*,
     Comment, CommentKind,
     NumericKind::*,
     StringInnerToken::{self, *},
     Token::{self, *},
 };
+
 #[derive(Debug)]
 pub struct ScannerError {
     pub message: String,
@@ -64,6 +66,7 @@ impl Scanner {
             } else {
                 match self.current {
                     '"' => self.scan_string()?,
+                    '{' | '}' | '[' | ']' | '(' | ')' => self.scan_brackets()?,
                     '@' => self.scan_injunction()?,
                     _ => {}
                 }
@@ -178,6 +181,27 @@ impl Scanner {
             value,
             loc: self.store,
         });
+        Ok(())
+    }
+    fn scan_brackets(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        let kind;
+        match self.current {
+            '{' => kind = LCurly,
+            '}' => kind = RCurly,
+            '(' => kind = LParen,
+            ')' => kind = RParen,
+            '[' => kind = LSquare,
+            ']' => kind = RSquare,
+            _ => panic!(),
+        }
+        self.next();
+        self.loc_end();
+        let token = Bracket {
+            kind,
+            loc: self.store,
+        };
+        self.tokens.push(token);
         Ok(())
     }
     /// Tokenize a number.
@@ -320,6 +344,17 @@ mod tests {
                 kind: Decimal,
                 raw: String::from("99923"),
                 loc: [1, 1, 1, 5]
+            }
+        )
+    }
+    #[test]
+    fn it_scans_brackets() {
+        let tokens = scan("() @variable".to_string()).unwrap();
+        assert_eq!(
+            tokens[0],
+            Bracket {
+                kind: LParen,
+                loc: [1, 1, 1, 2]
             }
         )
     }

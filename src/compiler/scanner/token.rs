@@ -38,6 +38,7 @@ pub enum Token {
     },
     Bracket {
         kind: BracketKind,
+        loc: [usize; 4],
     },
     Keyword {
         value: String,
