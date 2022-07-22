@@ -24,6 +24,7 @@ pub enum Token {
         /// The kind of number tokenized, whether a decimal, hexadecimal, octal, exponent, etc.
         kind: NumericKind,
         raw: String,
+        loc: [usize; 4],
     },
     Character {
         value: String,

@@ -3,6 +3,7 @@ mod token;
 use helpers::*;
 use token::{
     Comment, CommentKind,
+    NumericKind::*,
     StringInnerToken::{self, *},
     Token::{self, *},
 };
@@ -14,6 +15,7 @@ pub struct ScannerError {
 }
 
 type ScanResult = Result<Vec<Token>, ScannerError>;
+type ScanInternalResult = Result<(), ScannerError>;
 
 pub fn scan(content: String) -> ScanResult {
     let content: Vec<char> = content.chars().collect();
@@ -57,6 +59,8 @@ impl Scanner {
                 self.scan_line_comment()?
             } else if self.expects("/*") {
                 self.scan_block_comment()?
+            } else if self.current.is_digit(10) {
+                self.scan_number()?
             } else {
                 match self.current {
                     '"' => self.scan_string()?,
@@ -120,7 +124,7 @@ impl Scanner {
         }
     }
     /// Emits an error encountered during scanning.
-    fn error(&self, message: &str) -> Result<(), ScannerError> {
+    fn error(&self, message: &str) -> ScanInternalResult {
         Err(ScannerError {
             message: message.to_string(),
             line: self.pos[0],
@@ -137,7 +141,7 @@ impl Scanner {
         self.store[2] = self.pos[0];
         self.store[3] = self.pos[1];
     }
-    fn scan_block_comment(&mut self) -> Result<(), ScannerError> {
+    fn scan_block_comment(&mut self) -> ScanInternalResult {
         self.loc_start();
         self.next_by(2);
         let mut value = String::new();
@@ -157,7 +161,7 @@ impl Scanner {
         });
         Ok(())
     }
-    fn scan_line_comment(&mut self) -> Result<(), ScannerError> {
+    fn scan_line_comment(&mut self) -> ScanInternalResult {
         self.loc_start();
         self.next_by(2);
         let mut value = String::new();
@@ -176,7 +180,32 @@ impl Scanner {
         });
         Ok(())
     }
-    fn scan_injunction(&mut self) -> Result<(), ScannerError> {
+    /// Tokenize a number.
+    fn scan_number(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        let raw = self.count(10);
+        if self.current.is_alphabetic() {
+            self.error("An identifier cannot immediately follow a literal.")?
+        };
+        self.loc_end();
+        let token = Number {
+            kind: Decimal,
+            raw,
+            loc: self.store,
+        };
+        self.tokens.push(token);
+        Ok(())
+    }
+    /// Counts all the succeeding characters in the text stream that are numbers.
+    fn count(&mut self, base: usize) -> String {
+        let mut num = String::new();
+        while self.current.is_digit(base as u32) {
+            num.push(self.current);
+            self.next();
+        }
+        num
+    }
+    fn scan_injunction(&mut self) -> ScanInternalResult {
         self.loc_start();
         self.next();
         if !is_identifier_char(self.current) || self.current.is_digit(10) {
@@ -198,7 +227,7 @@ impl Scanner {
         });
         Ok(())
     }
-    fn scan_string(&mut self) -> Result<(), ScannerError> {
+    fn scan_string(&mut self) -> ScanInternalResult {
         self.loc_start();
         self.next();
         let mut inner = vec![];
@@ -279,6 +308,18 @@ mod tests {
                     value: String::from("Hello from the other side.")
                 }],
                 loc: [1, 1, 1, 28]
+            }
+        )
+    }
+    #[test]
+    fn it_scans_number() {
+        let tokens = scan("99923".to_string()).unwrap();
+        assert_eq!(
+            tokens[0],
+            Number {
+                kind: Decimal,
+                raw: String::from("99923"),
+                loc: [1, 1, 1, 5]
             }
         )
     }
