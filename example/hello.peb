@@ -1,5 +1,3 @@
-@prepend "./BinaryTree.peb";
-## The structure of a person.
 @public @struct Person {
    name: string;
    age: number;

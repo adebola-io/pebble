@@ -52,6 +52,9 @@ pub enum Token {
     SemiColon {
         loc: [usize; 4],
     },
+    Colon {
+        loc: [usize; 4],
+    },
     Operator {
         value: String,
         loc: [usize; 4],

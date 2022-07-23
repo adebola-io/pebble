@@ -61,6 +61,8 @@ impl Scanner {
                 self.scan_line_comment()?
             } else if self.expects("/*") {
                 self.scan_block_comment()?
+            } else if self.expects("##") {
+                self.scan_doc_comment()?
             } else if self.current.is_digit(10) {
                 self.scan_number()?
             } else if is_identifier_char(self.current) {
@@ -75,14 +77,17 @@ impl Scanner {
                         self.scan_operator(self.current.to_string())?
                     }
                     ';' => self.scan_semi_colon()?,
-                    ' ' | '\n' | '\r' => {}
+                    ',' => self.scan_comma()?,
+                    ':' => self.scan_colon()?,
+                    ' ' | '\n' | '\r' => {
+                        self.next();
+                    }
                     _ => {
                         let message = format!("Unexpected token '{}'.", self.current);
                         self.error(message.as_str())?
                     }
                 }
             }
-            self.next();
         }
         Ok(())
     }
@@ -194,6 +199,25 @@ impl Scanner {
         });
         Ok(())
     }
+    fn scan_doc_comment(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        self.next_by(2);
+        let mut value = String::new();
+        while !(self.end || self.current == '\n') {
+            value.push(self.current);
+            self.next();
+        }
+        if !self.end {
+            self.next();
+        }
+        self.loc_end();
+        self.comments.push(Comment {
+            kind: CommentKind::Documentation,
+            value,
+            loc: self.store,
+        });
+        Ok(())
+    }
     fn scan_brackets(&mut self) -> ScanInternalResult {
         self.loc_start();
         let kind;
@@ -274,6 +298,22 @@ impl Scanner {
         self.next();
         self.loc_end();
         let token = SemiColon { loc: self.store };
+        self.tokens.push(token);
+        Ok(())
+    }
+    fn scan_comma(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        self.next();
+        self.loc_end();
+        let token = Comma { loc: self.store };
+        self.tokens.push(token);
+        Ok(())
+    }
+    fn scan_colon(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        self.next();
+        self.loc_end();
+        let token = Colon { loc: self.store };
         self.tokens.push(token);
         Ok(())
     }
