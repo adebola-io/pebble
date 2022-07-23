@@ -114,11 +114,11 @@
     },
     "injunction": {
       "name": "meta.injunction keyword.injunction",
-      "match": "(?<![\\w$@])@(use|public|prepend|type|variable|function|constant|enum|struct|utilize|interface|implement)(?![$@])\\b"
+      "match": "(?<![\\w$@])@(use|public|prepend|type|set|func|const|enum|struct|utilize|record|interface|implement)(?![$@])\\b"
     },
     "keyword": {
       "name": "keyword.control",
-      "match": "\\b(?<![$@\\.])(for|in|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case)(?![$@])\\b"
+      "match": "\\b(?<![$@\\.])(for|in|do|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case)(?![$@])\\b"
     },
     "function": {
       "name": "entity.name.function",

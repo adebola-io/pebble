@@ -1,16 +1,22 @@
-pub const INJUNCTIONS: &'static [&'static str; 12] = &[
+pub const INJUNCTIONS: &'static [&'static str; 13] = &[
     "implement",
     "interface",
     "struct",
     "public",
     "utilize",
+    "record",
     "constant",
-    "variable",
+    "set",
     "enum",
-    "function",
+    "func",
     "type",
     "use",
     "prepend",
+];
+
+pub const KEYWORDS: &'static [&'static str; 18] = &[
+    "if", "else", "for", "in", "of", "match", "case", "from", "as", "do", "while", "break",
+    "continue", "return", "crash", "try", "recover", "println",
 ];
 
 pub fn is_identifier_char(c: char) -> bool {
@@ -18,4 +24,7 @@ pub fn is_identifier_char(c: char) -> bool {
 }
 pub fn is_injunction_value(value: &str) -> bool {
     INJUNCTIONS.contains(&value)
+}
+pub fn is_keyword(value: &str) -> bool {
+    KEYWORDS.contains(&value)
 }

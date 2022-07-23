@@ -63,12 +63,23 @@ impl Scanner {
                 self.scan_block_comment()?
             } else if self.current.is_digit(10) {
                 self.scan_number()?
+            } else if is_identifier_char(self.current) {
+                self.scan_identifier_or_keyword()?
             } else {
                 match self.current {
                     '"' => self.scan_string()?,
+                    '\'' => self.scan_char()?,
                     '{' | '}' | '[' | ']' | '(' | ')' => self.scan_brackets()?,
                     '@' => self.scan_injunction()?,
-                    _ => {}
+                    ':' | '.' | '=' | '+' | '-' | '>' | '<' | '/' | '&' | '|' | '%' | '*' | '!' => {
+                        self.scan_operator(self.current.to_string())?
+                    }
+                    ';' => self.scan_semi_colon()?,
+                    ' ' | '\n' | '\r' => {}
+                    _ => {
+                        let message = format!("Unexpected token '{}'.", self.current);
+                        self.error(message.as_str())?
+                    }
                 }
             }
             self.next();
@@ -229,6 +240,43 @@ impl Scanner {
         }
         num
     }
+    fn scan_identifier_or_keyword(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        let mut value = String::new();
+        let token;
+        while is_identifier_char(self.current) {
+            value.push(self.current);
+            self.next();
+        }
+        self.loc_end();
+        let loc = self.store;
+        if is_keyword(&value) {
+            token = Keyword { value, loc };
+        } else {
+            token = Identifier { value, loc };
+        }
+        self.tokens.push(token);
+        Ok(())
+    }
+    fn scan_operator(&mut self, operator: String) -> ScanInternalResult {
+        self.loc_start();
+        self.next_by(operator.len());
+        self.loc_end();
+        let token = Operator {
+            value: operator,
+            loc: self.store,
+        };
+        self.tokens.push(token);
+        Ok(())
+    }
+    fn scan_semi_colon(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        self.next();
+        self.loc_end();
+        let token = SemiColon { loc: self.store };
+        self.tokens.push(token);
+        Ok(())
+    }
     fn scan_injunction(&mut self) -> ScanInternalResult {
         self.loc_start();
         self.next();
@@ -305,14 +353,37 @@ impl Scanner {
             loc,
         })
     }
+    fn scan_char(&mut self) -> ScanInternalResult {
+        self.loc_start();
+        self.next();
+        let mut value = String::new();
+        while !(self.end || self.expects("'")) {
+            value.push(self.current);
+            self.next();
+        }
+        if self.end {
+            self.error("Unterminated character literal")?
+        }
+        self.next();
+        self.loc_end();
+        let token = Character {
+            value,
+            loc: self.store,
+        };
+        self.tokens.push(token);
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn tokenize(input: &str) -> Vec<Token> {
+        scan(input.to_string()).unwrap()
+    }
     #[test]
     fn it_scans_injunction_token() {
-        let tokens = scan("@public ".to_string()).unwrap();
+        let tokens = tokenize("@public @func hello () {}");
         assert_eq!(
             tokens[0],
             Injunction {
@@ -323,7 +394,7 @@ mod tests {
     }
     #[test]
     fn it_scans_string_token() {
-        let tokens = scan("\"Hello from the other side.\"".to_string()).unwrap();
+        let tokens = tokenize("\"Hello from the other side.\"");
         assert_eq!(
             tokens[0],
             StringToken {
@@ -337,7 +408,7 @@ mod tests {
     }
     #[test]
     fn it_scans_number() {
-        let tokens = scan("99923".to_string()).unwrap();
+        let tokens = tokenize("99923");
         assert_eq!(
             tokens[0],
             Number {
@@ -349,12 +420,55 @@ mod tests {
     }
     #[test]
     fn it_scans_brackets() {
-        let tokens = scan("() @variable".to_string()).unwrap();
+        let tokens = tokenize("()[][]{}{{}}");
         assert_eq!(
             tokens[0],
             Bracket {
                 kind: LParen,
                 loc: [1, 1, 1, 2]
+            }
+        )
+    }
+    #[test]
+    fn it_scans_characters() {
+        let tokens = tokenize("@set character = 's'; @set newline = '\\n'");
+        assert_eq!(
+            tokens[3],
+            Character {
+                value: String::from("s"),
+                loc: [1, 18, 1, 21]
+            }
+        );
+        assert_eq!(
+            tokens[7],
+            Character {
+                value: String::from("\\n"),
+                loc: [1, 38, 1, 41]
+            }
+        )
+    }
+    #[test]
+    fn it_scans_keywords() {
+        let tokens = scan(
+            "\
+for (word in sentence) {
+    println word
+}"
+            .to_string(),
+        )
+        .unwrap();
+        assert_eq!(
+            tokens[0],
+            Keyword {
+                value: String::from("for"),
+                loc: [1, 1, 1, 4]
+            }
+        );
+        assert_eq!(
+            tokens[3],
+            Keyword {
+                value: String::from("in"),
+                loc: [1, 11, 1, 13]
             }
         )
     }

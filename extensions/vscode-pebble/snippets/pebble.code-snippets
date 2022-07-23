@@ -7,12 +7,12 @@
   "Function Declaration": {
     "prefix": "@func",
     "description": "Creates a new function declaration",
-    "body": ["@function ${1:name}() {", "   $2", "}"]
+    "body": ["@func ${1:name}() {", "   $2", "}"]
   },
   "Function Declaration with parameters": {
     "prefix": "@funcp",
     "description": "Creates a new function declaration with parameters",
-    "body": ["@function ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
+    "body": ["@func ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
   },
   "Use Declaration": {
     "prefix": "@use",

@@ -28,6 +28,7 @@ pub enum Token {
     },
     Character {
         value: String,
+        loc: [usize; 4],
     },
     StringToken {
         inner: Vec<StringInnerToken>,
@@ -35,6 +36,7 @@ pub enum Token {
     },
     Identifier {
         value: String,
+        loc: [usize; 4],
     },
     Bracket {
         kind: BracketKind,
@@ -42,13 +44,18 @@ pub enum Token {
     },
     Keyword {
         value: String,
+        loc: [usize; 4],
     },
-    Comma,
-    SemiColon,
+    Comma {
+        loc: [usize; 4],
+    },
+    SemiColon {
+        loc: [usize; 4],
+    },
     Operator {
         value: String,
+        loc: [usize; 4],
     },
-    EOF,
 }
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
