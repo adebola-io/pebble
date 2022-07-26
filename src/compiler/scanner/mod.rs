@@ -1,5 +1,6 @@
 mod helpers;
-mod token;
+pub mod token;
+use super::error::CompileError;
 use helpers::*;
 use token::{
     BracketKind::*,
@@ -9,15 +10,8 @@ use token::{
     Token::{self, *},
 };
 
-#[derive(Debug)]
-pub struct ScannerError {
-    pub message: String,
-    pub line: usize,
-    pub column: usize,
-}
-
-type ScanResult = Result<Vec<Token>, ScannerError>;
-type ScanInternalResult = Result<(), ScannerError>;
+type ScanResult = Result<Vec<Token>, CompileError>;
+type ScanInternalResult = Result<(), CompileError>;
 
 pub fn scan(content: String) -> ScanResult {
     let content: Vec<char> = content.chars().collect();
@@ -53,7 +47,7 @@ impl Scanner {
         }
     }
     /// Run the scanner.
-    fn scan(&mut self, content: Vec<char>) -> Result<(), ScannerError> {
+    fn scan(&mut self, content: Vec<char>) -> Result<(), CompileError> {
         self.source = content;
         self.set();
         while !self.end {
@@ -89,10 +83,12 @@ impl Scanner {
                 }
             }
         }
+        self.tokens.push(Token::EOF);
         Ok(())
     }
     /// Set the scanner to the positions to start scanning.
     fn set(&mut self) {
+        self.tokens.push(Token::SOF);
         if let Some(c) = self.source.get(self.index) {
             self.current = *c;
         } else {
@@ -144,7 +140,7 @@ impl Scanner {
     }
     /// Emits an error encountered during scanning.
     fn error(&self, message: &str) -> ScanInternalResult {
-        Err(ScannerError {
+        Err(CompileError {
             message: message.to_string(),
             line: self.pos[0],
             column: self.pos[1],
@@ -364,7 +360,7 @@ impl Scanner {
         });
         Ok(())
     }
-    fn scan_string_sequence(&mut self) -> Result<StringInnerToken, ScannerError> {
+    fn scan_string_sequence(&mut self) -> Result<StringInnerToken, CompileError> {
         let start = self.pos.clone();
         let mut value = String::new();
         while !(self.end || self.expects("\"")) {
@@ -384,7 +380,7 @@ impl Scanner {
         let loc = [start[0], start[1], end[0], end[1]];
         Ok(StringSequence { value, loc })
     }
-    fn scan_string_expression(&mut self) -> Result<StringInnerToken, ScannerError> {
+    fn scan_string_expression(&mut self) -> Result<StringInnerToken, CompileError> {
         let start = self.pos.clone();
         let end = self.pos.clone();
         let loc = [start[0], start[1], end[0], end[1]];
@@ -425,7 +421,7 @@ mod tests {
     fn it_scans_injunction_token() {
         let tokens = tokenize("@public @func hello () {}");
         assert_eq!(
-            tokens[0],
+            tokens[1],
             Injunction {
                 value: String::from("public"),
                 loc: [1, 1, 1, 8]
@@ -436,7 +432,7 @@ mod tests {
     fn it_scans_string_token() {
         let tokens = tokenize("\"Hello from the other side.\"");
         assert_eq!(
-            tokens[0],
+            tokens[1],
             StringToken {
                 inner: vec![StringSequence {
                     loc: [1, 2, 1, 27],
@@ -450,7 +446,7 @@ mod tests {
     fn it_scans_number() {
         let tokens = tokenize("99923");
         assert_eq!(
-            tokens[0],
+            tokens[1],
             Number {
                 kind: Decimal,
                 raw: String::from("99923"),
@@ -462,7 +458,7 @@ mod tests {
     fn it_scans_brackets() {
         let tokens = tokenize("()[][]{}{{}}");
         assert_eq!(
-            tokens[0],
+            tokens[1],
             Bracket {
                 kind: LParen,
                 loc: [1, 1, 1, 2]
@@ -473,14 +469,14 @@ mod tests {
     fn it_scans_characters() {
         let tokens = tokenize("@set character = 's'; @set newline = '\\n'");
         assert_eq!(
-            tokens[3],
+            tokens[4],
             Character {
                 value: String::from("s"),
                 loc: [1, 18, 1, 21]
             }
         );
         assert_eq!(
-            tokens[8],
+            tokens[9],
             Character {
                 value: String::from("\\n"),
                 loc: [1, 38, 1, 41]
@@ -498,14 +494,14 @@ for (word in sentence) {
         )
         .unwrap();
         assert_eq!(
-            tokens[0],
+            tokens[1],
             Keyword {
                 value: String::from("for"),
                 loc: [1, 1, 1, 4]
             }
         );
         assert_eq!(
-            tokens[3],
+            tokens[4],
             Keyword {
                 value: String::from("in"),
                 loc: [1, 11, 1, 13]

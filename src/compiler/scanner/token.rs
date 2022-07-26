@@ -1,5 +1,5 @@
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum StringInnerToken {
     StringSequence { value: String, loc: [usize; 4] },
     StringExpression { tokens: Vec<Token>, loc: [usize; 4] },
@@ -13,8 +13,10 @@ pub struct Comment {
     pub loc: [usize; 4],
 }
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
+    /// Token representing the start of the file.
+    SOF,
     /// A token that begins with an @ symbol.
     Injunction {
         value: String,
@@ -59,16 +61,18 @@ pub enum Token {
         value: String,
         loc: [usize; 4],
     },
+    /// Token representing the end of the file.
+    EOF,
 }
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum CommentKind {
     Block,
     Line,
     Documentation,
 }
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum NumericKind {
     Hexadecimal,
     Decimal,
@@ -76,7 +80,7 @@ pub enum NumericKind {
     Binary,
 }
 #[allow(dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum BracketKind {
     LCurly,
     RCurly,

@@ -1,1 +1,17 @@
-++name = 89;
+@public @struct Person {
+   name: string;
+   age: number;
+}
+@utilize Person {
+   constructor(name: string, age: number, gender: char) {
+      self.name = name;
+      self.age = age;
+      self.gender = gender;
+   }
+   sayHello() {
+      println self.name + " says Hello!";
+   }
+}
+
+@set person1: Person = new Person("John Doe", 19, 'M');
+person1.sayHello(); // Prints out "John Doe says Hello!"

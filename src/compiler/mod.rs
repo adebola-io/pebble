@@ -1,4 +1,6 @@
 use super::cli::exit_with_error;
+mod error;
+mod parser;
 mod scanner;
 
 pub fn run(file: String) {
@@ -20,11 +22,18 @@ pub fn run(file: String) {
         exit_with_error(err.as_str());
     });
     let tokens = scanner::scan(content).unwrap_or_else(|err| {
-        println!(
+        eprintln!(
             "Error encountered while scanning file on {}:{}",
             err.line, err.column
         );
         exit_with_error(err.message.as_str());
     });
-    println!("{:#?}", tokens);
+    println!("{:#?}", &tokens);
+    let ast = parser::parse(tokens).unwrap_or_else(|err| {
+        eprintln!(
+            "Error encountered while parsing on {}:{}",
+            err.line, err.column
+        );
+        exit_with_error(err.message.as_str());
+    });
 }
