@@ -4,8 +4,8 @@ use crate::utils::stack::Stack;
 use super::{
     error::CompileError,
     scanner::{
-        helpers::precedenceOf,
-        token::{NumericKind, Token},
+        helpers::precedence_of,
+        token::{BracketKind, NumericKind, Token},
     },
 };
 use ast::{Block, Expression, Literal, NodeRange, Program, Statement};
@@ -52,6 +52,7 @@ impl Parser {
             self.end = true;
         }
     }
+    /// Log an error that has been encountered during parsing.
     fn error(&mut self, message: &str) -> ParseInternalResult {
         let error = CompileError {
             message: message.to_string(),
@@ -60,21 +61,25 @@ impl Parser {
         };
         Err(error)
     }
+    /// Check if an operator has a lower precedence in regards to the previously parsed operator.
+    /// This function determines associativity and operator precedence.
     fn is_lower_precedence(&self, operator: &str) -> bool {
         if self.operator_stack.is_empty {
             false
-        } else if precedenceOf(operator) <= precedenceOf(self.operator_stack.top().unwrap()) {
+        } else if precedence_of(operator) <= precedence_of(self.operator_stack.top().unwrap()) {
             true
         } else {
             false
         }
     }
-    fn start_range(&mut self) {
+    /// Mark the start of a node.
+    fn _start_range(&mut self) {
         let loc = self.token.get_location();
         self.store[0] = loc[0];
         self.store[1] = loc[1];
     }
-    fn stop_range(&mut self) {
+    /// Mark the end of a node.
+    fn _stop_range(&mut self) {
         let loc = self.token.get_location();
         self.store[2] = loc[2];
         self.store[3] = loc[3];
@@ -104,7 +109,6 @@ impl Parser {
             self.next();
             Ok(exprstat)
         } else {
-            println!("{:?}", self.token);
             self.error("Expected a semi-colon")?;
             panic!()
         }
@@ -115,24 +119,52 @@ impl Parser {
     /// Parses an expression.
     fn parse_expression(&mut self) -> ExpressionOrError {
         match &self.token {
+            // a number token.
             Token::Number { .. } => {
                 let number = self.parse_number()?;
-                let exp = self.reparse(number)?;
-                Ok(exp)
+                Ok(self.reparse(number)?)
+            }
+            // an identifier token
+            Token::Identifier { .. } => {
+                let exp = self.parse_identifier()?;
+                Ok(self.reparse(exp)?)
+            }
+            // an open bracket token (
+            Token::Bracket {
+                kind: BracketKind::LParen,
+                ..
+            } => {
+                let exp = self.parse_group()?;
+                Ok(self.reparse(exp)?)
             }
             _ => Ok(Expression::Null),
         }
     }
+    /// Parses a number token into a node.
     fn parse_number(&mut self) -> ExpressionOrError {
         let exp;
-        if self.token.is_number() {
-            exp = Expression::number(self.token.clone());
-        } else {
-            self.error("Expected a number.")?;
-            panic!();
-        }
+        exp = Expression::number(self.token.clone());
         self.next();
         Ok(exp)
+    }
+    /// Parses an identifier token into a node.
+    fn parse_identifier(&mut self) -> ExpressionOrError {
+        let exp = Expression::identifier(self.token.clone());
+        self.next();
+        Ok(exp)
+    }
+    // Parse a paremthesized group.
+    fn parse_group(&mut self) -> ExpressionOrError {
+        self.next(); // Move past the left parenthesis.
+        self.operator_stack.push("temp".to_string()); // A mock operator, which prevents the parenthesized group from affecting outer operators.
+        let expression = self.parse_expression()?;
+        self.operator_stack.pop();
+        if self.token.is_bracket(BracketKind::RParen) {
+            self.next();
+        } else {
+            self.error("Expected ')' here.")?;
+        }
+        Ok(expression)
     }
     fn reparse(&mut self, node: Expression) -> ExpressionOrError {
         if self.token.is_semi_colon() {
@@ -198,6 +230,50 @@ mod tests {
                     range: [1, 1, 1, 7],
                 },
                 range: [1, 1, 1, 7],
+            }
+        )
+    }
+    #[test]
+    fn it_changes_operator_precendence_based_on_brackets() {
+        let text = "(2+2)*8;";
+        let tokens = scanner::scan(text.to_string()).unwrap();
+        let tree = parse(tokens).unwrap();
+        assert_eq!(
+            tree,
+            Program {
+                body: Block {
+                    statements: vec![Statement::ExpressionStatement {
+                        expression: Expression::BinaryExpression {
+                            operator: String::from("*"),
+                            left: Box::new(Expression::BinaryExpression {
+                                operator: String::from("+"),
+                                left: Box::new(Expression::Number {
+                                    kind: NumericKind::Decimal,
+                                    range: [1, 2, 1, 3],
+                                    raw: String::from("2"),
+                                    value: String::from("2")
+                                }),
+                                right: Box::new(Expression::Number {
+                                    kind: NumericKind::Decimal,
+                                    range: [1, 4, 1, 5],
+                                    raw: String::from("2"),
+                                    value: String::from("2")
+                                }),
+                                range: [1, 2, 1, 5]
+                            }),
+                            right: Box::new(Expression::Number {
+                                kind: NumericKind::Decimal,
+                                value: String::from("8"),
+                                raw: String::from("8"),
+                                range: [1, 7, 1, 8]
+                            }),
+                            range: [1, 2, 1, 8]
+                        },
+                        range: [1, 2, 1, 8]
+                    }],
+                    range: [1, 1, 1, 8],
+                },
+                range: [1, 1, 1, 8],
             }
         )
     }

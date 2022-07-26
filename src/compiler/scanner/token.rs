@@ -105,6 +105,14 @@ impl Token {
     pub fn get_end_column(&self) -> usize {
         self.get_location()[3]
     }
+    pub fn is_bracket(&self, _bracketkind: BracketKind) -> bool {
+        match self {
+            Self::Bracket {
+                kind: _bracketkind, ..
+            } => true,
+            _ => false,
+        }
+    }
 }
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]

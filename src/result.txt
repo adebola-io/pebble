@@ -3,36 +3,32 @@ Program {
         1,
         1,
         1,
-        16,
+        10,
     ],
     body: Block {
         range: [
             1,
             1,
             1,
-            16,
+            10,
         ],
         statements: [
             ExpressionStatement {
                 expression: BinaryExpression {
                     operator: "+",
-                    left: Number {
-                        kind: Decimal,
-                        value: "2",
-                        raw: "2",
-                        range: [
-                            1,
-                            1,
-                            1,
-                            2,
-                        ],
-                    },
-                    right: BinaryExpression {
-                        operator: "*",
-                        left: Number {
-                            kind: Decimal,
-                            value: "2",
-                            raw: "2",
+                    left: BinaryExpression {
+                        operator: "+",
+                        left: Identifier {
+                            name: "i",
+                            range: [
+                                1,
+                                1,
+                                1,
+                                2,
+                            ],
+                        },
+                        right: Identifier {
+                            name: "j",
                             range: [
                                 1,
                                 5,
@@ -40,56 +36,34 @@ Program {
                                 6,
                             ],
                         },
-                        right: BinaryExpression {
-                            operator: "**",
-                            left: Number {
-                                kind: Decimal,
-                                value: "8",
-                                raw: "8",
-                                range: [
-                                    1,
-                                    9,
-                                    1,
-                                    10,
-                                ],
-                            },
-                            right: Number {
-                                kind: Decimal,
-                                value: "6",
-                                raw: "6",
-                                range: [
-                                    1,
-                                    14,
-                                    1,
-                                    15,
-                                ],
-                            },
-                            range: [
-                                1,
-                                9,
-                                1,
-                                15,
-                            ],
-                        },
                         range: [
                             1,
-                            5,
                             1,
-                            15,
+                            1,
+                            6,
+                        ],
+                    },
+                    right: Identifier {
+                        name: "k",
+                        range: [
+                            1,
+                            9,
+                            1,
+                            10,
                         ],
                     },
                     range: [
                         1,
                         1,
                         1,
-                        15,
+                        10,
                     ],
                 },
                 range: [
                     1,
                     1,
                     1,
-                    16,
+                    10,
                 ],
             },
         ],

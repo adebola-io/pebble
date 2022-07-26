@@ -1,11 +1,14 @@
 use crate::compiler::scanner::token::{NumericKind, Token};
 
-use super::{Identifier, Location, NodeRange};
+use super::{Location, NodeRange};
 
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Null,
-    Identifier(Identifier),
+    Identifier {
+        name: String,
+        range: NodeRange,
+    },
     Number {
         kind: NumericKind,
         value: String,
@@ -20,7 +23,7 @@ pub enum Expression {
     },
     AssignmentExpression {
         operator: String,
-        left: Identifier,
+        left: Box<Expression>,
         right: Box<Expression>,
         range: NodeRange,
     },
@@ -35,6 +38,16 @@ impl Expression {
             left: Box::new(left_node),
             right: Box::new(right_node),
             range: [left_range[0], left_range[1], right_range[2], right_range[3]],
+        }
+    }
+    pub fn identifier(token: Token) -> Self {
+        if let Token::Identifier { value, loc } = token {
+            Expression::Identifier {
+                name: value,
+                range: loc,
+            }
+        } else {
+            panic!("Cannot construct node. Expected an identifier token.")
         }
     }
     pub fn number(token: Token) -> Self {
@@ -55,10 +68,10 @@ impl Location for Expression {
     fn get_range(&self) -> NodeRange {
         match self {
             Self::Null => [0, 0, 0, 0],
-            Self::Identifier(i) => i.get_range(),
-            Self::Number { range, .. } => *range,
-            Self::BinaryExpression { range, .. } => *range,
-            Self::AssignmentExpression { range, .. } => *range,
+            Self::Identifier { range, .. }
+            | Self::Number { range, .. }
+            | Self::BinaryExpression { range, .. }
+            | Self::AssignmentExpression { range, .. } => *range,
         }
     }
 }

@@ -27,13 +27,14 @@ pub const OPERATORS: &'static [&'static str; 37] = &[
 
 /// Return the precedence of an operator according to the Pebble precedence chart.
 /// An operator with a higher precedence has a higher influence on parsing arrangement than one with a lower precedence.
-pub fn precedenceOf(operator: &str) -> usize {
+pub fn precedence_of(operator: &str) -> usize {
     match operator {
         ")" => 19,
         "." => 18,
         "**" => 10,
         "*" => 9,
         "+" => 8,
+        "-" => 8,
         "[" => 18,
         _ => 0,
     }
