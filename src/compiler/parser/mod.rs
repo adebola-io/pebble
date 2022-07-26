@@ -124,7 +124,7 @@ impl Parser {
                 let number = self.parse_number()?;
                 Ok(self.reparse(number)?)
             }
-            // an identifier token
+            // an identifier token.
             Token::Identifier { .. } => {
                 let exp = self.parse_identifier()?;
                 Ok(self.reparse(exp)?)
@@ -172,16 +172,37 @@ impl Parser {
         }
         if let Token::Operator { value, .. } = self.token.clone() {
             match value.as_str() {
+                "." => Ok(self.parse_member_expression(node)?),
                 "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<" | "<="
-                | ">=" => Ok(self.binary_expression(node, value)?),
+                | ">=" => Ok(self.parse_binary_expression(node, value)?),
                 _ => Ok(node),
             }
         } else {
             Ok(node)
         }
     }
+    // Parses a member expression, e.g. core.format, person.age.
+    fn parse_member_expression(&mut self, object: Expression) -> ExpressionOrError {
+        if self.is_lower_precedence(".") {
+            Ok(object)
+        } else {
+            self.next();
+            self.operator_stack.push(".".to_string());
+            if !self.token.is_identifier() {
+                self.error("Expected object property name.")?;
+            }
+            let property = self.parse_identifier()?;
+            self.operator_stack.pop();
+            let memexp = Expression::member_expression(object, property);
+            Ok(self.reparse(memexp)?)
+        }
+    }
     /// Parses a binary expression, e.g 2 + 2, 3 * 6, etc.
-    fn binary_expression(&mut self, left_node: Expression, operator: String) -> ExpressionOrError {
+    fn parse_binary_expression(
+        &mut self,
+        left_node: Expression,
+        operator: String,
+    ) -> ExpressionOrError {
         if self.is_lower_precedence(&operator) {
             Ok(left_node)
         } else {
@@ -239,41 +260,58 @@ mod tests {
         let tokens = scanner::scan(text.to_string()).unwrap();
         let tree = parse(tokens).unwrap();
         assert_eq!(
-            tree,
-            Program {
-                body: Block {
-                    statements: vec![Statement::ExpressionStatement {
-                        expression: Expression::BinaryExpression {
-                            operator: String::from("*"),
-                            left: Box::new(Expression::BinaryExpression {
-                                operator: String::from("+"),
-                                left: Box::new(Expression::Number {
-                                    kind: NumericKind::Decimal,
-                                    range: [1, 2, 1, 3],
-                                    raw: String::from("2"),
-                                    value: String::from("2")
-                                }),
-                                right: Box::new(Expression::Number {
-                                    kind: NumericKind::Decimal,
-                                    range: [1, 4, 1, 5],
-                                    raw: String::from("2"),
-                                    value: String::from("2")
-                                }),
-                                range: [1, 2, 1, 5]
-                            }),
-                            right: Box::new(Expression::Number {
-                                kind: NumericKind::Decimal,
-                                value: String::from("8"),
-                                raw: String::from("8"),
-                                range: [1, 7, 1, 8]
-                            }),
-                            range: [1, 2, 1, 8]
-                        },
-                        range: [1, 2, 1, 8]
-                    }],
-                    range: [1, 1, 1, 8],
+            tree.body.statements[0],
+            Statement::ExpressionStatement {
+                expression: Expression::BinaryExpression {
+                    operator: String::from("*"),
+                    left: Box::new(Expression::BinaryExpression {
+                        operator: String::from("+"),
+                        left: Box::new(Expression::Number {
+                            kind: NumericKind::Decimal,
+                            range: [1, 2, 1, 3],
+                            raw: String::from("2"),
+                            value: String::from("2")
+                        }),
+                        right: Box::new(Expression::Number {
+                            kind: NumericKind::Decimal,
+                            range: [1, 4, 1, 5],
+                            raw: String::from("2"),
+                            value: String::from("2")
+                        }),
+                        range: [1, 2, 1, 5]
+                    }),
+                    right: Box::new(Expression::Number {
+                        kind: NumericKind::Decimal,
+                        value: String::from("8"),
+                        raw: String::from("8"),
+                        range: [1, 7, 1, 8]
+                    }),
+                    range: [1, 2, 1, 8]
                 },
-                range: [1, 1, 1, 8],
+                range: [1, 2, 1, 8]
+            }
+        )
+    }
+    #[test]
+    fn it_parses_member_expressions() {
+        let text = "person.name;";
+        let tokens = scanner::scan(text.to_string()).unwrap();
+        let tree = parse(tokens).unwrap();
+        assert_eq!(
+            tree.body.statements[0],
+            Statement::ExpressionStatement {
+                expression: Expression::MemberExpression {
+                    object: Box::new(Expression::Identifier {
+                        name: String::from("person"),
+                        range: [1, 1, 1, 7]
+                    }),
+                    property: Box::new(Expression::Identifier {
+                        name: String::from("name"),
+                        range: [1, 8, 1, 12]
+                    }),
+                    range: [1, 1, 1, 12]
+                },
+                range: [1, 1, 1, 12]
             }
         )
     }

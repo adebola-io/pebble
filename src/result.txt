@@ -3,67 +3,65 @@ Program {
         1,
         1,
         1,
-        10,
+        23,
     ],
     body: Block {
         range: [
             1,
             1,
             1,
-            10,
+            23,
         ],
         statements: [
             ExpressionStatement {
-                expression: BinaryExpression {
-                    operator: "+",
-                    left: BinaryExpression {
-                        operator: "+",
-                        left: Identifier {
-                            name: "i",
+                expression: MemberExpression {
+                    object: MemberExpression {
+                        object: Identifier {
+                            name: "nested",
                             range: [
                                 1,
                                 1,
                                 1,
-                                2,
+                                7,
                             ],
                         },
-                        right: Identifier {
-                            name: "j",
+                        property: Identifier {
+                            name: "object",
                             range: [
                                 1,
-                                5,
+                                8,
                                 1,
-                                6,
+                                14,
                             ],
                         },
                         range: [
                             1,
                             1,
                             1,
-                            6,
+                            14,
                         ],
                     },
-                    right: Identifier {
-                        name: "k",
+                    property: Identifier {
+                        name: "property",
                         range: [
                             1,
-                            9,
+                            15,
                             1,
-                            10,
+                            23,
                         ],
                     },
                     range: [
                         1,
                         1,
                         1,
-                        10,
+                        23,
                     ],
                 },
                 range: [
                     1,
                     1,
                     1,
-                    10,
+                    23,
                 ],
             },
         ],

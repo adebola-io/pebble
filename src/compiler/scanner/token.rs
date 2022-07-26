@@ -113,6 +113,12 @@ impl Token {
             _ => false,
         }
     }
+    pub fn is_identifier(&self) -> bool {
+        match self {
+            Self::Identifier { .. } => true,
+            _ => false,
+        }
+    }
 }
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]
