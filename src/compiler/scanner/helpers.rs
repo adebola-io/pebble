@@ -14,9 +14,15 @@ pub const INJUNCTIONS: &'static [&'static str; 13] = &[
     "prepend",
 ];
 
-pub const KEYWORDS: &'static [&'static str; 18] = &[
+pub const KEYWORDS: &'static [&'static str; 19] = &[
     "if", "else", "for", "in", "of", "match", "case", "from", "as", "do", "while", "break",
-    "continue", "return", "crash", "try", "recover", "println",
+    "continue", "return", "crash", "try", "recover", "println", "readonly",
+];
+
+pub const OPERATORS: &'static [&'static str; 34] = &[
+    "&&=", "||=", "...", "||", "&&", "..", ">=", "<=", "!=", "==", "*=", "-=", "/=", "%=", "+=",
+    "++", "**", "--", "::", "^", ".", "=", "+", "-", ">", "<", "/", "&", "|", "%", "*", "!", "~",
+    "?",
 ];
 
 pub fn is_identifier_char(c: char) -> bool {

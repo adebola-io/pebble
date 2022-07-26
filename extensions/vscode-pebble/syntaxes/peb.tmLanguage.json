@@ -105,7 +105,7 @@
     },
     "literal": {
       "name": "constant.language.literal",
-      "match": "\\b(?<![\\d$@])(true|false|self|nothing|core|new)(?![$@])\\b"
+      "match": "\\b(?<![\\d$@])(true|false|self|nothing|core|new|readonly|constructor)(?![$@])\\b"
     },
     "custom_type": {
       "begin": "(?<=(@(enum|struct|utilize|interface|implement|type))\\s+)",

@@ -67,21 +67,21 @@ impl Scanner {
                 self.scan_number()?
             } else if is_identifier_char(self.current) {
                 self.scan_identifier_or_keyword()?
+            } else if let Some(op) = OPERATORS.iter().find(|op| self.expects(op)) {
+                self.scan_operator(op.to_string())?;
             } else {
                 match self.current {
                     '"' => self.scan_string()?,
                     '\'' => self.scan_char()?,
                     '{' | '}' | '[' | ']' | '(' | ')' => self.scan_brackets()?,
                     '@' => self.scan_injunction()?,
-                    ':' | '.' | '=' | '+' | '-' | '>' | '<' | '/' | '&' | '|' | '%' | '*' | '!' => {
-                        self.scan_operator(self.current.to_string())?
-                    }
                     ';' => self.scan_semi_colon()?,
                     ',' => self.scan_comma()?,
                     ':' => self.scan_colon()?,
                     ' ' | '\n' | '\r' => {
                         self.next();
                     }
+                    '\0' => {}
                     _ => {
                         let message = format!("Unexpected token '{}'.", self.current);
                         self.error(message.as_str())?
@@ -480,7 +480,7 @@ mod tests {
             }
         );
         assert_eq!(
-            tokens[7],
+            tokens[8],
             Character {
                 value: String::from("\\n"),
                 loc: [1, 38, 1, 41]
