@@ -64,6 +64,48 @@ pub enum Token {
     /// Token representing the end of the file.
     EOF,
 }
+impl Token {
+    pub fn get_location(&self) -> [usize; 4] {
+        match self {
+            Self::Bracket { loc, .. }
+            | Self::Colon { loc }
+            | Self::Comma { loc, .. }
+            | Self::Number { loc, .. }
+            | Self::Character { loc, .. }
+            | Self::Keyword { loc, .. }
+            | Self::Identifier { loc, .. }
+            | Self::StringToken { loc, .. }
+            | Self::Injunction { loc, .. }
+            | Self::SemiColon { loc, .. }
+            | Self::Operator { loc, .. } => *loc,
+            _ => [0, 0, 0, 0],
+        }
+    }
+    pub fn is_comma(&self) -> bool {
+        match self {
+            Self::Comma { .. } => true,
+            _ => false,
+        }
+    }
+    pub fn is_semi_colon(&self) -> bool {
+        match self {
+            Self::SemiColon { .. } => true,
+            _ => false,
+        }
+    }
+    pub fn is_number(&self) -> bool {
+        match self {
+            Self::Number { .. } => true,
+            _ => false,
+        }
+    }
+    pub fn get_end_line(&self) -> usize {
+        self.get_location()[2]
+    }
+    pub fn get_end_column(&self) -> usize {
+        self.get_location()[3]
+    }
+}
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]
 pub enum CommentKind {

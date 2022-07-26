@@ -1,4 +1,4 @@
-mod helpers;
+pub mod helpers;
 pub mod token;
 use super::error::CompileError;
 use helpers::*;
@@ -467,7 +467,7 @@ mod tests {
     }
     #[test]
     fn it_scans_characters() {
-        let tokens = tokenize("@set character = 's'; @set newline = '\\n'");
+        let tokens = tokenize("@let character = 's'; @let newline = '\\n'");
         assert_eq!(
             tokens[4],
             Character {

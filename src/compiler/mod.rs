@@ -1,3 +1,5 @@
+use std::fs;
+
 use super::cli::exit_with_error;
 mod error;
 mod parser;
@@ -28,7 +30,6 @@ pub fn run(file: String) {
         );
         exit_with_error(err.message.as_str());
     });
-    println!("{:#?}", &tokens);
     let ast = parser::parse(tokens).unwrap_or_else(|err| {
         eprintln!(
             "Error encountered while parsing on {}:{}",
@@ -36,4 +37,5 @@ pub fn run(file: String) {
         );
         exit_with_error(err.message.as_str());
     });
+    fs::write("src/result.txt", format!("{:#?}", ast)).unwrap();
 }
