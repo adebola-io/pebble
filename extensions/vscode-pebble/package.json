@@ -1,8 +1,9 @@
 {
   "name": "vscode-pebble",
-  "displayName": "vscode-pebble",
-  "description": "The Pebble Programming Language",
-  "icon": "./icon.png",
+  "displayName": "Pebble",
+  "description": "Support for the Pebble Programming Language",
+  "publisher": "adebola-xyz",
+  "icon": "./icons/pebble-color.svg",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.54.0"

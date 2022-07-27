@@ -153,7 +153,7 @@ impl Parser {
         self.next();
         Ok(exp)
     }
-    // Parse a paremthesized group.
+    // Parse a parenthesized group.
     fn parse_group(&mut self) -> ExpressionOrError {
         self.next(); // Move past the left parenthesis.
         self.operator_stack.push("temp".to_string()); // A mock operator, which prevents the parenthesized group from affecting outer operators.
@@ -177,6 +177,11 @@ impl Parser {
                 | ">=" => Ok(self.parse_binary_expression(node, value)?),
                 _ => Ok(node),
             }
+        } else if let Token::Bracket { kind, .. } = self.token.clone() {
+            match kind {
+                BracketKind::LParen => Ok(self.parse_call_expression(node)?),
+                _ => Ok(node),
+            }
         } else {
             Ok(node)
         }
@@ -195,6 +200,29 @@ impl Parser {
             self.operator_stack.pop();
             let memexp = Expression::member_expression(object, property);
             Ok(self.reparse(memexp)?)
+        }
+    }
+    fn parse_call_expression(&mut self, callee: Expression) -> ExpressionOrError {
+        if self.is_lower_precedence("(") {
+            Ok(callee)
+        } else {
+            self.next(); // Move past parenthesis.
+            let mut arguments = vec![];
+            while !(self.end || self.token.is_bracket(BracketKind::RParen)) {
+                let argument = self.parse_expression()?;
+                arguments.push(argument);
+                if self.token.is_comma() {
+                    self.next()
+                }
+            }
+            let end = self.token.get_location();
+            if self.end {
+                self.error("Expected a ')' here.")?;
+            } else {
+                self.next();
+            }
+            let callexp = Expression::call_expression(callee, arguments, end);
+            Ok(self.reparse(callexp)?)
         }
     }
     /// Parses a binary expression, e.g 2 + 2, 3 * 6, etc.

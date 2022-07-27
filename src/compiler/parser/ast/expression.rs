@@ -20,6 +20,11 @@ pub enum Expression {
         property: Box<Expression>,
         range: NodeRange,
     },
+    CallExpression {
+        callee: Box<Expression>,
+        arguments: Vec<Expression>,
+        range: NodeRange,
+    },
     BinaryExpression {
         operator: String,
         left: Box<Expression>,
@@ -43,6 +48,14 @@ impl Expression {
             left: Box::new(left_node),
             right: Box::new(right_node),
             range: [left_range[0], left_range[1], right_range[2], right_range[3]],
+        }
+    }
+    pub fn call_expression(callee: Expression, arguments: Vec<Expression>, end: NodeRange) -> Self {
+        let callee_range = callee.get_range();
+        Expression::CallExpression {
+            callee: Box::new(callee),
+            arguments,
+            range: [callee_range[0], callee_range[1], end[2], end[3]],
         }
     }
     pub fn member_expression(object: Expression, property: Expression) -> Self {
@@ -90,6 +103,7 @@ impl Location for Expression {
             Self::Identifier { range, .. }
             | Self::Number { range, .. }
             | Self::BinaryExpression { range, .. }
+            | Self::CallExpression { range, .. }
             | Self::MemberExpression { range, .. }
             | Self::AssignmentExpression { range, .. } => *range,
         }
