@@ -37,6 +37,16 @@ pub enum Expression {
         right: Box<Expression>,
         range: NodeRange,
     },
+    SelfExpression {
+        range: NodeRange,
+    },
+    NothingExpression {
+        range: NodeRange,
+    },
+    Boolean {
+        value: String,
+        range: NodeRange,
+    },
 }
 
 impl Expression {
@@ -72,6 +82,15 @@ impl Expression {
             ],
         }
     }
+    pub fn self_expression(loc: NodeRange) -> Self {
+        Self::SelfExpression { range: loc }
+    }
+    pub fn boolean(value: String, loc: NodeRange) -> Self {
+        Self::Boolean { value, range: loc }
+    }
+    pub fn nothing_expression(loc: NodeRange) -> Self {
+        Self::NothingExpression { range: loc }
+    }
     pub fn identifier(token: Token) -> Self {
         if let Token::Identifier { value, loc } = token {
             Expression::Identifier {
@@ -102,6 +121,9 @@ impl Location for Expression {
             Self::Null => [0, 0, 0, 0],
             Self::Identifier { range, .. }
             | Self::Number { range, .. }
+            | Self::Boolean { range, .. }
+            | Self::SelfExpression { range }
+            | Self::NothingExpression { range }
             | Self::BinaryExpression { range, .. }
             | Self::CallExpression { range, .. }
             | Self::MemberExpression { range, .. }

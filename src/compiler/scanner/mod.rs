@@ -272,6 +272,8 @@ impl Scanner {
         let loc = self.store;
         if is_keyword(&value) {
             token = Keyword { value, loc };
+        } else if is_literal(&value) {
+            token = Literal { value, loc };
         } else {
             token = Identifier { value, loc };
         }

@@ -40,6 +40,10 @@ pub enum Token {
         value: String,
         loc: [usize; 4],
     },
+    Literal {
+        value: String,
+        loc: [usize; 4],
+    },
     Bracket {
         kind: BracketKind,
         loc: [usize; 4],
@@ -73,6 +77,7 @@ impl Token {
             | Self::Number { loc, .. }
             | Self::Character { loc, .. }
             | Self::Keyword { loc, .. }
+            | Self::Literal { loc, .. }
             | Self::Identifier { loc, .. }
             | Self::StringToken { loc, .. }
             | Self::Injunction { loc, .. }

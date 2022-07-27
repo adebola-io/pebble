@@ -25,6 +25,9 @@ pub const OPERATORS: &'static [&'static str; 37] = &[
     "%", "*", "!", "~", "?",
 ];
 
+pub const LITERALS: &'static [&'static str; 6] =
+    &["true", "false", "self", "core", "nothing", "super"];
+
 /// Return the precedence of an operator according to the Pebble precedence chart.
 /// An operator with a higher precedence has a higher influence on parsing arrangement than one with a lower precedence.
 pub fn precedence_of(operator: &str) -> usize {
@@ -48,4 +51,7 @@ pub fn is_injunction_value(value: &str) -> bool {
 }
 pub fn is_keyword(value: &str) -> bool {
     KEYWORDS.contains(&value)
+}
+pub fn is_literal(value: &str) -> bool {
+    LITERALS.contains(&value)
 }

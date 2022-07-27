@@ -129,6 +129,10 @@ impl Parser {
                 let exp = self.parse_identifier()?;
                 Ok(self.reparse(exp)?)
             }
+            Token::Literal { .. } => {
+                let exp = self.parse_literal()?;
+                Ok(self.reparse(exp)?)
+            }
             // an open bracket token (
             Token::Bracket {
                 kind: BracketKind::LParen,
@@ -142,10 +146,25 @@ impl Parser {
     }
     /// Parses a number token into a node.
     fn parse_number(&mut self) -> ExpressionOrError {
-        let exp;
-        exp = Expression::number(self.token.clone());
+        let exp = Expression::number(self.token.clone());
         self.next();
         Ok(exp)
+    }
+    fn parse_literal(&mut self) -> ExpressionOrError {
+        let exp = match &self.token {
+            Token::Literal { value, loc } => match value.as_str() {
+                "true" | "false" => Ok(Expression::boolean(value.clone(), *loc)),
+                "self" => Ok(Expression::self_expression(*loc)),
+                "nothing" => Ok(Expression::nothing_expression(*loc)),
+                _ => panic!(),
+            },
+            _ => {
+                self.error("Error. Expected a literal value.")?;
+                panic!()
+            }
+        };
+        self.next();
+        exp
     }
     /// Parses an identifier token into a node.
     fn parse_identifier(&mut self) -> ExpressionOrError {
@@ -170,20 +189,18 @@ impl Parser {
         if self.token.is_semi_colon() {
             return Ok(node);
         }
-        if let Token::Operator { value, .. } = self.token.clone() {
-            match value.as_str() {
+        match &self.token {
+            Token::Operator { value, .. } => match value.as_str() {
                 "." => Ok(self.parse_member_expression(node)?),
                 "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<" | "<="
-                | ">=" => Ok(self.parse_binary_expression(node, value)?),
+                | ">=" => Ok(self.parse_binary_expression(node, value.clone())?),
                 _ => Ok(node),
-            }
-        } else if let Token::Bracket { kind, .. } = self.token.clone() {
-            match kind {
-                BracketKind::LParen => Ok(self.parse_call_expression(node)?),
-                _ => Ok(node),
-            }
-        } else {
-            Ok(node)
+            },
+            Token::Bracket {
+                kind: BracketKind::LParen,
+                ..
+            } => Ok(self.parse_call_expression(node)?),
+            _ => Ok(node),
         }
     }
     // Parses a member expression, e.g. core.format, person.age.
@@ -202,6 +219,7 @@ impl Parser {
             Ok(self.reparse(memexp)?)
         }
     }
+    /// Parses a call expression.
     fn parse_call_expression(&mut self, callee: Expression) -> ExpressionOrError {
         if self.is_lower_precedence("(") {
             Ok(callee)
@@ -343,4 +361,6 @@ mod tests {
             }
         )
     }
+    #[test]
+    fn it_parses_call_expressions() {}
 }

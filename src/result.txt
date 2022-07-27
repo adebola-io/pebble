@@ -3,180 +3,31 @@ Program {
         1,
         1,
         1,
-        61,
+        5,
     ],
     body: Block {
         range: [
             1,
             1,
             1,
-            61,
+            5,
         ],
         statements: [
             ExpressionStatement {
-                expression: BinaryExpression {
-                    operator: "+",
-                    left: CallExpression {
-                        callee: BinaryExpression {
-                            operator: "+",
-                            left: CallExpression {
-                                callee: MemberExpression {
-                                    object: Identifier {
-                                        name: "person",
-                                        range: [
-                                            1,
-                                            1,
-                                            1,
-                                            7,
-                                        ],
-                                    },
-                                    property: Identifier {
-                                        name: "getAge",
-                                        range: [
-                                            1,
-                                            8,
-                                            1,
-                                            14,
-                                        ],
-                                    },
-                                    range: [
-                                        1,
-                                        1,
-                                        1,
-                                        14,
-                                    ],
-                                },
-                                arguments: [
-                                    Number {
-                                        kind: Decimal,
-                                        value: "22",
-                                        raw: "22",
-                                        range: [
-                                            1,
-                                            15,
-                                            1,
-                                            17,
-                                        ],
-                                    },
-                                    Number {
-                                        kind: Decimal,
-                                        value: "66",
-                                        raw: "66",
-                                        range: [
-                                            1,
-                                            19,
-                                            1,
-                                            21,
-                                        ],
-                                    },
-                                    Identifier {
-                                        name: "yy",
-                                        range: [
-                                            1,
-                                            23,
-                                            1,
-                                            25,
-                                        ],
-                                    },
-                                ],
-                                range: [
-                                    1,
-                                    1,
-                                    1,
-                                    26,
-                                ],
-                            },
-                            right: MemberExpression {
-                                object: MemberExpression {
-                                    object: Identifier {
-                                        name: "person",
-                                        range: [
-                                            1,
-                                            29,
-                                            1,
-                                            35,
-                                        ],
-                                    },
-                                    property: Identifier {
-                                        name: "child",
-                                        range: [
-                                            1,
-                                            36,
-                                            1,
-                                            41,
-                                        ],
-                                    },
-                                    range: [
-                                        1,
-                                        29,
-                                        1,
-                                        41,
-                                    ],
-                                },
-                                property: Identifier {
-                                    name: "getAge",
-                                    range: [
-                                        1,
-                                        42,
-                                        1,
-                                        48,
-                                    ],
-                                },
-                                range: [
-                                    1,
-                                    29,
-                                    1,
-                                    48,
-                                ],
-                            },
-                            range: [
-                                1,
-                                1,
-                                1,
-                                48,
-                            ],
-                        },
-                        arguments: [
-                            Identifier {
-                                name: "false",
-                                range: [
-                                    1,
-                                    49,
-                                    1,
-                                    54,
-                                ],
-                            },
-                        ],
-                        range: [
-                            1,
-                            1,
-                            1,
-                            55,
-                        ],
-                    },
-                    right: Number {
-                        kind: Decimal,
-                        value: "999",
-                        raw: "999",
-                        range: [
-                            1,
-                            58,
-                            1,
-                            61,
-                        ],
-                    },
+                expression: Boolean {
+                    value: "true",
                     range: [
                         1,
                         1,
                         1,
-                        61,
+                        5,
                     ],
                 },
                 range: [
                     1,
                     1,
                     1,
-                    61,
+                    5,
                 ],
             },
         ],
