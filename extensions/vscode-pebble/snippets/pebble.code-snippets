@@ -43,6 +43,16 @@
       "}"
     ]
   },
+  "Interface Declaration": {
+    "prefix": "@int",
+    "description": "Autofill syntax for interface.",
+    "body": ["@interface ${1:Name} {", "   ${2:trait}: ${3:TraitType};", "}"]
+  },
+  "Implementation": {
+    "prefix": "@impl",
+    "description": "Implement a interface inside a struct.",
+    "body": "@implement ${1:Interface};"
+  },
   "Struct": {
     "prefix": ["@str", "@struct"],
     "description": "Creates a new structure.",

@@ -8,7 +8,7 @@ use super::{
         token::{BracketKind, NumericKind, Token},
     },
 };
-use ast::{Block, Expression, Literal, NodeRange, Program, Statement};
+use ast::{Block, Expression, NodeRange, Program, Statement};
 
 type ParseResult = Result<Program, CompileError>;
 type ParseInternalResult = Result<(), CompileError>;
@@ -155,7 +155,7 @@ impl Parser {
             Token::Literal { value, loc } => match value.as_str() {
                 "true" | "false" => Ok(Expression::boolean(value.clone(), *loc)),
                 "self" => Ok(Expression::self_expression(*loc)),
-                "nil" => Ok(Expression::nothing_expression(*loc)),
+                "nil" => Ok(Expression::nil_expression(*loc)),
                 _ => panic!(),
             },
             _ => {
@@ -187,21 +187,31 @@ impl Parser {
     }
     fn reparse(&mut self, node: Expression) -> ExpressionOrError {
         if self.token.is_semi_colon() {
-            return Ok(node);
-        }
-        match &self.token {
-            Token::Operator { value, .. } => match value.as_str() {
-                "||" | "&&" => Ok(self.parse_logical_expression(node, value.clone())?),
-                "." => Ok(self.parse_member_expression(node)?),
-                "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<" | "<="
-                | ">=" => Ok(self.parse_binary_expression(node, value.clone())?),
+            Ok(node)
+        } else {
+            match &self.token {
+                Token::Operator { value, .. } => match value.as_str() {
+                    "||" | "&&" => Ok(self.parse_logical_expression(node, value.clone())?),
+                    "." => Ok(self.parse_member_expression(node)?),
+                    ".." => Ok(self.parse_range_expression(node)?),
+                    "+=" | "/=" | "||=" | "&&=" | "*=" | "-=" | "%=" | "=" => {
+                        Ok(self.parse_assignment_expression(node, value.clone())?)
+                    }
+                    "++" | "--" => Ok(self.parse_update_expression(node, value.clone())?),
+                    "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<"
+                    | "<=" | ">=" => Ok(self.parse_binary_expression(node, value.clone())?),
+                    _ => Ok(node),
+                },
+                Token::Bracket {
+                    kind: BracketKind::LParen,
+                    ..
+                } => Ok(self.parse_call_expression(node)?),
+                Token::Bracket {
+                    kind: BracketKind::LSquare,
+                    ..
+                } => Ok(self.parse_access_expression(node)?),
                 _ => Ok(node),
-            },
-            Token::Bracket {
-                kind: BracketKind::LParen,
-                ..
-            } => Ok(self.parse_call_expression(node)?),
-            _ => Ok(node),
+            }
         }
     }
     // Parses a member expression, e.g. core.format, person.age.
@@ -220,7 +230,50 @@ impl Parser {
             Ok(self.reparse(memexp)?)
         }
     }
-    /// Parses a call expression.
+    /// Parses an update expression, e,g i++, y--
+    fn parse_update_expression(
+        &mut self,
+        value: Expression,
+        operator: String,
+    ) -> ExpressionOrError {
+        if self.is_lower_precedence(operator.as_str()) {
+            Ok(value)
+        } else {
+            let updexp = Expression::update_expression(value, self.token.clone());
+            self.next(); // Move past ++ or --
+            Ok(self.reparse(updexp)?)
+        }
+    }
+    /// Parses a range expression, e.g. 0..2, x..y
+    fn parse_range_expression(&mut self, lower_boundary: Expression) -> ExpressionOrError {
+        if self.is_lower_precedence("..") {
+            Ok(lower_boundary)
+        } else {
+            self.next();
+            self.operator_stack.push("..".to_string()); // Move past ..
+            let upper_boundary = self.parse_expression()?;
+            self.operator_stack.pop();
+            let rangexp = Expression::range_expression(lower_boundary, upper_boundary);
+            Ok(self.reparse(rangexp)?)
+        }
+    }
+    /// Parses an assignment expression.
+    fn parse_assignment_expression(
+        &mut self,
+        left_node: Expression,
+        operator: String,
+    ) -> ExpressionOrError {
+        if self.is_lower_precedence("=") {
+            Ok(left_node)
+        } else {
+            self.next(); // Move past the operator.
+            self.operator_stack.push("=".to_string());
+            let right_node = self.parse_expression()?;
+            let assexp = Expression::assignment_expression(left_node, operator, right_node);
+            Ok(self.reparse(assexp)?)
+        }
+    }
+    /// Parses a call expression. foo(bar), greet()
     fn parse_call_expression(&mut self, callee: Expression) -> ExpressionOrError {
         if self.is_lower_precedence("(") {
             Ok(callee)
@@ -243,6 +296,23 @@ impl Parser {
             let callexp = Expression::call_expression(callee, arguments, end);
             Ok(self.reparse(callexp)?)
         }
+    }
+    /// Parses an access expression. e.g. foo[bar], names[2]
+    fn parse_access_expression(&mut self, arr: Expression) -> ExpressionOrError {
+        if self.is_lower_precedence("[") {
+            return Ok(arr);
+        }
+        let mut end = [0, 0, 0, 0];
+        self.next(); // Move past [.
+        let element = self.parse_expression()?;
+        if !self.token.is_bracket(BracketKind::RSquare) {
+            self.error("Expected a ']' here.")?;
+        } else {
+            end = self.token.get_location();
+            self.next();
+        }
+        let accexp = Expression::access_expression(arr, element, end);
+        Ok(self.reparse(accexp)?)
     }
     /// Parses a logical expression, e.g isTall && isFair, 7 > 4 && 5 < 11 etc.
     fn parse_logical_expression(

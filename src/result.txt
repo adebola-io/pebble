@@ -3,21 +3,20 @@ Program {
         1,
         1,
         1,
-        18,
+        7,
     ],
     body: Block {
         range: [
             1,
             1,
             1,
-            18,
+            7,
         ],
         statements: [
             ExpressionStatement {
-                expression: LogicalExpression {
-                    operator: "&&",
-                    left: Boolean {
-                        value: "true",
+                expression: UpdateExpression {
+                    variable: Identifier {
+                        name: "name",
                         range: [
                             1,
                             1,
@@ -25,47 +24,19 @@ Program {
                             5,
                         ],
                     },
-                    right: BinaryExpression {
-                        operator: "+",
-                        left: Boolean {
-                            value: "false",
-                            range: [
-                                1,
-                                9,
-                                1,
-                                14,
-                            ],
-                        },
-                        right: Number {
-                            kind: Decimal,
-                            value: "7",
-                            raw: "7",
-                            range: [
-                                1,
-                                17,
-                                1,
-                                18,
-                            ],
-                        },
-                        range: [
-                            1,
-                            9,
-                            1,
-                            18,
-                        ],
-                    },
+                    operator: "++",
                     range: [
                         1,
                         1,
                         1,
-                        18,
+                        7,
                     ],
                 },
                 range: [
                     1,
                     1,
                     1,
-                    18,
+                    7,
                 ],
             },
         ],

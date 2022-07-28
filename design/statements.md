@@ -78,16 +78,23 @@ The four types of statements in Pebble are:
 
     Other things that may not be noticed from the example, but are equally important, are:
 
-    1. **The arguments of a function, and other outer variables, are treated as constants.** When parameters are passed into a function, they cannot be mutated within the scope of that function. Therefore, assigning new values to a function argument is not allowed. If those values must be changed, consider saving the mutation into another variable. For example, the following code sample will fail to compile.
+    1. **The arguments of a function are treated as constants.** When parameters are passed into a function, they cannot be mutated within the scope of that function. Therefore, assigning new values to a function argument is not allowed. If those values must be changed, consider saving the mutation into another variable. For example, the following code sample will fail to compile.
 
     ```pebble
         ## Subtracts two from a number.
         @function subtract(x: Number, y: Number) {
           x = x - y; // Brings up an error.
         }
+    ```
 
-        @let x = 9;
-        subtract(x, 2);
+    1. **Outer variables cannot be accessed from within a function** A variable that is defined outside of a function cannot be accessed from within the scope of the function. Therefore, the following code sample will fail to compile.
+
+    ```pebble
+      @let name = "Sefunmi";
+
+      @function getName() {
+        println name; // Brings up an error.
+      }
     ```
 
   - ### `Struct Declarations`

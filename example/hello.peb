@@ -1,14 +1,1 @@
- ## Adds two numbers together.
-    @function addNum(m: Number, n: Number) -> Number {
-      @let sum = m + n;
-      return sum;
-    }
-
-    println addNum(2, 2); // Will print out 4.
-
-    ## Prints a greeting.
-    @function greet() {
-      println "Hello, world!";
-    }
-
-    greet(); // Will print out "Hello, world!".
+name++;
