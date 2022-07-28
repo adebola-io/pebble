@@ -7,12 +7,24 @@
   "Function Declaration": {
     "prefix": "@func",
     "description": "Creates a new function declaration",
-    "body": ["@func ${1:name}() {", "   $2", "}"]
+    "body": ["@function ${1:name}() {", "   $2", "}"]
+  },
+  "Record Declaration": {
+    "prefix": "@rec",
+    "body": [
+      "@record ${1:RECORD_NAME} = {",
+      "   ${2:property} -> ${3:value}",
+      "}"
+    ]
+  },
+  "Constant Declaration": {
+    "prefix": "@const",
+    "body": "@const $1"
   },
   "Function Declaration with parameters": {
     "prefix": "@funcp",
     "description": "Creates a new function declaration with parameters",
-    "body": ["@func ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
+    "body": ["@function ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
   },
   "Use Declaration": {
     "prefix": "@use",
@@ -35,5 +47,10 @@
     "prefix": ["@str", "@struct"],
     "description": "Creates a new structure.",
     "body": ["@struct ${1:Name} {", "   $2", "}"]
+  },
+  "Enum": {
+    "prefix": "@enum",
+    "description": "Creates a new enum type.",
+    "body": ["@enum ${1:Name} {", "   ${2:Variant}", "}"]
   }
 }

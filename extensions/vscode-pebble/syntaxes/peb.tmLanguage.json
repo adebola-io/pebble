@@ -15,6 +15,7 @@
     { "include": "#enumerated" },
     { "include": "#return_type" },
     { "include": "#custom_type" },
+    { "include": "#constant" },
     { "include": "#type_label" },
     { "include": "#identifier" }
   ],
@@ -105,24 +106,35 @@
     },
     "literal": {
       "name": "constant.language.literal",
-      "match": "\\b(?<![\\d$@])(true|false|self|nothing|core|new|readonly|constructor)(?![$@])\\b"
+      "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|readonly|constructor)(?![$@])\\b"
     },
     "custom_type": {
       "begin": "(?<=(@(enum|struct|utilize|interface|implement|type))\\s+)",
       "patterns": [{ "include": "#type" }],
       "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
     },
+    "constant": {
+      "name": "constant.other.caps support.constant variable.other.constant",
+      "begin": "(?<=(@(record|const))\\s+)",
+      "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+    },
     "injunction": {
-      "name": "meta.injunction keyword.injunction",
-      "match": "(?<![\\w$@])@(use|public|prepend|type|let|func|const|enum|struct|utilize|rec|interface|implement)(?![$@])\\b"
+      "name": "meta.injunction keyword.storage.injunction",
+      "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|struct|utilize|record|interface|implement)(?![$@])\\b"
     },
     "keyword": {
       "name": "keyword.control",
-      "match": "\\b(?<![$@\\.])(for|in|do|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case)(?![$@])\\b"
+      "match": "\\b(?<![$@\\.])(for|fn|in|do|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case|loop)(?![$@])\\b"
     },
     "function": {
-      "name": "entity.name.function",
-      "match": "(?<![\\d@])\\w+(?=\\s*\\()"
+      "begin": "(?<![\\d@])(\\w+)(?=\\s*(\\<|\\())",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function"
+        }
+      },
+      "patterns": [{ "include": "#type_argument" }],
+      "end": "(?=\\s*\\()"
     },
     "inferred_function": {
       "name": "entity.name.function",
@@ -140,8 +152,8 @@
       }
     },
     "return_type": {
-      "begin": "(?<=\\s*\\((\\s|\\S)*\\)\\s*)\\=\\>\\s*",
-      "patterns": [{ "include": "#type" }],
+      "begin": "(?<=\\s*\\((\\s|\\S)*\\)\\s*)\\-\\>\\s*",
+      "patterns": [{ "include": "#literal" }, { "include": "#type" }],
       "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
     },
     "type_label": {

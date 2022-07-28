@@ -1,0 +1,9 @@
+{
+  "$schema": "../design/config.schema.json",
+  "name": "new-pebble-project",
+  "version": "0.0.0",
+  "description": "The template for a new Pebble project.",
+  "config": {
+    "documentation": "public-only"
+  }
+}

@@ -155,7 +155,7 @@ impl Parser {
             Token::Literal { value, loc } => match value.as_str() {
                 "true" | "false" => Ok(Expression::boolean(value.clone(), *loc)),
                 "self" => Ok(Expression::self_expression(*loc)),
-                "nothing" => Ok(Expression::nothing_expression(*loc)),
+                "nil" => Ok(Expression::nothing_expression(*loc)),
                 _ => panic!(),
             },
             _ => {
@@ -191,6 +191,7 @@ impl Parser {
         }
         match &self.token {
             Token::Operator { value, .. } => match value.as_str() {
+                "||" | "&&" => Ok(self.parse_logical_expression(node, value.clone())?),
                 "." => Ok(self.parse_member_expression(node)?),
                 "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<" | "<="
                 | ">=" => Ok(self.parse_binary_expression(node, value.clone())?),
@@ -241,6 +242,23 @@ impl Parser {
             }
             let callexp = Expression::call_expression(callee, arguments, end);
             Ok(self.reparse(callexp)?)
+        }
+    }
+    /// Parses a logical expression, e.g isTall && isFair, 7 > 4 && 5 < 11 etc.
+    fn parse_logical_expression(
+        &mut self,
+        left_node: Expression,
+        operator: String,
+    ) -> ExpressionOrError {
+        if self.is_lower_precedence(&operator) {
+            Ok(left_node)
+        } else {
+            self.next(); // Move past operator.
+            self.operator_stack.push(operator.clone());
+            let right_node = self.parse_expression()?;
+            self.operator_stack.pop();
+            let logexp = Expression::logical_expression(left_node, operator, right_node);
+            Ok(self.reparse(logexp)?)
         }
     }
     /// Parses a binary expression, e.g 2 + 2, 3 * 6, etc.

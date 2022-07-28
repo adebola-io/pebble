@@ -31,6 +31,12 @@ pub enum Expression {
         right: Box<Expression>,
         range: NodeRange,
     },
+    LogicalExpression {
+        operator: String,
+        left: Box<Expression>,
+        right: Box<Expression>,
+        range: NodeRange,
+    },
     AssignmentExpression {
         operator: String,
         left: Box<Expression>,
@@ -54,6 +60,16 @@ impl Expression {
         let left_range = left_node.get_range();
         let right_range = right_node.get_range();
         Expression::BinaryExpression {
+            operator,
+            left: Box::new(left_node),
+            right: Box::new(right_node),
+            range: [left_range[0], left_range[1], right_range[2], right_range[3]],
+        }
+    }
+    pub fn logical_expression(left_node: Self, operator: String, right_node: Self) -> Self {
+        let left_range = left_node.get_range();
+        let right_range = right_node.get_range();
+        Expression::LogicalExpression {
             operator,
             left: Box::new(left_node),
             right: Box::new(right_node),
@@ -125,6 +141,7 @@ impl Location for Expression {
             | Self::SelfExpression { range }
             | Self::NothingExpression { range }
             | Self::BinaryExpression { range, .. }
+            | Self::LogicalExpression { range, .. }
             | Self::CallExpression { range, .. }
             | Self::MemberExpression { range, .. }
             | Self::AssignmentExpression { range, .. } => *range,

@@ -4,41 +4,40 @@ pub const INJUNCTIONS: &'static [&'static str; 13] = &[
     "struct",
     "public",
     "utilize",
-    "rec",
-    "constant",
+    "record",
+    "const",
     "let",
     "enum",
-    "func",
+    "function",
     "type",
     "use",
     "prepend",
 ];
 
-pub const KEYWORDS: &'static [&'static str; 19] = &[
-    "if", "else", "for", "in", "of", "match", "case", "from", "as", "do", "while", "break",
-    "continue", "return", "crash", "try", "recover", "println", "readonly",
+pub const KEYWORDS: &'static [&'static str; 21] = &[
+    "if", "else", "for", "fn", "in", "of", "match", "loop", "case", "from", "as", "do", "while",
+    "break", "continue", "return", "crash", "try", "recover", "println", "readonly",
 ];
 
-pub const OPERATORS: &'static [&'static str; 37] = &[
-    "&&=", "||=", "...", "||", "&&", "..", ">>", "<<", "=>", ">=", "<=", "!=", "==", "*=", "-=",
-    "/=", "%=", "+=", "++", "**", "--", "::", "^", ".", "=", "+", "-", ">", "<", "/", "&", "|",
-    "%", "*", "!", "~", "?",
+pub const OPERATORS: &'static [&'static str; 38] = &[
+    "&&=", "||=", "...", "||", "&&", "..", ">>", "<<", "=>", "->", ">=", "<=", "!=", "==", "*=",
+    "-=", "/=", "%=", "+=", "++", "**", "--", "::", "^", ".", "=", "+", "-", ">", "<", "/", "&",
+    "|", "%", "*", "!", "~", "?",
 ];
 
-pub const LITERALS: &'static [&'static str; 6] =
-    &["true", "false", "self", "core", "nothing", "super"];
+pub const LITERALS: &'static [&'static str; 6] = &["true", "false", "self", "core", "nil", "super"];
 
 /// Return the precedence of an operator according to the Pebble precedence chart.
 /// An operator with a higher precedence has a higher influence on parsing arrangement than one with a lower precedence.
 pub fn precedence_of(operator: &str) -> usize {
     match operator {
-        ")" => 19,
         "." => 18,
         "**" => 10,
         "*" => 9,
         "+" => 8,
         "-" => 8,
-        "[" => 18,
+        "&&" => 5,
+        "||" => 4,
         _ => 0,
     }
 }
