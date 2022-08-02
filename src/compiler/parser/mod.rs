@@ -150,6 +150,7 @@ impl Parser {
         self.next();
         Ok(exp)
     }
+    /// Parses a literal expression, e.g. true, false, self, etc.
     fn parse_literal(&mut self) -> ExpressionOrError {
         let exp = match &self.token {
             Token::Literal { value, loc } => match value.as_str() {
@@ -280,6 +281,7 @@ impl Parser {
         } else {
             self.next(); // Move past parenthesis.
             let mut arguments = vec![];
+            self.operator_stack.push("temp".to_string());
             while !(self.end || self.token.is_bracket(BracketKind::RParen)) {
                 let argument = self.parse_expression()?;
                 arguments.push(argument);
@@ -287,6 +289,7 @@ impl Parser {
                     self.next()
                 }
             }
+            self.operator_stack.pop();
             let end = self.token.get_location();
             if self.end {
                 self.error("Expected a ')' here.")?;
@@ -304,6 +307,7 @@ impl Parser {
         }
         let mut end = [0, 0, 0, 0];
         self.next(); // Move past [.
+        self.operator_stack.push("temp".to_string());
         let element = self.parse_expression()?;
         if !self.token.is_bracket(BracketKind::RSquare) {
             self.error("Expected a ']' here.")?;
@@ -311,6 +315,7 @@ impl Parser {
             end = self.token.get_location();
             self.next();
         }
+        self.operator_stack.pop();
         let accexp = Expression::access_expression(arr, element, end);
         Ok(self.reparse(accexp)?)
     }

@@ -28,7 +28,7 @@
           "type": "string"
         },
         "documentation": {
-          "description": "This determines how the compiler should expect documentation comments. The default value is not-required",
+          "description": "This determines how the compiler should expect documentation comments. The default value is not-required.",
           "type": "string",
           "enum": [
             "strict-required",

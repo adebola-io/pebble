@@ -109,7 +109,7 @@
       "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|static|readonly|constructor)(?![$@])\\b"
     },
     "custom_type": {
-      "begin": "(?<=(@(enum|struct|utilize|interface|implement|type))\\s+)",
+      "begin": "(?<=(@(enum|struct|utilize|interface|type|implement))\\s+)",
       "patterns": [{ "include": "#type" }],
       "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
     },
@@ -175,7 +175,7 @@
     },
     "instantiator": {
       "name": "meta.struct struct entity.name.class",
-      "match": "(?<=new\\s+((\\w+.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
+      "match": "(?<=(new|@implement)\\s+((\\w+.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
     },
     "identifier": {
       "name": "identifier meta.identifier variable.identifier",
