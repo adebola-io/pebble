@@ -151,6 +151,14 @@ impl Parser {
                 let exp = self.parse_group()?;
                 Ok(self.reparse(exp)?)
             }
+            // An open square bracket [
+            Token::Bracket {
+                kind: BracketKind::LSquare,
+                ..
+            } => {
+                let exp = self.parse_array_expression()?;
+                Ok(self.reparse(exp)?)
+            }
             _ => Ok(Expression::Null),
         }
     }
@@ -269,6 +277,34 @@ impl Parser {
         self.operator_stack.pop();
         let expression = Expression::unary_expression(argument, optoken);
         Ok(self.reparse(expression)?)
+    }
+    /// Parses an array expression. e.g. [1, 2, 3]
+    fn parse_array_expression(&mut self) -> ExpressionOrError {
+        let start = self.token.get_location();
+        let mut elements = vec![];
+        self.operator_stack.push("arr".to_string()); // Mock operator to prevent precedence clashing.
+        self.next(); // Move past [
+        while !(self.end || self.token.is_bracket(BracketKind::RSquare)) {
+            let element = self.parse_expression()?;
+            elements.push(element);
+            if self.token.is_comma() {
+                self.next();
+            } else if self.token.is_bracket(BracketKind::RSquare) {
+                break;
+            } else {
+                self.error("Expected a comma here. ")?;
+                panic!()
+            }
+        }
+        if !self.token.is_bracket(BracketKind::RSquare) {
+            self.error("Expected a closing bracket ] here. ")?;
+            panic!();
+        }
+        let end = self.token.get_location();
+        self.next();
+        self.operator_stack.pop();
+        let arrexp = Expression::array_expression(start, elements, end);
+        Ok(self.reparse(arrexp)?)
     }
     /// Parses a range expression, e.g. 0..2, x..y
     fn parse_range_expression(&mut self, lower_boundary: Expression) -> ExpressionOrError {

@@ -48,6 +48,10 @@ pub enum Expression {
         right: Box<Expression>,
         range: NodeRange,
     },
+    ArrayExpression {
+        elements: Vec<Expression>,
+        range: NodeRange,
+    },
     UpdateExpression {
         variable: Box<Expression>,
         operator: String,
@@ -200,6 +204,12 @@ impl Expression {
             panic!("Cannot construct node. Expected an update token.")
         }
     }
+    pub fn array_expression(start: [usize; 4], elements: Vec<Self>, end: [usize; 4]) -> Self {
+        Expression::ArrayExpression {
+            elements,
+            range: [start[0], start[1], end[2], end[3]],
+        }
+    }
     pub fn unary_expression(variable: Self, operator: Token) -> Self {
         let value_range = variable.get_range();
         if let Token::Operator { value, loc } = operator {
@@ -265,6 +275,7 @@ impl Location for Expression {
             | Self::UnaryExpression { range, .. }
             | Self::MemberExpression { range, .. }
             | Self::AccessExpression { range, .. }
+            | Self::ArrayExpression { range, .. }
             | Self::RangeExpression { range, .. }
             | Self::NamespaceExpression { range, .. }
             | Self::TernaryExpression { range, .. }
