@@ -19,20 +19,22 @@ pub const KEYWORDS: &'static [&'static str; 22] = &[
     "break", "continue", "return", "crash", "try", "recover", "println", "readonly", "static",
 ];
 
-pub const OPERATORS: &'static [&'static str; 38] = &[
-    "&&=", "||=", "...", "||", "&&", "..", ">>", "<<", "=>", "->", ">=", "<=", "!=", "==", "*=",
-    "-=", "/=", "%=", "+=", "++", "**", "--", "::", "^", ".", "=", "+", "-", ">", "<", "/", "&",
-    "|", "%", "*", "!", "~", "?",
+pub const OPERATORS: &'static [&'static str; 39] = &[
+    "&&=", "||=", "...", "new", "||", "&&", "..", ">>", "<<", "=>", "->", ">=", "<=", "!=", "==",
+    "*=", "-=", "/=", "%=", "+=", "++", "**", "--", "::", "^", ".", "=", "+", "-", ">", "<", "/",
+    "&", "|", "%", "*", "!", "~", "?",
 ];
 
-pub const LITERALS: &'static [&'static str; 6] = &["true", "false", "self", "core", "nil", "super"];
+pub const LITERALS: &'static [&'static str; 5] = &["true", "false", "self", "core", "nil"];
 
 /// Return the precedence of an operator according to the Pebble precedence chart.
 /// An operator with a higher precedence has a higher influence on parsing arrangement than one with a lower precedence.
 pub fn precedence_of(operator: &str) -> usize {
     match operator {
-        "." => 18,
-        "::" => 17,
+        "." => 20,
+        "::" => 19,
+        "new" => 18,
+        "(" => 17,
         "[" => 16,
         "!" => 15,
         "--" => 14,

@@ -135,10 +135,16 @@ impl Parser {
                 }
             },
             // an identifier token.
-            Token::Identifier { .. } => {
-                let exp = self.parse_identifier()?;
-                Ok(self.reparse(exp)?)
-            }
+            Token::Identifier { value, .. } => match value.as_str() {
+                "new" => {
+                    let newxp = self.parse_new_expression()?;
+                    Ok(self.reparse(newxp)?)
+                }
+                _ => {
+                    let exp = self.parse_identifier()?;
+                    Ok(self.reparse(exp)?)
+                }
+            },
             Token::Literal { .. } => {
                 let exp = self.parse_literal()?;
                 Ok(self.reparse(exp)?)
@@ -277,6 +283,39 @@ impl Parser {
         self.operator_stack.pop();
         let expression = Expression::unary_expression(argument, optoken);
         Ok(self.reparse(expression)?)
+    }
+    /// Parses a new expression.
+    fn parse_new_expression(&mut self) -> ExpressionOrError {
+        let start = self.token.get_location();
+        self.next(); // Move past new.
+        self.operator_stack.push("new".to_string());
+        let construct = self.parse_expression()?;
+        let mut arguments = vec![];
+        let mut end = [0, 0, 0, 0];
+        self.operator_stack.pop();
+        if self.token.is_bracket(BracketKind::LParen) {
+            self.next(); // Move past parenthesis.
+            self.operator_stack.push("new_call".to_string());
+            while !(self.end || self.token.is_bracket(BracketKind::RParen)) {
+                let argument = self.parse_expression()?;
+                arguments.push(argument);
+                if self.token.is_comma() {
+                    self.next()
+                } else {
+                    self.error("A comma was expected here.")?;
+                }
+            }
+            if (self.end) {
+                self.error("A closing ) was expected.")?;
+            }
+            self.operator_stack.pop();
+            end = self.token.get_location();
+            self.next(); // Move past ).
+        } else {
+            self.error("New expressions must be constructed with arguments. Leave an empty parenthesis if no arguments are required.")?
+        };
+        let newexp = Expression::new_expression(start, construct, arguments, end);
+        Ok(self.reparse(newexp)?)
     }
     /// Parses an array expression. e.g. [1, 2, 3]
     fn parse_array_expression(&mut self) -> ExpressionOrError {

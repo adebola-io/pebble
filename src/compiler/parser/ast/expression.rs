@@ -52,6 +52,11 @@ pub enum Expression {
         elements: Vec<Expression>,
         range: NodeRange,
     },
+    NewExpression {
+        construct: Box<Expression>,
+        arguments: Vec<Expression>,
+        range: NodeRange,
+    },
     UpdateExpression {
         variable: Box<Expression>,
         operator: String,
@@ -204,6 +209,13 @@ impl Expression {
             panic!("Cannot construct node. Expected an update token.")
         }
     }
+    pub fn new_expression(start: [usize; 4], construct: Self, arguments: Vec<Self>, end: [usize; 4]) -> Self {
+        Expression::NewExpression {
+            construct: Box::new(construct),
+            arguments,
+            range: [start[0], start[1], end[2], end[3]],
+        }
+    }
     pub fn array_expression(start: [usize; 4], elements: Vec<Self>, end: [usize; 4]) -> Self {
         Expression::ArrayExpression {
             elements,
@@ -270,6 +282,7 @@ impl Location for Expression {
             | Self::NothingExpression { range }
             | Self::BinaryExpression { range, .. }
             | Self::LogicalExpression { range, .. }
+            | Self::NewExpression { range, .. }
             | Self::CallExpression { range, .. }
             | Self::UpdateExpression { range, .. }
             | Self::UnaryExpression { range, .. }
