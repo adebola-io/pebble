@@ -118,12 +118,22 @@ impl Parser {
     }
     /// Parses an expression.
     fn parse_expression(&mut self) -> ExpressionOrError {
-        match &self.token {
+        match self.token.clone() {
             // a number token.
             Token::Number { .. } => {
                 let number = self.parse_number()?;
                 Ok(self.reparse(number)?)
             }
+            Token::Operator { value, .. } => match value.as_str() {
+                "!" | "++" | "--" | "+" | "-" => {
+                    let unary = self.parse_unary_expression(value)?;
+                    Ok(self.reparse(unary)?)
+                }
+                _ => {
+                    self.error("Unexpected operator.")?;
+                    panic!();
+                }
+            },
             // an identifier token.
             Token::Identifier { .. } => {
                 let exp = self.parse_identifier()?;
@@ -173,7 +183,7 @@ impl Parser {
         self.next();
         Ok(exp)
     }
-    // Parse a parenthesized group.
+    /// Parse a parenthesized group.
     fn parse_group(&mut self) -> ExpressionOrError {
         self.next(); // Move past the left parenthesis.
         self.operator_stack.push("temp".to_string()); // A mock operator, which prevents the parenthesized group from affecting outer operators.
@@ -244,6 +254,16 @@ impl Parser {
             self.next(); // Move past ++ or --
             Ok(self.reparse(updexp)?)
         }
+    }
+    /// Parses a unary expression. e.g !true, -4;
+    fn parse_unary_expression(&mut self, operator: String) -> ExpressionOrError {
+        let optoken = self.token.clone();
+        self.next(); // Move past the operator.
+        self.operator_stack.push(operator);
+        let argument = self.parse_expression()?;
+        self.operator_stack.pop();
+        let expression = Expression::unary_expression(argument, optoken);
+        Ok(self.reparse(expression)?)
     }
     /// Parses a range expression, e.g. 0..2, x..y
     fn parse_range_expression(&mut self, lower_boundary: Expression) -> ExpressionOrError {

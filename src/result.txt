@@ -3,40 +3,92 @@ Program {
         1,
         1,
         1,
-        7,
+        29,
     ],
     body: Block {
         range: [
             1,
             1,
             1,
-            7,
+            29,
         ],
         statements: [
             ExpressionStatement {
-                expression: UpdateExpression {
-                    variable: Identifier {
-                        name: "name",
+                expression: AssignmentExpression {
+                    operator: "=",
+                    left: MemberExpression {
+                        object: Identifier {
+                            name: "state",
+                            range: [
+                                1,
+                                1,
+                                1,
+                                6,
+                            ],
+                        },
+                        property: Identifier {
+                            name: "change",
+                            range: [
+                                1,
+                                7,
+                                1,
+                                13,
+                            ],
+                        },
                         range: [
                             1,
                             1,
                             1,
-                            5,
+                            13,
                         ],
                     },
-                    operator: "++",
+                    right: UnaryExpression {
+                        variable: MemberExpression {
+                            object: Identifier {
+                                name: "state",
+                                range: [
+                                    1,
+                                    17,
+                                    1,
+                                    22,
+                                ],
+                            },
+                            property: Identifier {
+                                name: "change",
+                                range: [
+                                    1,
+                                    23,
+                                    1,
+                                    29,
+                                ],
+                            },
+                            range: [
+                                1,
+                                17,
+                                1,
+                                29,
+                            ],
+                        },
+                        operator: "!",
+                        range: [
+                            1,
+                            16,
+                            1,
+                            29,
+                        ],
+                    },
                     range: [
                         1,
                         1,
                         1,
-                        7,
+                        29,
                     ],
                 },
                 range: [
                     1,
                     1,
                     1,
-                    7,
+                    29,
                 ],
             },
         ],

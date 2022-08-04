@@ -8,7 +8,7 @@ The four types of statements in Pebble are:
 
 - ## `Declarative Statements`
 
-  Declarative statements, (otherwise known as injunctions) are statements that provide a new variable, type or function into the scope. A key feature of declarative statements in Pebbl is that they start with an `injunction`, i.e. a special keyword beginning with an `@` symbol.
+  Declarative statements are statements that provide a new variable, type or function into the scope. A key feature of declarative statements in Pebble is that they start with an `injunction`, i.e. a special keyword beginning with an `@` symbol.
   There are six types of declarative statements in Pebble.
 
   - ### `Variable Declarations`

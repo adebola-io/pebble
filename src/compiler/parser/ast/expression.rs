@@ -53,6 +53,11 @@ pub enum Expression {
         operator: String,
         range: NodeRange,
     },
+    UnaryExpression {
+        variable: Box<Expression>,
+        operator: String,
+        range: NodeRange,
+    },
     AccessExpression {
         array: Box<Expression>,
         element: Box<Expression>,
@@ -157,6 +162,18 @@ impl Expression {
             panic!("Cannot construct node. Expected an update token.")
         }
     }
+    pub fn unary_expression(variable: Self, operator: Token) -> Self {
+        let value_range = variable.get_range();
+        if let Token::Operator { value, loc } = operator {
+            Expression::UnaryExpression {
+                variable: Box::new(variable),
+                operator: value,
+                range: [loc[0], loc[1], value_range[2], value_range[3]],
+            }
+        } else {
+            panic!("Cannot construct node. Expected an update token.")
+        }
+    }
     pub fn self_expression(loc: NodeRange) -> Self {
         Self::SelfExpression { range: loc }
     }
@@ -203,6 +220,7 @@ impl Location for Expression {
             | Self::LogicalExpression { range, .. }
             | Self::CallExpression { range, .. }
             | Self::UpdateExpression { range, .. }
+            | Self::UnaryExpression { range, .. }
             | Self::MemberExpression { range, .. }
             | Self::AccessExpression { range, .. }
             | Self::RangeExpression { range, .. }

@@ -31,8 +31,9 @@ pub const LITERALS: &'static [&'static str; 6] = &["true", "false", "self", "cor
 /// An operator with a higher precedence has a higher influence on parsing arrangement than one with a lower precedence.
 pub fn precedence_of(operator: &str) -> usize {
     match operator {
-        "." => 13,
-        "[" => 12,
+        "." => 14,
+        "[" => 13,
+        "!" => 12,
         "--" => 11,
         "++" => 11,
         "**" => 10,
