@@ -87,9 +87,17 @@ impl Token {
         }
     }
     pub fn is_comma(&self) -> bool {
-        match self {
-            Self::Comma { .. } => true,
-            _ => false,
+        if let Self::Comma { .. } = self {
+            true
+        } else {
+            false
+        }
+    }
+    pub fn is_colon(&self) -> bool {
+        if let Self::Colon { .. } = self {
+            true
+        } else {
+            false
         }
     }
     pub fn is_semi_colon(&self) -> bool {
@@ -99,9 +107,10 @@ impl Token {
         }
     }
     pub fn is_number(&self) -> bool {
-        match self {
-            Self::Number { .. } => true,
-            _ => false,
+        if let Self::Number { .. } = self {
+            true
+        } else {
+            false
         }
     }
     pub fn get_end_line(&self) -> usize {
@@ -111,17 +120,20 @@ impl Token {
         self.get_location()[3]
     }
     pub fn is_bracket(&self, _bracketkind: BracketKind) -> bool {
-        match self {
-            Self::Bracket {
-                kind: _bracketkind, ..
-            } => true,
-            _ => false,
+        if let Self::Bracket {
+            kind: _bracketkind, ..
+        } = self
+        {
+            true
+        } else {
+            false
         }
     }
     pub fn is_identifier(&self) -> bool {
-        match self {
-            Self::Identifier { .. } => true,
-            _ => false,
+        if let Self::Identifier { .. } = self {
+            true
+        } else {
+            false
         }
     }
 }

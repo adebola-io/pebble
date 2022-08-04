@@ -63,6 +63,12 @@ pub enum Expression {
         element: Box<Expression>,
         range: NodeRange,
     },
+    TernaryExpression {
+        test: Box<Expression>,
+        consequent: Box<Expression>,
+        alternate: Box<Expression>,
+        range: NodeRange,
+    },
     SelfExpression {
         range: NodeRange,
     },
@@ -150,6 +156,21 @@ impl Expression {
             range: [left_range[0], left_range[1], right_range[2], right_range[3]],
         }
     }
+    pub fn ternary_expression(test: Self, consequent: Self, alternate: Self) -> Self {
+        let test_range = test.get_range();
+        let alternate_range = alternate.get_range();
+        Expression::TernaryExpression {
+            test: Box::new(test),
+            consequent: Box::new(consequent),
+            alternate: Box::new(alternate),
+            range: [
+                test_range[0],
+                test_range[1],
+                alternate_range[2],
+                alternate_range[3],
+            ],
+        }
+    }
     pub fn update_expression(variable: Self, operator: Token) -> Self {
         let value_range = variable.get_range();
         if let Token::Operator { value, loc } = operator {
@@ -224,6 +245,7 @@ impl Location for Expression {
             | Self::MemberExpression { range, .. }
             | Self::AccessExpression { range, .. }
             | Self::RangeExpression { range, .. }
+            | Self::TernaryExpression { range, .. }
             | Self::AssignmentExpression { range, .. } => *range,
         }
     }

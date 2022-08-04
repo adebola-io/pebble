@@ -208,9 +208,12 @@ impl Parser {
                     "+=" | "/=" | "||=" | "&&=" | "*=" | "-=" | "%=" | "=" => {
                         Ok(self.parse_assignment_expression(node, value.clone())?)
                     }
+                    "?" => Ok(self.parse_ternary_expression(node)?),
                     "++" | "--" => Ok(self.parse_update_expression(node, value.clone())?),
                     "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<"
-                    | "<=" | ">=" => Ok(self.parse_binary_expression(node, value.clone())?),
+                    | "==" | "!=" | "<=" | ">=" => {
+                        Ok(self.parse_binary_expression(node, value.clone())?)
+                    }
                     _ => Ok(node),
                 },
                 Token::Bracket {
@@ -371,6 +374,29 @@ impl Parser {
             self.operator_stack.pop();
             let binexp = Expression::binary_expression(left_node, operator, right_node);
             Ok(self.reparse(binexp)?)
+        }
+    }
+    /// Parses a ternary expression. name === "adebola" ? "hello" : "who are you?";
+    fn parse_ternary_expression(&mut self, test: Expression) -> ExpressionOrError {
+        if self.is_lower_precedence("?") {
+            Ok(test)
+        } else {
+            self.next(); // Move past ?
+            self.operator_stack.push("?".to_string());
+            let consequent = self.parse_expression()?;
+            let alternate;
+            self.operator_stack.pop();
+            if self.token.is_colon() {
+                self.next();
+                self.operator_stack.push(":".to_string());
+                alternate = self.parse_expression()?;
+                self.operator_stack.pop();
+                let ternexp = Expression::ternary_expression(test, consequent, alternate);
+                Ok(self.reparse(ternexp)?)
+            } else {
+                self.error("Expected a colon here for the ternary alternate.")?;
+                panic!()
+            }
         }
     }
 }
