@@ -69,7 +69,15 @@ pub enum Expression {
         alternate: Box<Expression>,
         range: NodeRange,
     },
+    NamespaceExpression {
+        left: Box<Expression>,
+        right: Box<Expression>,
+        range: NodeRange,
+    },
     SelfExpression {
+        range: NodeRange,
+    },
+    CoreExpression {
         range: NodeRange,
     },
     NothingExpression {
@@ -171,6 +179,15 @@ impl Expression {
             ],
         }
     }
+    pub fn namespace_expression(left: Self, right: Self) -> Self {
+        let left_range = left.get_range();
+        let right_range = right.get_range();
+        Expression::NamespaceExpression {
+            left: Box::new(left),
+            right: Box::new(right),
+            range: [left_range[0], left_range[1], right_range[2], right_range[3]],
+        }
+    }
     pub fn update_expression(variable: Self, operator: Token) -> Self {
         let value_range = variable.get_range();
         if let Token::Operator { value, loc } = operator {
@@ -197,6 +214,9 @@ impl Expression {
     }
     pub fn self_expression(loc: NodeRange) -> Self {
         Self::SelfExpression { range: loc }
+    }
+    pub fn core_expression(loc: NodeRange) -> Self {
+        Self::CoreExpression { range: loc }
     }
     pub fn boolean(value: String, loc: NodeRange) -> Self {
         Self::Boolean { value, range: loc }
@@ -236,6 +256,7 @@ impl Location for Expression {
             | Self::Number { range, .. }
             | Self::Boolean { range, .. }
             | Self::SelfExpression { range }
+            | Self::CoreExpression { range, .. }
             | Self::NothingExpression { range }
             | Self::BinaryExpression { range, .. }
             | Self::LogicalExpression { range, .. }
@@ -245,6 +266,7 @@ impl Location for Expression {
             | Self::MemberExpression { range, .. }
             | Self::AccessExpression { range, .. }
             | Self::RangeExpression { range, .. }
+            | Self::NamespaceExpression { range, .. }
             | Self::TernaryExpression { range, .. }
             | Self::AssignmentExpression { range, .. } => *range,
         }

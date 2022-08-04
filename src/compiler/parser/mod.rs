@@ -167,6 +167,7 @@ impl Parser {
                 "true" | "false" => Ok(Expression::boolean(value.clone(), *loc)),
                 "self" => Ok(Expression::self_expression(*loc)),
                 "nil" => Ok(Expression::nil_expression(*loc)),
+                "core" => Ok(Expression::core_expression(*loc)),
                 _ => panic!(),
             },
             _ => {
@@ -208,6 +209,7 @@ impl Parser {
                     "+=" | "/=" | "||=" | "&&=" | "*=" | "-=" | "%=" | "=" => {
                         Ok(self.parse_assignment_expression(node, value.clone())?)
                     }
+                    "::" => Ok(self.parse_namespace_expression(node)?),
                     "?" => Ok(self.parse_ternary_expression(node)?),
                     "++" | "--" => Ok(self.parse_update_expression(node, value.clone())?),
                     "+" | "-" | "/" | "%" | "*" | "**" | ">" | "<" | "&" | "|" | ">>" | "<<"
@@ -374,6 +376,18 @@ impl Parser {
             self.operator_stack.pop();
             let binexp = Expression::binary_expression(left_node, operator, right_node);
             Ok(self.reparse(binexp)?)
+        }
+    }
+    fn parse_namespace_expression(&mut self, left: Expression) -> ExpressionOrError {
+        if self.is_lower_precedence("::") {
+            Ok(left)
+        } else {
+            self.next(); // Move past "::"
+            self.operator_stack.push("::".to_string());
+            let right = self.parse_expression()?;
+            self.operator_stack.pop();
+            let namexp = Expression::namespace_expression(left, right);
+            Ok(self.reparse(namexp)?)
         }
     }
     /// Parses a ternary expression. name === "adebola" ? "hello" : "who are you?";

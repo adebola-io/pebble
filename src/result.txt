@@ -3,167 +3,64 @@ Program {
         1,
         1,
         1,
-        45,
+        28,
     ],
     body: Block {
         range: [
             1,
             1,
             1,
-            45,
+            28,
         ],
         statements: [
             ExpressionStatement {
-                expression: TernaryExpression {
-                    test: BinaryExpression {
-                        operator: "==",
-                        left: BinaryExpression {
-                            operator: "+",
-                            left: Number {
-                                kind: Decimal,
-                                value: "2",
-                                raw: "2",
-                                range: [
-                                    1,
-                                    1,
-                                    1,
-                                    2,
-                                ],
-                            },
-                            right: Number {
-                                kind: Decimal,
-                                value: "3",
-                                raw: "3",
-                                range: [
-                                    1,
-                                    3,
-                                    1,
-                                    4,
-                                ],
-                            },
+                expression: NamespaceExpression {
+                    left: MemberExpression {
+                        object: CoreExpression {
                             range: [
                                 1,
                                 1,
                                 1,
-                                4,
+                                5,
                             ],
                         },
-                        right: Number {
-                            kind: Decimal,
-                            value: "5",
-                            raw: "5",
+                        property: Identifier {
+                            name: "Errors",
                             range: [
                                 1,
-                                8,
+                                6,
                                 1,
-                                9,
+                                12,
                             ],
                         },
                         range: [
                             1,
                             1,
-                            1,
-                            9,
-                        ],
-                    },
-                    consequent: Boolean {
-                        value: "true",
-                        range: [
                             1,
                             12,
-                            1,
-                            16,
                         ],
                     },
-                    alternate: TernaryExpression {
-                        test: BinaryExpression {
-                            operator: "==",
-                            left: BinaryExpression {
-                                operator: "+",
-                                left: Number {
-                                    kind: Decimal,
-                                    value: "5",
-                                    raw: "5",
-                                    range: [
-                                        1,
-                                        19,
-                                        1,
-                                        20,
-                                    ],
-                                },
-                                right: Number {
-                                    kind: Decimal,
-                                    value: "9",
-                                    raw: "9",
-                                    range: [
-                                        1,
-                                        23,
-                                        1,
-                                        24,
-                                    ],
-                                },
-                                range: [
-                                    1,
-                                    19,
-                                    1,
-                                    24,
-                                ],
-                            },
-                            right: Number {
-                                kind: Decimal,
-                                value: "14",
-                                raw: "14",
-                                range: [
-                                    1,
-                                    28,
-                                    1,
-                                    30,
-                                ],
-                            },
-                            range: [
-                                1,
-                                19,
-                                1,
-                                30,
-                            ],
-                        },
-                        consequent: Boolean {
-                            value: "true",
-                            range: [
-                                1,
-                                33,
-                                1,
-                                37,
-                            ],
-                        },
-                        alternate: Boolean {
-                            value: "false",
-                            range: [
-                                1,
-                                40,
-                                1,
-                                45,
-                            ],
-                        },
+                    right: Identifier {
+                        name: "StackReadError",
                         range: [
                             1,
-                            19,
+                            14,
                             1,
-                            45,
+                            28,
                         ],
                     },
                     range: [
                         1,
                         1,
                         1,
-                        45,
+                        28,
                     ],
                 },
                 range: [
                     1,
                     1,
                     1,
-                    45,
+                    28,
                 ],
             },
         ],
