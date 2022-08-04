@@ -2,74 +2,191 @@ Program {
     range: [
         1,
         1,
-        1,
-        34,
+        5,
+        16,
     ],
     body: Block {
         range: [
             1,
             1,
-            1,
-            34,
+            5,
+            16,
         ],
         statements: [
-            ExpressionStatement {
-                expression: NewExpression {
-                    construct: NamespaceExpression {
-                        left: MemberExpression {
-                            object: CoreExpression {
-                                range: [
-                                    1,
-                                    5,
-                                    1,
-                                    9,
-                                ],
-                            },
-                            property: Identifier {
-                                name: "Errors",
-                                range: [
-                                    1,
-                                    10,
-                                    1,
-                                    16,
-                                ],
-                            },
-                            range: [
-                                1,
-                                5,
-                                1,
-                                16,
-                            ],
-                        },
-                        right: Identifier {
-                            name: "StackReadError",
-                            range: [
-                                1,
-                                18,
-                                1,
-                                32,
-                            ],
-                        },
+            IfStatement {
+                test: BinaryExpression {
+                    operator: ">",
+                    left: Identifier {
+                        name: "age",
                         range: [
                             1,
                             5,
                             1,
-                            32,
+                            8,
                         ],
                     },
-                    arguments: [],
+                    right: Number {
+                        kind: Decimal,
+                        value: "19",
+                        raw: "19",
+                        range: [
+                            1,
+                            11,
+                            1,
+                            13,
+                        ],
+                    },
                     range: [
                         1,
+                        5,
                         1,
-                        1,
-                        34,
+                        13,
                     ],
                 },
+                body: BlockStatement {
+                    statements: [
+                        ExpressionStatement {
+                            expression: CallExpression {
+                                callee: Identifier {
+                                    name: "allowToDrink",
+                                    range: [
+                                        2,
+                                        4,
+                                        2,
+                                        16,
+                                    ],
+                                },
+                                arguments: [],
+                                range: [
+                                    2,
+                                    4,
+                                    2,
+                                    18,
+                                ],
+                            },
+                            range: [
+                                2,
+                                4,
+                                2,
+                                19,
+                            ],
+                        },
+                    ],
+                    range: [
+                        1,
+                        15,
+                        3,
+                        2,
+                    ],
+                },
+                alternate: Some(
+                    IfStatement {
+                        test: BinaryExpression {
+                            operator: "==",
+                            left: Identifier {
+                                name: "age",
+                                range: [
+                                    3,
+                                    12,
+                                    3,
+                                    15,
+                                ],
+                            },
+                            right: Number {
+                                kind: Decimal,
+                                value: "19",
+                                raw: "19",
+                                range: [
+                                    3,
+                                    19,
+                                    3,
+                                    21,
+                                ],
+                            },
+                            range: [
+                                3,
+                                12,
+                                3,
+                                21,
+                            ],
+                        },
+                        body: BlockStatement {
+                            statements: [
+                                ExpressionStatement {
+                                    expression: CallExpression {
+                                        callee: Identifier {
+                                            name: "collectBribe",
+                                            range: [
+                                                4,
+                                                4,
+                                                4,
+                                                16,
+                                            ],
+                                        },
+                                        arguments: [],
+                                        range: [
+                                            4,
+                                            4,
+                                            4,
+                                            18,
+                                        ],
+                                    },
+                                    range: [
+                                        4,
+                                        4,
+                                        4,
+                                        19,
+                                    ],
+                                },
+                            ],
+                            range: [
+                                3,
+                                23,
+                                5,
+                                2,
+                            ],
+                        },
+                        alternate: Some(
+                            ExpressionStatement {
+                                expression: CallExpression {
+                                    callee: Identifier {
+                                        name: "reject",
+                                        range: [
+                                            5,
+                                            8,
+                                            5,
+                                            14,
+                                        ],
+                                    },
+                                    arguments: [],
+                                    range: [
+                                        5,
+                                        8,
+                                        5,
+                                        16,
+                                    ],
+                                },
+                                range: [
+                                    5,
+                                    8,
+                                    5,
+                                    16,
+                                ],
+                            },
+                        ),
+                        range: [
+                            3,
+                            8,
+                            5,
+                            16,
+                        ],
+                    },
+                ),
                 range: [
                     1,
                     1,
-                    1,
-                    34,
+                    5,
+                    16,
                 ],
             },
         ],

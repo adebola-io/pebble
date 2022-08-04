@@ -1,1 +1,5 @@
-new core.Errors::StackReadError();
+if (age > 19) {
+   allowToDrink();
+} else if (age == 19) {
+   collectBribe();
+} else reject();

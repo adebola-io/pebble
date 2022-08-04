@@ -1,6 +1,8 @@
 mod ast;
 use crate::utils::stack::Stack;
 
+use self::ast::Location;
+
 use super::{
     error::CompileError,
     scanner::{
@@ -20,7 +22,7 @@ pub fn parse(tokens: Vec<Token>) -> ParseResult {
     parser.parse(tokens)?;
     Ok(parser.result)
 }
-
+#[allow(dead_code)]
 struct Parser {
     result: Program,
     token: Token,
@@ -96,11 +98,86 @@ impl Parser {
     }
     /// Parses a statement.
     fn parse_statement(&mut self) -> StatementOrError {
-        if let Token::Keyword { .. } = &self.token {
-            Ok(self.parse_other_statement()?)
-        } else {
-            Ok(self.parse_expression_statement()?)
+        match &self.token {
+            Token::Keyword { value, .. } => match value.as_str() {
+                "if" => Ok(self.parse_if_statement()?),
+                _ => {
+                    self.error("Unexpected keyword.")?;
+                    panic!()
+                }
+            },
+            Token::Bracket {
+                kind: BracketKind::LCurly,
+                ..
+            } => Ok(self.parse_block()?),
+            _ => Ok(self.parse_expression_statement()?),
         }
+    }
+    /// Parses an if statement.
+    fn parse_if_statement(&mut self) -> StatementOrError {
+        let start = self.token.get_location();
+        self.next(); // Move past if.
+        if !self.token.is_bracket(BracketKind::LParen) {
+            self.error("Expected a ( here.")?;
+        }
+        self.next(); // Move past (
+
+        let test = self.parse_expression()?;
+        if !self.token.is_bracket(BracketKind::RParen) {
+            self.error("Expected a ) here.")?;
+        }
+        self.next(); // Move past )
+
+        let body = self.parse_statement()?;
+        let alternate;
+        if let Token::Keyword { value, .. } = &self.token {
+            if value.as_str() == "else" {
+                self.next(); // Move past else.
+                alternate = Some(self.parse_statement()?);
+            } else {
+                alternate = None;
+            }
+        } else {
+            alternate = None;
+        };
+        let end;
+        if self.token.is_semi_colon() {
+            end = self.token.get_location();
+            self.next();
+        } else if let Some(statement) = &alternate {
+            end = statement.get_range();
+        } else {
+            end = test.get_range();
+        }
+        let ifstat = Statement::IfStatement {
+            test,
+            body: Box::new(body),
+            alternate: Box::new(alternate),
+            range: [start[0], start[1], end[2], end[3]],
+        };
+        Ok(ifstat)
+    }
+    fn parse_block(&mut self) -> Result<Statement, CompileError> {
+        if !self.token.is_bracket(BracketKind::LCurly) {
+            self.error("Expected a { here.")?;
+        }
+        let start = self.token.get_location();
+        self.next(); // Move past {
+        let mut statements = vec![];
+        while !(self.end || self.token.is_bracket(BracketKind::RCurly)) {
+            let statement = self.parse_statement()?;
+            statements.push(statement);
+        }
+        if self.end {
+            self.error("Expected a } here.")?
+        }
+        let end = self.token.get_location();
+        self.next();
+        let blockstat = Statement::BlockStatement {
+            statements,
+            range: [start[0], start[1], end[2], end[3]],
+        };
+        Ok(blockstat)
     }
     fn parse_expression_statement(&mut self) -> StatementOrError {
         let expression = self.parse_expression()?;

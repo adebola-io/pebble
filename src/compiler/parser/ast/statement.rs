@@ -1,8 +1,18 @@
-use super::{expression, Expression, Location, NodeRange};
+use super::{Block, Expression, Location, NodeRange};
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub enum Statement {
     EmptyStatement {
+        range: NodeRange,
+    },
+    BlockStatement {
+        statements: Vec<Statement>,
+        range: NodeRange,
+    },
+    IfStatement {
+        test: Expression,
+        body: Box<Statement>,
+        alternate: Box<Option<Statement>>,
         range: NodeRange,
     },
     ExpressionStatement {
@@ -14,7 +24,10 @@ pub enum Statement {
 impl Location for Statement {
     fn get_range(&self) -> NodeRange {
         match self {
-            Self::ExpressionStatement { range, .. } | Self::EmptyStatement { range } => *range,
+            Self::ExpressionStatement { range, .. }
+            | Self::BlockStatement { range, .. }
+            | Self::EmptyStatement { range }
+            | Self::IfStatement { range, .. } => *range,
         }
     }
 }
