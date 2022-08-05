@@ -136,6 +136,18 @@ impl Token {
             false
         }
     }
+    pub fn is_keyword(&self, val: &str) -> bool {
+        match self {
+            Self::Keyword { value: val, .. } => true,
+            _ => false,
+        }
+    }
+    pub fn is_operator(&self, val: &str) -> bool {
+        match self {
+            Self::Operator { value: val, .. } => true,
+            _ => false,
+        }
+    }
 }
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]

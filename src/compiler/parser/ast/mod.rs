@@ -9,6 +9,7 @@ pub use literal::StringExpressions;
 pub use program::Block;
 pub use program::Program;
 pub use statement::Declaration;
+pub use statement::MatchCase;
 pub use statement::Statement;
 
 pub type NodeRange = [usize; 4];

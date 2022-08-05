@@ -10,7 +10,7 @@ use super::{
         token::{BracketKind, NumericKind, Token},
     },
 };
-use ast::{Block, Expression, NodeRange, Program, Statement};
+use ast::{Block, Expression, MatchCase, NodeRange, Program, Statement};
 
 type ParseResult = Result<Program, CompileError>;
 type ParseInternalResult = Result<(), CompileError>;
@@ -101,6 +101,10 @@ impl Parser {
         match &self.token {
             Token::Keyword { value, .. } => match value.as_str() {
                 "if" => Ok(self.parse_if_statement()?),
+                "while" => Ok(self.parse_while_statement()?),
+                "do" => Ok(self.parse_do_while_statement()?),
+                "println" => Ok(self.parse_println_statement()?),
+                // "match" => Ok(self.parse_match_statement()?),
                 _ => {
                     self.error("Unexpected keyword.")?;
                     panic!()
@@ -113,10 +117,7 @@ impl Parser {
             _ => Ok(self.parse_expression_statement()?),
         }
     }
-    /// Parses an if statement.
-    fn parse_if_statement(&mut self) -> StatementOrError {
-        let start = self.token.get_location();
-        self.next(); // Move past if.
+    fn parse_condition(&mut self) -> ExpressionOrError {
         if !self.token.is_bracket(BracketKind::LParen) {
             self.error("Expected a ( here.")?;
         }
@@ -127,7 +128,13 @@ impl Parser {
             self.error("Expected a ) here.")?;
         }
         self.next(); // Move past )
-
+        Ok(test)
+    }
+    /// Parses an if statement.
+    fn parse_if_statement(&mut self) -> StatementOrError {
+        let start = self.token.get_location();
+        self.next(); // Move past if.
+        let test = self.parse_condition()?;
         let body = self.parse_statement()?;
         let alternate;
         if let Token::Keyword { value, .. } = &self.token {
@@ -179,6 +186,109 @@ impl Parser {
         };
         Ok(blockstat)
     }
+    fn parse_while_statement(&mut self) -> StatementOrError {
+        let start = self.token.get_location();
+        self.next(); // Move past while.
+        let test = self.parse_condition()?;
+        let body = self.parse_statement()?;
+        let mut end = body.get_range();
+        if self.token.is_semi_colon() {
+            end = self.token.get_location();
+            self.next();
+        }
+        let whilestat = Statement::WhileStatement {
+            test,
+            body: Box::new(body),
+            range: [start[0], start[1], end[2], end[3]],
+        };
+        Ok(whilestat)
+    }
+    fn parse_do_while_statement(&mut self) -> StatementOrError {
+        let start = self.token.get_location();
+        self.next(); // Move past do.
+        let body = self.parse_statement()?;
+        if let Token::Keyword { value, .. } = &self.token {
+            if !(value.as_str() == "while") {
+                self.error("Expected a while here.")?;
+            }
+            self.next(); // Move past while.
+            let test = self.parse_condition()?;
+            let mut end = test.get_range();
+            if self.token.is_semi_colon() {
+                end = self.token.get_location();
+                self.next();
+            }
+            let dowhilestat = Statement::DoWhileStatement {
+                test,
+                body: Box::new(body),
+                range: [start[0], start[1], end[2], end[3]],
+            };
+            Ok(dowhilestat)
+        } else {
+            self.error("Expected a while here.")?;
+            panic!()
+        }
+    }
+    fn parse_println_statement(&mut self) -> StatementOrError {
+        let start = self.token.get_location();
+        self.next(); // Move past println.
+        let argument = self.parse_expression()?;
+        if !self.token.is_semi_colon() {
+            self.error("Expected a semicolon here.")?;
+        }
+        let end = self.token.get_location();
+        self.next();
+        let printstat = Statement::PrintLnStatement {
+            argument,
+            range: [start[0], start[1], end[2], end[3]],
+        };
+        Ok(printstat)
+    }
+    // fn parse_match_statement(&mut self) -> StatementOrError {
+    //     let start = self.token.get_location();
+    //     self.next(); // Move past match
+    //     let discriminant = self.parse_condition()?;
+    //     let mut cases = vec![];
+    //     if !self.token.is_bracket(BracketKind::LCurly) {
+    //         self.error("Expected a { here.")?;
+    //     }
+    //     self.next(); // Move past {
+    //     while !(self.end || self.token.is_bracket(BracketKind::RCurly)) {
+    //         let case = self.parse_match_case()?;
+    //         cases.push(case);
+    //     }
+    //     if self.end {
+    //         self.error("Expected a } here.")?;
+    //     }
+    //     let mut end = self.token.get_location();
+    //     self.next();
+    //     if self.token.is_semi_colon() {
+    //         end = self.token.get_location();
+    //         self.next();
+    //     }
+    //     let matchstat = Statement::MatchStatement {
+    //         discriminant,
+    //         cases,
+    //         range: [start[0], start[1], end[2], end[3]],
+    //     };
+    //     Ok(matchstat)
+    // }
+    // fn parse_match_case(&mut self) -> Result<MatchCase, CompileError> {
+    //     if !self.token.is_keyword("case") {
+    //         self.error("Expected a match case here.")?;
+    //     }
+    //     self.next(); // Move past case.
+
+    //     let test = self.parse_pattern()?;
+
+    //     if !self.token.is_operator("=>") {
+
+    //     }
+
+    // }
+    // fn parse_pattern(&mut self) -> Result<Pattern, CompileError> {
+
+    // }
     fn parse_expression_statement(&mut self) -> StatementOrError {
         let expression = self.parse_expression()?;
         if self.token.is_semi_colon() {
@@ -189,9 +299,6 @@ impl Parser {
             self.error("Expected a semi-colon")?;
             panic!()
         }
-    }
-    fn parse_other_statement(&mut self) -> StatementOrError {
-        Ok(Statement::EmptyStatement { range: self.store })
     }
     /// Parses an expression.
     fn parse_expression(&mut self) -> ExpressionOrError {
@@ -382,7 +489,7 @@ impl Parser {
                     self.error("A comma was expected here.")?;
                 }
             }
-            if (self.end) {
+            if self.end {
                 self.error("A closing ) was expected.")?;
             }
             self.operator_stack.pop();
