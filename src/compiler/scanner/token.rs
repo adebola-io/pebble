@@ -1,6 +1,6 @@
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Clone)]
-pub enum StringInnerToken {
+pub enum StringChild {
     StringSequence { value: String, loc: [usize; 4] },
     StringExpression { tokens: Vec<Token>, loc: [usize; 4] },
 }
@@ -33,7 +33,7 @@ pub enum Token {
         loc: [usize; 4],
     },
     StringToken {
-        inner: Vec<StringInnerToken>,
+        inner: Vec<StringChild>,
         loc: [usize; 4],
     },
     Identifier {

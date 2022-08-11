@@ -1,12 +1,14 @@
 pub mod helpers;
 pub mod token;
+use crate::utils::stack::Stack;
+
 use super::error::CompileError;
 use helpers::*;
 use token::{
     BracketKind::*,
     Comment, CommentKind,
     NumericKind::*,
-    StringInnerToken::{self, *},
+    StringChild::{self, *},
     Token::{self, *},
 };
 
@@ -30,6 +32,7 @@ struct Scanner {
     index: usize,
     end: bool,
     store: [usize; 4],
+    loc_stack: Stack<[usize; 2]>,
     comments: Vec<Comment>,
 }
 
@@ -43,6 +46,7 @@ impl Scanner {
             pos: [1, 0],
             index: 0,
             store: [0, 0, 0, 0],
+            loc_stack: Stack::new(),
             end: false,
         }
     }
@@ -99,12 +103,12 @@ impl Scanner {
     /// Advance to the next character in the stream.
     fn next(&mut self) {
         self.index += 1;
+        self.shift();
         if self.index >= self.source.len() {
             self.end = true;
             self.current = '\0'
         } else {
             self.current = self.source[self.index];
-            self.shift();
         }
     }
     /// Advance by a particular length.
@@ -148,13 +152,12 @@ impl Scanner {
     }
     /// Takes a snapshot of the position of the scanner at a point during the scanning.
     fn loc_start(&mut self) {
-        self.store[0] = self.pos[0];
-        self.store[1] = self.pos[1];
+        self.loc_stack.push([self.pos[0], self.pos[1]]);
     }
     /// Takes a snapshot of the position of the scanner at a point during the scanning.
     fn loc_end(&mut self) {
-        self.store[2] = self.pos[0];
-        self.store[3] = self.pos[1];
+        let start = self.loc_stack.pop().unwrap();
+        self.store = [start[0], start[1], self.pos[0], self.pos[1]];
     }
     fn scan_block_comment(&mut self) -> ScanInternalResult {
         self.loc_start();
@@ -224,7 +227,7 @@ impl Scanner {
             ')' => kind = RParen,
             '[' => kind = LSquare,
             ']' => kind = RSquare,
-            _ => panic!(),
+            _ => unreachable!(),
         }
         self.next();
         self.loc_end();
@@ -339,22 +342,27 @@ impl Scanner {
     }
     fn scan_string(&mut self) -> ScanInternalResult {
         self.loc_start();
-        self.next();
-        let mut inner = vec![];
+        self.next(); // Move past ".
+        let mut inner: Vec<StringChild> = vec![];
         while !(self.end || self.expects("\"")) {
-            if self.expects("#{") {
-                self.next_by(2);
-                inner.push(self.scan_string_expression()?);
-                self.next();
-            } else {
-                inner.push(self.scan_string_sequence()?);
-                self.next();
-            }
+            inner.push(self.scan_string_sequence()?)
         }
+        // while !(self.end || self.expects("\"")) {
+        //     if self.expects("#{") {
+        //         self.next_by(2);
+        //         inner.push(self.scan_string_expression()?);
+        //         self.next();
+        //     } else {
+        //         inner.push(self.scan_string_sequence()?);
+        //         self.next();
+        //     }
+        // }
         if self.end {
             self.error("Unterminated string literal.")?;
         }
+        println!("{:?}", self.pos);
         self.next();
+        println!("{:?}", self.pos);
         self.loc_end();
         self.tokens.push(StringToken {
             inner,
@@ -362,27 +370,23 @@ impl Scanner {
         });
         Ok(())
     }
-    fn scan_string_sequence(&mut self) -> Result<StringInnerToken, CompileError> {
-        let start = self.pos.clone();
+    fn scan_string_sequence(&mut self) -> Result<StringChild, CompileError> {
+        self.loc_start();
         let mut value = String::new();
         while !(self.end || self.expects("\"")) {
             value.push(self.current);
-            if let Some('#') = self._lookahead(1) {
-                if let Some('{') = self._lookahead(2) {
-                    break;
-                }
-            }
-            if let Some('\"') = self._lookahead(1) {
+            if self.expects("#{") {
                 break;
-            } else {
-                self.next();
             }
+            self.next();
         }
-        let end = self.pos.clone();
-        let loc = [start[0], start[1], end[0], end[1]];
-        Ok(StringSequence { value, loc })
+        self.loc_end();
+        Ok(StringSequence {
+            value,
+            loc: self.store,
+        })
     }
-    fn scan_string_expression(&mut self) -> Result<StringInnerToken, CompileError> {
+    fn scan_string_expression(&mut self) -> Result<StringChild, CompileError> {
         let start = self.pos.clone();
         let end = self.pos.clone();
         let loc = [start[0], start[1], end[0], end[1]];

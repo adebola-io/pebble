@@ -1,4 +1,4 @@
-pub const INJUNCTIONS: &'static [&'static str; 13] = &[
+pub const INJUNCTIONS: &'static [&'static str; 14] = &[
     "implement",
     "interface",
     "struct",
@@ -12,11 +12,13 @@ pub const INJUNCTIONS: &'static [&'static str; 13] = &[
     "type",
     "use",
     "prepend",
+    "test",
 ];
 
-pub const KEYWORDS: &'static [&'static str; 22] = &[
+pub const KEYWORDS: &'static [&'static str; 23] = &[
     "if", "else", "for", "fn", "in", "of", "match", "loop", "case", "from", "as", "do", "while",
     "break", "continue", "return", "crash", "try", "recover", "println", "readonly", "static",
+    "sleep",
 ];
 
 pub const OPERATORS: &'static [&'static str; 39] = &[

@@ -1,37 +1,23 @@
-Program {
-    range: [
-        1,
-        1,
-        1,
-        11,
-    ],
-    body: Block {
-        range: [
-            1,
-            1,
-            1,
-            11,
-        ],
-        statements: [
-            PrintLnStatement {
-                argument: Number {
-                    kind: Decimal,
-                    value: "45",
-                    raw: "45",
-                    range: [
-                        1,
-                        9,
-                        1,
-                        11,
-                    ],
-                },
-                range: [
+[
+    SOF,
+    StringToken {
+        inner: [
+            StringSequence {
+                value: "This is a string.",
+                loc: [
                     1,
+                    2,
                     1,
-                    1,
-                    11,
+                    19,
                 ],
             },
         ],
+        loc: [
+            1,
+            1,
+            1,
+            20,
+        ],
     },
-}
+    EOF,
+]

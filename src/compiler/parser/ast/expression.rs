@@ -1,13 +1,21 @@
 use crate::compiler::scanner::token::{NumericKind, Token};
 
 use super::{Location, NodeRange};
-
+#[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub enum Expression {
     Null,
     Identifier {
         name: String,
         range: NodeRange,
+    },
+    String {
+        range: NodeRange,
+        value: String,
+    },
+    TemplateString {
+        range: NodeRange,
+        sequences: Vec<Expression>,
     },
     Number {
         kind: NumericKind,
@@ -209,7 +217,12 @@ impl Expression {
             panic!("Cannot construct node. Expected an update token.")
         }
     }
-    pub fn new_expression(start: [usize; 4], construct: Self, arguments: Vec<Self>, end: [usize; 4]) -> Self {
+    pub fn new_expression(
+        start: [usize; 4],
+        construct: Self,
+        arguments: Vec<Self>,
+        end: [usize; 4],
+    ) -> Self {
         Expression::NewExpression {
             construct: Box::new(construct),
             arguments,
@@ -275,6 +288,8 @@ impl Location for Expression {
         match self {
             Self::Null => [0, 0, 0, 0],
             Self::Identifier { range, .. }
+            | Self::TemplateString { range, .. }
+            | Self::String { range, .. }
             | Self::Number { range, .. }
             | Self::Boolean { range, .. }
             | Self::SelfExpression { range }

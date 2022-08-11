@@ -107,7 +107,7 @@ impl Parser {
                 // "match" => Ok(self.parse_match_statement()?),
                 _ => {
                     self.error("Unexpected keyword.")?;
-                    panic!()
+                    unreachable!()
                 }
             },
             Token::Bracket {
@@ -226,7 +226,7 @@ impl Parser {
             Ok(dowhilestat)
         } else {
             self.error("Expected a while here.")?;
-            panic!()
+            unreachable!()
         }
     }
     fn parse_println_statement(&mut self) -> StatementOrError {
@@ -289,6 +289,7 @@ impl Parser {
     // fn parse_pattern(&mut self) -> Result<Pattern, CompileError> {
 
     // }
+    /// Parses an expression statement.
     fn parse_expression_statement(&mut self) -> StatementOrError {
         let expression = self.parse_expression()?;
         if self.token.is_semi_colon() {
@@ -297,7 +298,7 @@ impl Parser {
             Ok(exprstat)
         } else {
             self.error("Expected a semi-colon")?;
-            panic!()
+            unreachable!()
         }
     }
     /// Parses an expression.
@@ -315,7 +316,7 @@ impl Parser {
                 }
                 _ => {
                     self.error("Unexpected operator.")?;
-                    panic!();
+                    unreachable!();
                 }
             },
             // an identifier token.
@@ -366,11 +367,11 @@ impl Parser {
                 "self" => Ok(Expression::self_expression(*loc)),
                 "nil" => Ok(Expression::nil_expression(*loc)),
                 "core" => Ok(Expression::core_expression(*loc)),
-                _ => panic!(),
+                _ => unreachable!(),
             },
             _ => {
                 self.error("Error. Expected a literal value.")?;
-                panic!()
+                unreachable!()
             }
         };
         self.next();
@@ -516,12 +517,12 @@ impl Parser {
                 break;
             } else {
                 self.error("Expected a comma here. ")?;
-                panic!()
+                unreachable!()
             }
         }
         if !self.token.is_bracket(BracketKind::RSquare) {
             self.error("Expected a closing bracket ] here. ")?;
-            panic!();
+            unreachable!();
         }
         let end = self.token.get_location();
         self.next();
@@ -668,7 +669,7 @@ impl Parser {
                 Ok(self.reparse(ternexp)?)
             } else {
                 self.error("Expected a colon here for the ternary alternate.")?;
-                panic!()
+                unreachable!()
             }
         }
     }

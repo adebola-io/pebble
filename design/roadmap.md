@@ -1,0 +1,63 @@
+<h1 align=center>Roadmap</h1>
+Below is the roadmap for the development of Pebble. Done items are marked.
+
+-  [x] Syntax Highlighting
+-  [x] Lex Injunction Starts
+-  [x] Lex Block comments
+-  [x] Lex Line comments
+-  [x] Lex Doc comments
+-  [ ] Lex Strings
+-  [x] Lex Integers
+-  [ ] Lex Decimal numbers
+-  [ ] Lex Hexadecimal numbers
+-  [ ] Lex Octal numbers
+-  [ ] Lex Binary numbers
+-  [ ] Lex exponential numbers
+-  [x] Lex keywords
+-  [x] Lex operators
+-  [x] Lex punctuation
+-  [x] Lex Identifiers
+-  [x] Lex literals
+-  [ ] Parse strings
+-  [x] Parse numbers
+-  [x] Parse booleans
+-  [x] Parse expression statement
+-  [x] Parse binary expression
+-  [x] Parse member expression
+-  [x] Parse namespace expression
+-  [x] Parse Access expression
+-  [ ] Parse new expression
+-  [x] Parse range expression
+-  [x] Parse logical expression
+-  [x] Parse conditional expression
+-  [x] Parse assignment expression
+-  [ ] Parse functional expression
+-  [x] Parse if statement
+-  [x] Parse else block
+-  [x] Parse while statement
+-  [x] Parse do-while statement
+-  [ ] Parse loop statement
+-  [x] Parse println statement
+-  [ ] Parse break statement
+-  [ ] Parse return statement
+-  [ ] Parse crash statement
+-  [ ] Parse try statement
+-  [ ] Parse restore statement
+-  [ ] Parse empty statement
+-  [ ] Parse match statement
+-  [ ] Parse sleep statement
+-  [ ] Parse variable declaration
+-  [ ] Parse constant declaration
+-  [ ] Parse record declaration
+-  [ ] Parse function declaration
+-  [ ] Parse type declaration
+-  [ ] Parse struct declaration
+-  [ ] Parse struct property
+-  [ ] Parse implement statement
+-  [ ] Parse interface declaration
+-  [ ] Parse enum declaration
+-  [ ] Parse utilizer block
+-  [ ] Parse use statement
+-  [ ] Parse prepend statement
+-  [ ] Parse public declaration
+-  [ ] Parse test block.
