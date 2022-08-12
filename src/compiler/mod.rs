@@ -30,12 +30,13 @@ pub fn run(file: String) {
         );
         exit_with_error(err.message.as_str());
     });
-    let ast = parser::parse(tokens).unwrap_or_else(|err| {
-        eprintln!(
-            "Error encountered while parsing on {}:{}",
-            err.line, err.column
-        );
-        exit_with_error(err.message.as_str());
-    });
-    fs::write("src/result.txt", format!("{:#?}", ast)).unwrap();
+    // println!("{:#?}", tokens);
+    // let ast = parser::parse(tokens).unwrap_or_else(|err| {
+    //     eprintln!(
+    //         "Error encountered while parsing on {}:{}",
+    //         err.line, err.column
+    //     );
+    //     exit_with_error(err.message.as_str());
+    // });
+    fs::write("src/result.txt", format!("{:#?}", tokens)).unwrap();
 }

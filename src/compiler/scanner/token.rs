@@ -137,15 +137,17 @@ impl Token {
         }
     }
     pub fn is_keyword(&self, val: &str) -> bool {
-        match self {
-            Self::Keyword { value: val, .. } => true,
-            _ => false,
+        if let Self::Keyword { value: val, .. } = self {
+            true
+        } else {
+            false
         }
     }
     pub fn is_operator(&self, val: &str) -> bool {
-        match self {
-            Self::Operator { value: val, .. } => true,
-            _ => false,
+        if let Self::Operator { value: val, .. } = self {
+            true
+        } else {
+            false
         }
     }
 }

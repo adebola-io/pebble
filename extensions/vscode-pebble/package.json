@@ -1,42 +1,84 @@
 {
-  "name": "vscode-pebble",
-  "displayName": "Pebble",
-  "description": "Support for the Pebble Programming Language",
-  "publisher": "adebola-xyz",
-  "icon": "./icons/pebble-color.svg",
-  "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.54.0"
-  },
-  "categories": [
-    "Programming Languages"
-  ],
-  "contributes": {
-    "languages": [
-      {
-        "id": "peb",
-        "aliases": [
-          "Pebble",
-          "peb"
-        ],
-        "extensions": [
-          ".peb"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "peb",
-        "scopeName": "source.peb",
-        "path": "./syntaxes/peb.tmLanguage.json"
-      }
-    ],
-    "snippets": [
-      {
-        "language": "peb",
-        "path": "./snippets/pebble.code-snippets"
-      }
-    ]
-  }
+   "name": "vscode-pebble",
+   "displayName": "Pebble",
+   "description": "Support for the Pebble Programming Language",
+   "publisher": "adebola-xyz",
+   "author": {
+      "name": "Adebola Akomolafe",
+      "email": "adebolaakomoalfe@gmail.com"
+   },
+   "icon": "./icons/pebble-color.svg",
+   "version": "0.0.1",
+   "engines": {
+      "vscode": "^1.54.0"
+   },
+   "categories": [
+      "Programming Languages",
+      "Other"
+   ],
+   "activationEvents": [
+      "onLanguage:peb",
+      "workspaceContains:*.peb",
+      "workspaceContains:*/*.peb",
+      "workspaceContains:*/*/*.peb"
+   ],
+   "main": "./dist/extension.js",
+   "scripts": {
+      "watch": "tsc --watch",
+      "build-server": "cd ../../server/ && wasm-pack build --target nodejs",
+      "compile": "echo running"
+   },
+   "contributes": {
+      "languages": [
+         {
+            "id": "peb",
+            "aliases": [
+               "Pebble",
+               "peb"
+            ],
+            "extensions": [
+               ".peb"
+            ],
+            "configuration": "./language-configuration.json"
+         }
+      ],
+      "configuration": {
+         "type": "object",
+         "title": "Pebble",
+         "properties": {
+            "pbls.maxNumberOfProblems": {
+               "scope": "resource",
+               "type": "number",
+               "default": 100,
+               "description": "Controls the maximum number of problems produced by the server."
+            }
+         }
+      },
+      "grammars": [
+         {
+            "language": "peb",
+            "scopeName": "source.peb",
+            "path": "./syntaxes/peb.tmLanguage.json"
+         }
+      ],
+      "snippets": [
+         {
+            "language": "peb",
+            "path": "./snippets/pebble.code-snippets"
+         }
+      ]
+   },
+   "devDependencies": {
+      "@types/node": "^16.11.7",
+      "@types/vscode": "^1.32.0",
+      "@typescript-eslint/eslint-plugin": "^5.30.0",
+      "@typescript-eslint/parser": "^5.30.0",
+      "eslint": "^8.13.0",
+      "typescript": "^4.7.2"
+   },
+   "dependencies": {
+      "vscode-languageclient": "^8.0.2",
+      "vscode-languageserver": "^8.0.2",
+      "vscode-languageserver-textdocument": "^1.0.5"
+   }
 }
