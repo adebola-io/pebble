@@ -23,7 +23,7 @@ pub fn parse(tokens: Vec<Token>) -> ParseResult {
     Ok(parser.result)
 }
 #[allow(dead_code)]
-struct Parser {
+pub struct Parser {
     result: Program,
     token: Token,
     index: usize,
@@ -34,7 +34,7 @@ struct Parser {
 }
 
 impl Parser {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Parser {
             result: Program::new(),
             operator_stack: Stack::new(),
@@ -87,7 +87,7 @@ impl Parser {
         self.store[3] = loc[3];
     }
     /// Parses a stream of tokens into a valid Program.
-    fn parse(&mut self, tokens: Vec<Token>) -> Result<(), CompileError> {
+    pub fn parse(&mut self, tokens: Vec<Token>) -> Result<(), CompileError> {
         self.tokens = tokens;
         self.next();
         while self.token != Token::EOF {

@@ -1,9 +1,5 @@
-pub mod helpers;
 pub mod token;
-use crate::utils::stack::Stack;
 
-use super::error::CompileError;
-use helpers::*;
 use token::{
     BracketKind::*,
     Comment, CommentKind,
@@ -11,6 +7,7 @@ use token::{
     StringChild::{self, *},
     Token::{self, *},
 };
+use utils::{errors::CompileError, helpers::*, stack::Stack};
 
 type ScanResult = Result<Vec<Token>, CompileError>;
 type ScanInternalResult = Result<(), CompileError>;
@@ -22,7 +19,7 @@ pub fn scan(content: String) -> ScanResult {
     Ok(scanner.tokens)
 }
 
-struct Scanner {
+pub struct Scanner {
     source: Vec<char>,
     /// The current character in the stream.
     current: char,
