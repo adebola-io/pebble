@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::scanner::Scanner;
-use ast::{Comment, CommentKind, Token, TokenKind};
+use ast::{Comment, CommentKind, Literal, LiteralKind, Token, TokenKind};
 
 #[test]
 fn it_scans_line_comment() {
@@ -46,6 +46,38 @@ fn it_scans_doc_comments() {
             kind: TokenKind::Comment(Comment {
                 kind: CommentKind::Doc,
                 content: String::from(" This is a doc comment.")
+            })
+        }
+    )
+}
+
+#[test]
+fn it_scans_strings() {
+    let mut scanner = Scanner::new("\"This is a string.\"");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 19]],
+            kind: TokenKind::Literal(Literal {
+                kind: LiteralKind::StringLiteral,
+                value: String::from("This is a string.")
+            })
+        }
+    )
+}
+
+#[test]
+fn it_scans_string_with_escape() {
+    let mut scanner = Scanner::new("\"This is a\\\" string.\"");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 21]],
+            kind: TokenKind::Literal(Literal {
+                kind: LiteralKind::StringLiteral,
+                value: String::from("This is a\" string.")
             })
         }
     )

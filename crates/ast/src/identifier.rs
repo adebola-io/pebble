@@ -4,10 +4,9 @@ pub struct Identifier<'a> {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Literal<'a> {
-    kind: LiteralKind,
-    raw: &'a str,
-    value: &'a str,
+pub struct Literal {
+    pub kind: LiteralKind,
+    pub value: String,
 }
 
 #[derive(Debug, PartialEq, Clone)]

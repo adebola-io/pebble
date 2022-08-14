@@ -12,7 +12,7 @@ mod token;
 
 pub use comment::*;
 pub use expression::*;
-pub use identifier::Identifier;
+pub use identifier::*;
 pub use keyword::*;
 pub use node::Node;
 pub use operator::Operator;

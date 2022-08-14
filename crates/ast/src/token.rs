@@ -1,5 +1,6 @@
 use crate::{
-    identifier::Literal, Comment, CommentKind, Identifier, Keyword, Operator, Punctuation, TextSpan,
+    identifier::{Literal, LiteralKind},
+    Comment, CommentKind, Identifier, Keyword, Operator, Punctuation, TextSpan,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -8,7 +9,7 @@ pub enum TokenKind<'a> {
     Punctuation(Punctuation),
     Keyword(Keyword),
     Comment(Comment),
-    Literal(Literal<'a>),
+    Literal(Literal),
     Identifier(Identifier<'a>),
     Invalid { value: &'a str },
 }
@@ -16,8 +17,8 @@ pub enum TokenKind<'a> {
 /// A piece of code collected when scanning the input source file.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Token<'a> {
-    pub kind: TokenKind<'a>,
     pub span: TextSpan,
+    pub kind: TokenKind<'a>,
 }
 
 impl<'a> Token<'a> {
@@ -41,11 +42,25 @@ impl<'a> Token<'a> {
     }
     pub fn create_doc_comment(content: String, span: TextSpan) -> Self {
         Token {
+            span,
             kind: TokenKind::Comment(Comment {
                 kind: CommentKind::Doc,
                 content,
             }),
+        }
+    }
+    pub fn create_literal(literal_type: &str, value: String, span: TextSpan) -> Self {
+        Token {
             span,
+            kind: TokenKind::Literal(Literal {
+                value,
+                kind: match literal_type {
+                    "string" => LiteralKind::StringLiteral,
+                    "boolean" => LiteralKind::BooleanLiteral,
+                    "number" => LiteralKind::NumericLiteral,
+                    _ => unreachable!(),
+                },
+            }),
         }
     }
 }
