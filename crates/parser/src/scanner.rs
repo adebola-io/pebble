@@ -96,6 +96,8 @@ impl<'a> Scanner<'a> {
             self.scan_line_comment()
         } else if self.sees("/*") {
             self.scan_block_comment()
+        } else if self.sees("#") {
+            self.scan_doc_comment()
         } else {
             todo!()
         }
@@ -122,5 +124,16 @@ impl<'a> Scanner<'a> {
         self.next_by(2);
         self.mark_end();
         Token::create_block_comment(content, self.span.clone())
+    }
+    fn scan_doc_comment(&mut self) -> Token<'a> {
+        self.mark_start();
+        self.next();
+        let mut content = String::new();
+        while !(self.end || self.char == '\n') {
+            content.push(self.char);
+            self.next();
+        }
+        self.mark_end();
+        Token::create_doc_comment(content, self.span.clone())
     }
 }

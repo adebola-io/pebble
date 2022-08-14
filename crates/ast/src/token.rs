@@ -39,4 +39,13 @@ impl<'a> Token<'a> {
             span,
         }
     }
+    pub fn create_doc_comment(content: String, span: TextSpan) -> Self {
+        Token {
+            kind: TokenKind::Comment(Comment {
+                kind: CommentKind::Doc,
+                content,
+            }),
+            span,
+        }
+    }
 }

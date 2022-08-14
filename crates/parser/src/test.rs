@@ -34,3 +34,19 @@ fn it_scans_block_comment() {
         }
     )
 }
+
+#[test]
+fn it_scans_doc_comments() {
+    let mut scanner = Scanner::new("# This is a doc comment.");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 24]],
+            kind: TokenKind::Comment(Comment {
+                kind: CommentKind::Doc,
+                content: String::from(" This is a doc comment.")
+            })
+        }
+    )
+}
