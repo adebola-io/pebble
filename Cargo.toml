@@ -2,5 +2,7 @@
 members = [ 
    "crates/server",
    "crates/utils",
-   "crates/ast"
+   "crates/ast",
+   "crates/parser",
+   "crates/errors"
 ]

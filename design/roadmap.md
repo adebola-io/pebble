@@ -2,42 +2,42 @@
 Below is the roadmap for the development of Pebble. Done items are marked.
 
 -  [x] Syntax Highlighting
--  [x] Lex Injunction Starts
--  [x] Lex Block comments
--  [x] Lex Line comments
--  [x] Lex Doc comments
+-  [ ] Lex Injunction Starts
+-  [ ] Lex Block comments
+-  [ ] Lex Line comments
+-  [ ] Lex Doc comments
 -  [ ] Lex Strings
--  [x] Lex Integers
+-  [ ] Lex Integers
 -  [ ] Lex Decimal numbers
 -  [ ] Lex Hexadecimal numbers
 -  [ ] Lex Octal numbers
 -  [ ] Lex Binary numbers
 -  [ ] Lex exponential numbers
--  [x] Lex keywords
--  [x] Lex operators
--  [x] Lex punctuation
--  [x] Lex Identifiers
--  [x] Lex literals
+-  [ ] Lex keywords
+-  [ ] Lex operators
+-  [ ] Lex punctuation
+-  [ ] Lex Identifiers
+-  [ ] Lex literals
 -  [ ] Parse strings
--  [x] Parse numbers
--  [x] Parse booleans
--  [x] Parse expression statement
--  [x] Parse binary expression
--  [x] Parse member expression
--  [x] Parse namespace expression
--  [x] Parse Access expression
+-  [ ] Parse numbers
+-  [ ] Parse booleans
+-  [ ] Parse expression statement
+-  [ ] Parse binary expression
+-  [ ] Parse member expression
+-  [ ] Parse namespace expression
+-  [ ] Parse Access expression
 -  [ ] Parse new expression
--  [x] Parse range expression
--  [x] Parse logical expression
--  [x] Parse conditional expression
--  [x] Parse assignment expression
+-  [ ] Parse range expression
+-  [ ] Parse logical expression
+-  [ ] Parse conditional expression
+-  [ ] Parse assignment expression
 -  [ ] Parse functional expression
--  [x] Parse if statement
--  [x] Parse else block
--  [x] Parse while statement
--  [x] Parse do-while statement
+-  [ ] Parse if statement
+-  [ ] Parse else block
+-  [ ] Parse while statement
+-  [ ] Parse do-while statement
 -  [ ] Parse loop statement
--  [x] Parse println statement
+-  [ ] Parse println statement
 -  [ ] Parse break statement
 -  [ ] Parse return statement
 -  [ ] Parse crash statement

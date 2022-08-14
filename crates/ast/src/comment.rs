@@ -1,10 +1,9 @@
-use crate::TextRange;
+use crate::TextSpan;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Comment {
-    kind: CommentKind,
-    range: TextRange,
-    value: String,
+    pub kind: CommentKind,
+    pub content: String,
 }
 #[derive(Debug, PartialEq, Clone)]
 pub enum CommentKind {

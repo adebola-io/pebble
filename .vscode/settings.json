@@ -3,7 +3,7 @@
    "material-icon-theme.files.associations": {
       "*.peb": "../../vscode-pebble/icons/pebble-plain",
       "pile.types": "../../vscode-pebble/icons/pile-types",
-      "pile.json": "../../vscode-pebble/icons/pebble-info"
+      "pile.json": "../../vscode-pebble/icons/pile-json"
    },
    "material-icon-theme.folders.associations": {
       "piles": "piles",

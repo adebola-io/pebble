@@ -1,1 +1,1 @@
-pub type TextRange = [usize; 4];
+pub type TextSpan = [[u64; 2]; 2];
