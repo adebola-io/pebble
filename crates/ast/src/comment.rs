@@ -1,5 +1,3 @@
-use crate::TextSpan;
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct Comment {
     pub kind: CommentKind,

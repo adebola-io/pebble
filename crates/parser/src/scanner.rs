@@ -15,6 +15,7 @@ pub struct Scanner<'a> {
     char: char,
     /// A duo of numbers that mark the position of the scanner in the input text, by line and by column
     pos: [u64; 2],
+    span: [[u64; 2]; 2],
 }
 
 impl<'a> Scanner<'a> {
@@ -27,6 +28,7 @@ impl<'a> Scanner<'a> {
             end: false,
             char: '\0',
             pos: [1, 1],
+            span: [[0, 0], [0, 0]],
         }
     }
     // Advances to the next character in the stream.
@@ -55,8 +57,15 @@ impl<'a> Scanner<'a> {
             self.pos[1] += 1;
         }
     }
+    /// Marks the current line and column as the start of a token.
+    fn mark_start(&mut self) {
+        self.span[0] = self.pos.clone();
+    }
+    fn mark_end(&mut self) {
+        self.span[1] = self.pos.clone();
+    }
     /// Checks that the next stream of tokens match a scan rule.
-    pub fn expects(&mut self, rule: &str) -> bool {
+    pub fn sees(&mut self, rule: &str) -> bool {
         let front = self.index + rule.len();
         if front <= self.text.len() {
             let actual: String = self.text[self.index..front].iter().collect();
@@ -83,22 +92,35 @@ impl<'a> Scanner<'a> {
     }
     /// Scans for the next token in the stream.
     fn scan_next(&mut self) -> Token<'a> {
-        if self.expects("//") {
+        if self.sees("//") {
             self.scan_line_comment()
+        } else if self.sees("/*") {
+            self.scan_block_comment()
         } else {
             todo!()
         }
     }
     fn scan_line_comment(&mut self) -> Token<'a> {
-        let start = self.pos.clone();
+        self.mark_start();
         self.next_by(2);
         let mut content = String::new();
         while !(self.end || self.char == '\n') {
             content.push(self.char);
             self.next();
         }
-        let end = self.pos.clone();
-        let range = [start, end];
-        Token::create_line_comment(content, range)
+        self.mark_end();
+        Token::create_line_comment(content, self.span.clone())
+    }
+    fn scan_block_comment(&mut self) -> Token<'a> {
+        self.mark_start();
+        self.next_by(2);
+        let mut content = String::new();
+        while !(self.end || self.sees("*/")) {
+            content.push(self.char);
+            self.next();
+        }
+        self.next_by(2);
+        self.mark_end();
+        Token::create_block_comment(content, self.span.clone())
     }
 }

@@ -30,4 +30,13 @@ impl<'a> Token<'a> {
             span,
         }
     }
+    pub fn create_block_comment(content: String, span: TextSpan) -> Self {
+        Token {
+            kind: TokenKind::Comment(Comment {
+                kind: CommentKind::Block,
+                content,
+            }),
+            span,
+        }
+    }
 }

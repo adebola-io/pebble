@@ -18,3 +18,19 @@ fn it_scans_line_comment() {
         }
     )
 }
+
+#[test]
+fn it_scans_block_comment() {
+    let mut scanner = Scanner::new("/* This\nis\na\nblock\ncomment */");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            kind: TokenKind::Comment(Comment {
+                kind: CommentKind::Block,
+                content: String::from(" This\nis\na\nblock\ncomment ")
+            }),
+            span: [[1, 1], [5, 10]]
+        }
+    )
+}
