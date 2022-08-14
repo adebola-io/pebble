@@ -1,0 +1,12 @@
+{
+   "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
+   "material-icon-theme.files.associations": {
+      "*.peb": "../../vscode-pebble/icons/pebble-plain",
+      "pile.types": "../../vscode-pebble/icons/pile-types",
+      "pile.json": "../../vscode-pebble/icons/pebble-info"
+   },
+   "material-icon-theme.folders.associations": {
+      "piles": "piles",
+      "*.pile": "packages"
+   }
+}

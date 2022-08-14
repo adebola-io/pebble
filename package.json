@@ -1,0 +1,27 @@
+{
+   "name": "pebble",
+   "version": "0.0.0",
+   "description": "An open source programming language for building fast and reliable software.",
+   "main": " ",
+   "directories": {
+      "example": "example"
+   },
+   "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+   },
+   "repository": {
+      "type": "git",
+      "url": "git+https://github.com/adebola-xyz/pebble.git"
+   },
+   "keywords": [
+      "languages",
+      "compilers",
+      "pebble"
+   ],
+   "author": "Adebola Akomolafe",
+   "license": "MIT",
+   "bugs": {
+      "url": "https://github.com/adebola-xyz/pebble/issues"
+   },
+   "homepage": "https://github.com/adebola-xyz/pebble#readme"
+}

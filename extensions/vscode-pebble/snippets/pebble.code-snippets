@@ -31,11 +31,11 @@
       "description": "Autofills syntax for use imports.",
       "body": ["@use { $1 } from \"$2\";"]
    },
-   "Utilizer": {
+   "Specifier": {
       "prefix": "@util",
-      "description": "Build a utilizer block.",
+      "description": "Build a specifier block.",
       "body": [
-         "@utilize ${1:Structure} {",
+         "@specify ${1:Structure} {",
          "   constructor() {",
          "      $2",
          "   }",
@@ -50,13 +50,13 @@
    },
    "Implementation": {
       "prefix": "@impl",
-      "description": "Implement a interface inside a struct.",
+      "description": "Implement a interface inside a model.",
       "body": "@implement ${1:Interface};"
    },
-   "Struct": {
-      "prefix": ["@str", "@struct"],
+   "Model": {
+      "prefix": ["@mod", "@model"],
       "description": "Creates a new structure.",
-      "body": ["@struct ${1:Name} {", "   $2", "}"]
+      "body": ["@model ${1:Name} {", "   $2", "}"]
    },
    "Enum": {
       "prefix": "@enum",

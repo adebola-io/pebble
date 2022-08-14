@@ -1,4 +1,5 @@
-#[derive(Debug, Clone)]
+/// An abstract data type that is a collection of elements arranged in a LIFO (Last In, First Out) structure.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Stack<T> {
     arr: Vec<T>,
     pub size: usize,
@@ -31,5 +32,25 @@ impl<T> Stack<T> {
     /// Peeks at the element at the top of the stack.
     pub fn top(&self) -> Option<&T> {
         self.arr.last()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn it_tests_stack_pop() {
+        let mut stack: Stack<i32> = Stack::new();
+        stack.push(78);
+        stack.push(34);
+        stack.pop();
+        assert_eq!(stack.top().unwrap(), &78);
+    }
+    #[test]
+    fn it_test_stack_emptiness() {
+        let mut stack: Stack<i32> = Stack::new();
+        stack.push(56);
+        stack.pop();
+        assert!(stack.is_empty);
     }
 }

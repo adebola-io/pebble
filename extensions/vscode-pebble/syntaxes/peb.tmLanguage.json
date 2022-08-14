@@ -106,10 +106,10 @@
       },
       "literal": {
          "name": "constant.language.literal",
-         "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|static|readonly|constructor|sleep)(?![$@])\\b"
+         "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|static|constructor|sleep)(?![$@])\\b"
       },
       "custom_type": {
-         "begin": "(?<=(@(enum|struct|utilize|interface|type|implement))\\s+)",
+         "begin": "(?<=(@(enum|model|specify|interface|type|implement))\\s+)",
          "patterns": [{ "include": "#type" }],
          "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
       },
@@ -120,7 +120,7 @@
       },
       "injunction": {
          "name": "meta.injunction keyword.storage.injunction",
-         "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|struct|utilize|record|interface|implement|test)(?![$@])\\b"
+         "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|model|specify|record|interface|implement|test)(?![$@])\\b"
       },
       "keyword": {
          "name": "keyword.control",
@@ -177,7 +177,7 @@
          "end": "\\>"
       },
       "instantiator": {
-         "name": "meta.struct struct entity.name.class",
+         "name": "meta.model model entity.name.class",
          "match": "(?<=(new|@implement)\\s+((\\w+\\.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
       },
       "identifier": {

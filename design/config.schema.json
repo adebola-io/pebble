@@ -1,45 +1,45 @@
 {
-  "$schema": "http://json-schema.org/draft/2020-12/schema",
-  "title": "Pebble Configurations",
-  "description": "The configurations for your Pebble project.",
-  "type": "object",
-  "properties": {
-    "name": {
-      "description": "The name for your Pebble project.",
-      "type": "string"
-    },
-    "version": {
-      "description": "The current version of the project.",
-      "type": "string"
-    },
-    "description": {
-      "description": "What your Pebble project does, or what it's about.",
-      "type": "string"
-    },
-    "start-date": {
-      "description": "You can specify the start date of this project, to keep track of time spent on it."
-    },
-    "config": {
-      "descriptions": "Configurations for your project.",
-      "type": "object",
-      "properties": {
-        "compile-entry": {
-          "description": "The main file, where the compiler should start compilation from. The default value is source/.peb.",
-          "type": "string"
-        },
-        "documentation": {
-          "description": "This determines how the compiler should expect documentation comments. The default value is not-required.",
-          "type": "string",
-          "enum": [
-            "strict-required",
-            "functions-only",
-            "struct-only",
-            "public-only",
-            "not-required"
-          ]
-        }
+   "$schema": "http://json-schema.org/draft/2020-12/schema",
+   "title": "Pebble Configurations",
+   "description": "The configurations for your Pebble project.",
+   "type": "object",
+   "properties": {
+      "name": {
+         "description": "The name for your Pebble project.",
+         "type": "string"
+      },
+      "version": {
+         "description": "The current version of the project.",
+         "type": "string"
+      },
+      "description": {
+         "description": "What your Pebble project does, or what it's about.",
+         "type": "string"
+      },
+      "start-date": {
+         "description": "You can specify the start date of this project, to keep track of time spent on it."
+      },
+      "config": {
+         "descriptions": "Configurations for your project.",
+         "type": "object",
+         "properties": {
+            "compile-entry": {
+               "description": "The main file, where the compiler should start compilation from. The default value is source/.peb.",
+               "type": "string"
+            },
+            "documentation": {
+               "description": "This determines how the compiler should expect documentation comments. The default value is not-required.",
+               "type": "string",
+               "enum": [
+                  "strict-required",
+                  "functions-only",
+                  "model-only",
+                  "public-only",
+                  "not-required"
+               ]
+            }
+         }
       }
-    }
-  },
-  "required": ["name", "version"]
+   },
+   "required": ["name", "version"]
 }

@@ -51,12 +51,12 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -  [ ] Parse record declaration
 -  [ ] Parse function declaration
 -  [ ] Parse type declaration
--  [ ] Parse struct declaration
--  [ ] Parse struct property
+-  [ ] Parse model declaration
+-  [ ] Parse model property
 -  [ ] Parse implement statement
 -  [ ] Parse interface declaration
 -  [ ] Parse enum declaration
--  [ ] Parse utilizer block
+-  [ ] Parse specifier block
 -  [ ] Parse use statement
 -  [ ] Parse prepend statement
 -  [ ] Parse public declaration
