@@ -1,6 +1,7 @@
 use crate::{
     identifier::{Literal, LiteralKind},
-    Comment, CommentKind, Identifier, Injunction, Keyword, Operator, Punctuation, TextSpan,
+    BracketKind, Comment, CommentKind, Identifier, Injunction, Keyword, Operator, Punctuation,
+    TextSpan,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -64,27 +65,40 @@ impl<'a> Token<'a> {
             }),
         }
     }
-    pub fn create_injunction(value: String, span: TextSpan) -> Self {
-        let injunction = match value.as_str() {
-            "public" => Injunction::Public,
-            "function" => Injunction::Function,
-            "let" => Injunction::Let,
-            "tests" => Injunction::Test,
-            "model" => Injunction::Model,
-            "const" => Injunction::Const,
-            "enum" => Injunction::Enum,
-            "record" => Injunction::Record,
-            "specify" => Injunction::Specify,
-            "interface" => Injunction::Interface,
-            "type" => Injunction::Type,
-            "implement" => Injunction::Implement,
-            "use" => Injunction::Use,
-            "prepend" => Injunction::Prepend,
-            _ => Injunction::Unknown(value),
-        };
+    pub fn create_injunction(value: &str, span: TextSpan) -> Self {
         Token {
             span,
-            kind: TokenKind::Keyword(Keyword::Injunction(injunction)),
+            kind: TokenKind::Keyword(Keyword::Injunction(match value {
+                "public" => Injunction::Public,
+                "function" => Injunction::Function,
+                "let" => Injunction::Let,
+                "tests" => Injunction::Test,
+                "model" => Injunction::Model,
+                "const" => Injunction::Const,
+                "enum" => Injunction::Enum,
+                "record" => Injunction::Record,
+                "specify" => Injunction::Specify,
+                "interface" => Injunction::Interface,
+                "type" => Injunction::Type,
+                "implement" => Injunction::Implement,
+                "use" => Injunction::Use,
+                "prepend" => Injunction::Prepend,
+                _ => Injunction::Unknown(value.to_string()),
+            })),
+        }
+    }
+    pub fn create_bracket(value: &char, span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::Punctuation(Punctuation::Bracket(match value {
+                '[' => BracketKind::LeftSquare,
+                ']' => BracketKind::RightSquare,
+                '{' => BracketKind::LeftCurly,
+                '}' => BracketKind::RightCurly,
+                '(' => BracketKind::LeftParenthesis,
+                ')' => BracketKind::RightParenthesis,
+                _ => unreachable!(),
+            })),
         }
     }
 }

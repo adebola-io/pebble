@@ -1,7 +1,10 @@
 #![cfg(test)]
 
 use crate::scanner::Scanner;
-use ast::{Comment, CommentKind, Injunction, Keyword, Literal, LiteralKind, Token, TokenKind};
+use ast::{
+    BracketKind, Comment, CommentKind, Injunction, Keyword, Literal, LiteralKind, Punctuation,
+    Token, TokenKind,
+};
 
 #[test]
 fn it_scans_line_comment() {
@@ -205,4 +208,39 @@ fn it_scans_characters() {
             })
         }
     );
+}
+
+#[test]
+fn it_scans_brackets() {
+    let mut scanner = Scanner::new("{}[]()");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens,
+        vec![
+            Token {
+                span: [[1, 1], [1, 2]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftCurly))
+            },
+            Token {
+                span: [[1, 2], [1, 3]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightCurly))
+            },
+            Token {
+                span: [[1, 3], [1, 4]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftSquare))
+            },
+            Token {
+                span: [[1, 4], [1, 5]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightSquare))
+            },
+            Token {
+                span: [[1, 5], [1, 6]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis))
+            },
+            Token {
+                span: [[1, 6], [1, 6]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightParenthesis))
+            }
+        ]
+    )
 }

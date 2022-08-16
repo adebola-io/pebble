@@ -69,6 +69,10 @@ impl<'a> Scanner<'a> {
     fn is_ident(&mut self) -> bool {
         self.char == '$' || self.char == '_' || self.char.is_alphanumeric()
     }
+    /// Checks is the current character is a bracket.
+    fn is_bracket(&mut self) -> bool {
+        matches!(self.char, '{' | '}' | '(' | ')' | '[' | ']')
+    }
     /// Checks that the next stream of tokens match a scan rule.
     fn sees(&mut self, rule: &str) -> bool {
         let front = self.index + rule.len();
@@ -111,6 +115,8 @@ impl<'a> Scanner<'a> {
             self.scan_number()
         } else if self.char == '@' {
             self.scan_injunction()
+        } else if self.is_bracket() {
+            self.scan_bracket()
         } else {
             todo!()
         }
@@ -233,7 +239,7 @@ impl<'a> Scanner<'a> {
             self.next();
         }
         self.mark_end();
-        Token::create_injunction(value, self.span.clone())
+        Token::create_injunction(&value, self.span.clone())
     }
     fn scan_character(&mut self) -> Token<'a> {
         self.mark_start();
@@ -254,5 +260,12 @@ impl<'a> Scanner<'a> {
         self.mark_end();
         self.next();
         Token::create_literal("character", value, self.span.clone())
+    }
+    fn scan_bracket(&mut self) -> Token<'a> {
+        self.mark_start();
+        let char = self.char;
+        self.next();
+        self.mark_end();
+        Token::create_bracket(&char, self.span.clone())
     }
 }
