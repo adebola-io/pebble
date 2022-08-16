@@ -77,7 +77,7 @@ fn it_scans_string_with_escape() {
             span: [[1, 1], [1, 21]],
             kind: TokenKind::Literal(Literal {
                 kind: LiteralKind::StringLiteral,
-                value: String::from("This is a\" string.")
+                value: String::from("This is a\\\" string.")
             })
         }
     )
@@ -189,4 +189,20 @@ fn it_scans_injunction() {
             kind: TokenKind::Keyword(Keyword::Injunction(Injunction::Public))
         }
     )
+}
+
+#[test]
+fn it_scans_characters() {
+    let mut scanner = Scanner::new("'h'");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 3]],
+            kind: TokenKind::Literal(Literal {
+                value: String::from("h"),
+                kind: LiteralKind::CharacterLiteral
+            })
+        }
+    );
 }

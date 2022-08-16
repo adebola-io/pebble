@@ -14,4 +14,5 @@ pub enum LiteralKind {
     StringLiteral,
     NumericLiteral,
     BooleanLiteral,
+    CharacterLiteral,
 }

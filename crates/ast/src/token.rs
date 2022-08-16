@@ -58,6 +58,7 @@ impl<'a> Token<'a> {
                     "string" => LiteralKind::StringLiteral,
                     "boolean" => LiteralKind::BooleanLiteral,
                     "number" => LiteralKind::NumericLiteral,
+                    "character" => LiteralKind::CharacterLiteral,
                     _ => unreachable!(),
                 },
             }),

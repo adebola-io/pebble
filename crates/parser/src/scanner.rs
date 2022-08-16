@@ -105,6 +105,8 @@ impl<'a> Scanner<'a> {
             self.scan_doc_comment()
         } else if self.char == '"' {
             self.scan_string()
+        } else if self.char == '\'' {
+            self.scan_character()
         } else if self.char.is_digit(10) {
             self.scan_number()
         } else if self.char == '@' {
@@ -152,15 +154,19 @@ impl<'a> Scanner<'a> {
         self.next();
         let mut value = String::new();
         while !(self.end || self.char == '"') {
-            if self.sees("\\") {
-                self.next();
-            } else if self.sees("\"") {
-                self.next();
+            if self.sees("\\\\") {
+                value.push_str("\\\\");
+                self.next_by(2);
+            } else if self.sees("\\\"") {
+                value.push_str("\\\"");
+                self.next_by(2);
+            } else {
+                value.push(self.char);
+                self.next()
             }
-            value.push(self.char);
-            self.next()
         }
         self.mark_end();
+        self.next();
         Token::create_literal("string", value, self.span.clone())
     }
     fn scan_number(&mut self) -> Token<'a> {
@@ -228,5 +234,25 @@ impl<'a> Scanner<'a> {
         }
         self.mark_end();
         Token::create_injunction(value, self.span.clone())
+    }
+    fn scan_character(&mut self) -> Token<'a> {
+        self.mark_start();
+        self.next();
+        let mut value = String::new();
+        while !(self.end || self.char == '\'') {
+            if self.sees("\\\\") {
+                value.push_str("\\\\");
+                self.next_by(2);
+            } else if self.sees("\\\'") {
+                value.push_str("\\\'");
+                self.next_by(2);
+            } else {
+                value.push(self.char);
+                self.next()
+            }
+        }
+        self.mark_end();
+        self.next();
+        Token::create_literal("character", value, self.span.clone())
     }
 }
