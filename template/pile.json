@@ -1,5 +1,5 @@
 {
-    "name": "new-pebble-project@1.0.0",
+    "name": "new-pebble-project",
     "version": "0.0.0",
     "description": "The template for a new Pebble project.",
     "dependencies": [{ "name": "sample", "version": "0.0.0" }]
