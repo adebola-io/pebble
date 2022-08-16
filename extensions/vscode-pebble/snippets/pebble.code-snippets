@@ -29,7 +29,12 @@
    "Use Declaration": {
       "prefix": "@use",
       "description": "Autofills syntax for use imports.",
-      "body": ["@use { $1 } from \"$2\";"]
+      "body": ["@use { $2 } from \"$1\";"]
+   },
+   "Prepend Declaration": {
+      "prefix": "@prep",
+      "description": "New prepend declaration.",
+      "body": ["@prepend \"$1\";"]
    },
    "Specifier": {
       "prefix": "@util",

@@ -100,6 +100,8 @@ impl<'a> Scanner<'a> {
             self.scan_doc_comment()
         } else if self.char == '"' {
             self.scan_string()
+        } else if self.char.is_digit(10) {
+            self.scan_number()
         } else {
             todo!()
         }
@@ -153,5 +155,60 @@ impl<'a> Scanner<'a> {
         }
         self.mark_end();
         Token::create_literal("string", value, self.span.clone())
+    }
+    fn scan_number(&mut self) -> Token<'a> {
+        self.mark_start();
+        let mut value = String::new();
+        if self.sees("0x") {
+            value.push_str("0x");
+            self.next_by(2);
+            while self.char.is_digit(16) {
+                value.push(self.char);
+                self.next();
+            }
+        } else if self.sees("0b") {
+            value.push_str("0b");
+            self.next_by(2);
+            while self.char.is_digit(2) {
+                value.push(self.char);
+                self.next();
+            }
+        } else if self.sees("0o") {
+            value.push_str("0o");
+            self.next_by(2);
+            while self.char.is_digit(8) {
+                value.push(self.char);
+                self.next();
+            }
+        } else {
+            while self.char.is_digit(10) {
+                value.push(self.char);
+                self.next();
+            }
+            if self.char == '.' {
+                value.push(self.char);
+                self.next();
+                while self.char.is_digit(10) {
+                    value.push(self.char);
+                    self.next();
+                }
+            }
+        }
+        value.push_str(self.exponent().as_str());
+        self.mark_end();
+        Token::create_literal("number", value, self.span.clone())
+    }
+    fn exponent(&mut self) -> String {
+        let mut exponential = String::new();
+        if self.char == 'e' {
+            loop {
+                exponential.push(self.char);
+                self.next();
+                if !self.char.is_digit(10) {
+                    break;
+                }
+            }
+        }
+        exponential
     }
 }

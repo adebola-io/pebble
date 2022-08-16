@@ -3,21 +3,21 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 
 -  [x] Syntax Highlighting
 -  [ ] Lex Injunction Starts
--  [ ] Lex Block comments
--  [ ] Lex Line comments
--  [ ] Lex Doc comments
+-  [x] Lex Block comments
+-  [x] Lex Line comments
+-  [x] Lex Doc comments
 -  [ ] Lex Strings
--  [ ] Lex Integers
--  [ ] Lex Decimal numbers
--  [ ] Lex Hexadecimal numbers
--  [ ] Lex Octal numbers
--  [ ] Lex Binary numbers
--  [ ] Lex exponential numbers
+-  [x] Lex Integers
+-  [x] Lex Decimal numbers
+-  [x] Lex Hexadecimal numbers
+-  [x] Lex Octal numbers
+-  [x] Lex Binary numbers
+-  [x] Lex exponential numbers
 -  [ ] Lex keywords
 -  [ ] Lex operators
 -  [ ] Lex punctuation
 -  [ ] Lex Identifiers
--  [ ] Lex literals
+-  [x] Lex literals
 -  [ ] Parse strings
 -  [ ] Parse numbers
 -  [ ] Parse booleans

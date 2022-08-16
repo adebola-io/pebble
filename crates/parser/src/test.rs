@@ -82,3 +82,98 @@ fn it_scans_string_with_escape() {
         }
     )
 }
+
+#[test]
+fn it_scans_whole_numbers() {
+    let mut scanner = Scanner::new("89");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 2]],
+            kind: TokenKind::Literal(Literal {
+                value: String::from("89"),
+                kind: LiteralKind::NumericLiteral
+            })
+        }
+    )
+}
+
+#[test]
+fn it_scans_floating_numbers() {
+    let mut scanner = Scanner::new("9.9999");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 6]],
+            kind: TokenKind::Literal(Literal {
+                kind: LiteralKind::NumericLiteral,
+                value: String::from("9.9999")
+            })
+        }
+    )
+}
+
+#[test]
+fn it_scans_hexadecimal_numbers() {
+    let mut scanner = Scanner::new("0x90384");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 7]],
+            kind: TokenKind::Literal(Literal {
+                value: String::from("0x90384"),
+                kind: LiteralKind::NumericLiteral,
+            })
+        }
+    )
+}
+
+#[test]
+fn it_scans_binary_numbers() {
+    let mut scanner = Scanner::new("0b10100");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 7]],
+            kind: TokenKind::Literal(Literal {
+                value: String::from("0b10100"),
+                kind: LiteralKind::NumericLiteral,
+            })
+        }
+    )
+}
+
+#[test]
+fn it_scans_octal_numbers() {
+    let mut scanner = Scanner::new("0o75266");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 7]],
+            kind: TokenKind::Literal(Literal {
+                value: String::from("0o75266"),
+                kind: LiteralKind::NumericLiteral,
+            })
+        }
+    )
+}
+#[test]
+fn it_scans_octal_exponents() {
+    let mut scanner = Scanner::new("0o75266e2");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 9]],
+            kind: TokenKind::Literal(Literal {
+                value: String::from("0o75266e2"),
+                kind: LiteralKind::NumericLiteral,
+            })
+        }
+    )
+}

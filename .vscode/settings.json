@@ -1,5 +1,5 @@
 {
-   "editor.fontFamily": " 'Consolas', 'Courier New', monospace",
+   "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
    "material-icon-theme.files.associations": {
       "*.peb": "../../vscode-pebble/icons/pebble-plain",
       "pile.types": "../../vscode-pebble/icons/pile-types",
