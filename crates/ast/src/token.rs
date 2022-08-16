@@ -1,6 +1,6 @@
 use crate::{
     identifier::{Literal, LiteralKind},
-    Comment, CommentKind, Identifier, Keyword, Operator, Punctuation, TextSpan,
+    Comment, CommentKind, Identifier, Injunction, Keyword, Operator, Punctuation, TextSpan,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -61,6 +61,29 @@ impl<'a> Token<'a> {
                     _ => unreachable!(),
                 },
             }),
+        }
+    }
+    pub fn create_injunction(value: String, span: TextSpan) -> Self {
+        let injunction = match value.as_str() {
+            "public" => Injunction::Public,
+            "function" => Injunction::Function,
+            "let" => Injunction::Let,
+            "tests" => Injunction::Test,
+            "model" => Injunction::Model,
+            "const" => Injunction::Const,
+            "enum" => Injunction::Enum,
+            "record" => Injunction::Record,
+            "specify" => Injunction::Specify,
+            "interface" => Injunction::Interface,
+            "type" => Injunction::Type,
+            "implement" => Injunction::Implement,
+            "use" => Injunction::Use,
+            "prepend" => Injunction::Prepend,
+            _ => Injunction::Unknown(value),
+        };
+        Token {
+            span,
+            kind: TokenKind::Keyword(Keyword::Injunction(injunction)),
         }
     }
 }

@@ -14,15 +14,10 @@
    },
    "categories": [
       "Programming Languages",
+      "Snippets",
+      "Linters",
       "Other"
    ],
-   "activationEvents": [
-      "onLanguage:peb",
-      "workspaceContains:*.peb",
-      "workspaceContains:*/*.peb",
-      "workspaceContains:*/*/*.peb"
-   ],
-   "main": "./dist/extension.js",
    "scripts": {
       "watch": "tsc --watch",
       "build-server": "cd ../../server/ && wasm-pack build --target nodejs",

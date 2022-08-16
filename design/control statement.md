@@ -5,5 +5,5 @@
 5. for-in statements
 6. match statements
 7. loop statements
-8. Try statements
+8. Try-restore statements
 9.

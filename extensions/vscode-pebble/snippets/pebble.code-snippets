@@ -68,6 +68,11 @@
       "description": "Creates a new enum type.",
       "body": ["@enum ${1:Name} {", "   ${2:Variant}", "}"]
    },
+   "Test block": {
+      "prefix": "@tests",
+      "description": "Creates a new test block.",
+      "body": ["@tests {", "   $1", "}"]
+   },
    "For Loop": {
       "prefix": "for",
       "description": "New for Loop.",

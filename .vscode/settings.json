@@ -1,12 +1,25 @@
 {
-   "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
-   "material-icon-theme.files.associations": {
-      "*.peb": "../../vscode-pebble/icons/pebble-plain",
-      "pile.types": "../../vscode-pebble/icons/pile-types",
-      "pile.json": "../../vscode-pebble/icons/pile-json"
-   },
-   "material-icon-theme.folders.associations": {
-      "piles": "piles",
-      "*.pile": "packages"
-   }
+    "editor.fontFamily": "'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "Default Dark+",
+    "editor.tabSize": 4,
+    "prettier.tabWidth": 4,
+    "workbench.iconTheme": "material-icon-theme",
+    "rust-analyzer.inlayHints.typeHints.enable": false,
+    "rust-analyzer.inlayHints.parameterHints.enable": false,
+    "rust-analyzer.inlayHints.closingBraceHints.enable": false,
+    "material-icon-theme.files.associations": {
+        "*.peb": "/vscode-pebble/icons/pebble-plain",
+        "pile.types": "/vscode-pebble/icons/pile-types",
+        "pile.json": "/vscode-pebble/icons/pile-json"
+    },
+    "material-icon-theme.folders.associations": {
+        "piles": "piles",
+        "*.pile": "packages"
+    },
+    "json.schemas": [
+        {
+            "fileMatch": ["/pile.json"],
+            "url": "/design/config.schema.json"
+        }
+    ]
 }

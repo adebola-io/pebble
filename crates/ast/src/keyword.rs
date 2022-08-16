@@ -17,7 +17,7 @@ pub const INJUNCTIONS: &'static [&'static str; 14] = &[
     "type",
     "use",
     "prepend",
-    "test",
+    "tests",
 ];
 #[derive(Debug, Clone, PartialEq)]
 pub enum Keyword {
@@ -60,4 +60,6 @@ pub enum Injunction {
     Implement,
     Specify,
     Public,
+    /// An unrecognized injunction.
+    Unknown(String),
 }

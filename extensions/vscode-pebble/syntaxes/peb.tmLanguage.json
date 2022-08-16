@@ -120,7 +120,7 @@
       },
       "injunction": {
          "name": "meta.injunction keyword.storage.injunction",
-         "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|model|specify|record|interface|implement|test)(?![$@])\\b"
+         "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|model|specify|record|interface|implement|tests)(?![$@])\\b"
       },
       "keyword": {
          "name": "keyword.control",

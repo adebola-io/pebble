@@ -61,11 +61,16 @@ impl<'a> Scanner<'a> {
     fn mark_start(&mut self) {
         self.span[0] = self.pos.clone();
     }
+    /// Marks the current line and column as the end of a token.
     fn mark_end(&mut self) {
         self.span[1] = self.pos.clone();
     }
+    /// Checks if the current character is a valid identifier character.
+    fn is_ident(&mut self) -> bool {
+        self.char == '$' || self.char == '_' || self.char.is_alphanumeric()
+    }
     /// Checks that the next stream of tokens match a scan rule.
-    pub fn sees(&mut self, rule: &str) -> bool {
+    fn sees(&mut self, rule: &str) -> bool {
         let front = self.index + rule.len();
         if front <= self.text.len() {
             let actual: String = self.text[self.index..front].iter().collect();
@@ -102,6 +107,8 @@ impl<'a> Scanner<'a> {
             self.scan_string()
         } else if self.char.is_digit(10) {
             self.scan_number()
+        } else if self.char == '@' {
+            self.scan_injunction()
         } else {
             todo!()
         }
@@ -210,5 +217,16 @@ impl<'a> Scanner<'a> {
             }
         }
         exponential
+    }
+    fn scan_injunction(&mut self) -> Token<'a> {
+        self.mark_start();
+        self.next();
+        let mut value = String::new();
+        while self.is_ident() {
+            value.push(self.char);
+            self.next();
+        }
+        self.mark_end();
+        Token::create_injunction(value, self.span.clone())
     }
 }

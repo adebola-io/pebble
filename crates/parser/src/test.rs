@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::scanner::Scanner;
-use ast::{Comment, CommentKind, Literal, LiteralKind, Token, TokenKind};
+use ast::{Comment, CommentKind, Injunction, Keyword, Literal, LiteralKind, Token, TokenKind};
 
 #[test]
 fn it_scans_line_comment() {
@@ -174,6 +174,19 @@ fn it_scans_octal_exponents() {
                 value: String::from("0o75266e2"),
                 kind: LiteralKind::NumericLiteral,
             })
+        }
+    )
+}
+
+#[test]
+fn it_scans_injunction() {
+    let mut scanner = Scanner::new("@public");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens[0],
+        Token {
+            span: [[1, 1], [1, 7]],
+            kind: TokenKind::Keyword(Keyword::Injunction(Injunction::Public))
         }
     )
 }
