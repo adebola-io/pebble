@@ -50,6 +50,15 @@ impl<'a> Token<'a> {
             }),
         }
     }
+    pub fn is_comment(&self) -> bool {
+        matches!(
+            self,
+            Token {
+                kind: TokenKind::Comment(_),
+                ..
+            }
+        )
+    }
     pub fn create_literal(literal_type: &str, value: String, span: TextSpan) -> Self {
         Token {
             span,

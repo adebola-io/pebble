@@ -13,7 +13,7 @@ fn it_scans_line_comment() {
     let mut scanner = Scanner::new("// This is a comment.");
     scanner.run();
     assert_eq!(
-        scanner.tokens[0],
+        scanner.comments[0],
         Token {
             kind: TokenKind::Comment(Comment {
                 kind: CommentKind::Line,
@@ -29,7 +29,7 @@ fn it_scans_block_comment() {
     let mut scanner = Scanner::new("/* This\nis\na\nblock\ncomment */");
     scanner.run();
     assert_eq!(
-        scanner.tokens[0],
+        scanner.comments[0],
         Token {
             kind: TokenKind::Comment(Comment {
                 kind: CommentKind::Block,
@@ -45,7 +45,7 @@ fn it_scans_doc_comments() {
     let mut scanner = Scanner::new("## This is a doc comment.");
     scanner.run();
     assert_eq!(
-        scanner.tokens[0],
+        scanner.comments[0],
         Token {
             span: [[1, 1], [1, 25]],
             kind: TokenKind::Comment(Comment {

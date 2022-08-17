@@ -5,8 +5,10 @@ use std::collections::HashMap;
 /// A state machine that goes over the input text and scans it into a stream of tokens.<br>
 /// The scanner does not perform any validation on its input. It picks out recognised tokens and flag the unknown tokens as invalid.
 pub struct Scanner<'a> {
-    /// The result tokens.
+    /// The result syntactic tokens.
     pub tokens: Vec<Token<'a>>,
+    /// The result comment tokens,
+    pub comments: Vec<Token<'a>>,
     /// The characters in the input text.
     text: Vec<char>,
     /// The current position in the text stream while scanning.
@@ -30,6 +32,7 @@ impl<'a> Scanner<'a> {
     pub fn new(input: &'a str) -> Self {
         Scanner {
             tokens: Vec::new(),
+            comments: Vec::new(),
             text: input.chars().collect(),
             index: 0,
             end: false,
@@ -113,7 +116,11 @@ impl<'a> Scanner<'a> {
                     self.next()
                 }
                 let token = self.scan_next();
-                self.tokens.push(token);
+                if token.is_comment() {
+                    self.comments.push(token)
+                } else {
+                    self.tokens.push(token);
+                }
                 if self.end {
                     break;
                 }
