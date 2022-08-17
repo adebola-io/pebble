@@ -8,9 +8,9 @@
     "rust-analyzer.inlayHints.parameterHints.enable": false,
     "rust-analyzer.inlayHints.closingBraceHints.enable": false,
     "material-icon-theme.files.associations": {
-        "*.peb": "/vscode-pebble/icons/pebble-plain",
-        "pile.types": "/vscode-pebble/icons/pile-types",
-        "pile.json": "/vscode-pebble/icons/json-plain"
+        "*.peb": "/extensions/vscode-pebble/icons/pebble-plain",
+        "pile.types": "/extensions/vscode-pebble/icons/pile-types",
+        "pile.json": "/extensions/vscode-pebble/icons/json-plain"
     },
     "material-icon-theme.folders.associations": {
         "piles": "piles",

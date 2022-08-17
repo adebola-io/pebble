@@ -47,3 +47,9 @@ pub const OPERATORS: &'static [&'static str; 34] = &[
     "::", "||", "&&", ">>", "<<", "**", "*", "/", "+", "-", "%", "&", "|", "!", "~", ".", "?", ":",
     "=",
 ];
+
+pub fn precedenceof(operator: &str) -> i32 {
+    match operator {
+        _ => todo!(),
+    }
+}

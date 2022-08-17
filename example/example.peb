@@ -1,5 +1,3 @@
-@function sayHello() {
-   println "Hello, world!";
-}
+@use * from core.prelude;
 
-sayHello();
+println "Hello, world!";
