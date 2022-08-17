@@ -16,7 +16,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Lex Binary numbers
 -   [x] Lex exponential numbers
 -   [x] Lex keywords
--   [ ] Lex operators
+-   [x] Lex operators
 -   [x] Lex brackets
 -   [x] Lex punctuation
 -   [x] Lex Identifiers

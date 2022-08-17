@@ -1,9 +1,9 @@
 {
-    "editor.fontFamily": "'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "GitHub Dark",
+    "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "Default Dark+",
     "editor.tabSize": 4,
     "prettier.tabWidth": 4,
-    "workbench.iconTheme": "vscode-icons",
+    "workbench.iconTheme": "material-icon-theme",
     "rust-analyzer.inlayHints.typeHints.enable": false,
     "rust-analyzer.inlayHints.parameterHints.enable": false,
     "rust-analyzer.inlayHints.closingBraceHints.enable": false,

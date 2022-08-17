@@ -15,7 +15,7 @@ pub use expression::*;
 pub use identifier::*;
 pub use keyword::*;
 pub use node::Node;
-pub use operator::Operator;
+pub use operator::*;
 pub use punctuation::*;
 pub use textrange::TextSpan;
 pub use token::*;

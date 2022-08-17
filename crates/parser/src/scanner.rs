@@ -1,4 +1,4 @@
-use ast::{TextSpan, Token, KEYWORDS};
+use ast::{TextSpan, Token, KEYWORDS, OPERATORS};
 use errors::Error;
 use std::collections::HashMap;
 
@@ -19,6 +19,10 @@ pub struct Scanner<'a> {
     pos: [u64; 2],
     span: [[u64; 2]; 2],
     errors: HashMap<TextSpan, &'static str>,
+}
+
+fn is_identifier_char(char: char) -> bool {
+    char == '$' || char == '_' || char.is_alphanumeric()
 }
 
 impl<'a> Scanner<'a> {
@@ -72,20 +76,27 @@ impl<'a> Scanner<'a> {
     fn error(&mut self, code: i32) {
         self.errors.insert(self.span, Error::scanner_error(code));
     }
-    /// Checks if the current character is a valid identifier character.
-    fn is_ident(&mut self) -> bool {
-        self.char == '$' || self.char == '_' || self.char.is_alphanumeric()
-    }
-    /// Checks is the current character is a bracket.
+    /// Checks if the current character is a bracket.
     fn is_bracket(&mut self) -> bool {
         matches!(self.char, '{' | '}' | '(' | ')' | '[' | ']')
     }
     /// Checks that the next stream of tokens match a scan rule.
-    fn sees(&mut self, rule: &str) -> bool {
+    fn sees(&self, rule: &str) -> bool {
         let front = self.index + rule.len();
         if front <= self.text.len() {
             let actual: String = self.text[self.index..front].iter().collect();
             rule.chars().nth(0) == actual.chars().nth(0) && rule == actual.as_str()
+        } else {
+            false
+        }
+    }
+    /// Checks that the next stream of tokens match a scan rule.
+    fn matches(&mut self, rule: &str) -> bool {
+        if self.sees(rule) {
+            match self.text.get(self.index + rule.len()) {
+                None => true,
+                Some(v) => !is_identifier_char(*v),
+            }
         } else {
             false
         }
@@ -123,13 +134,17 @@ impl<'a> Scanner<'a> {
             self.character()
         } else if self.char.is_digit(10) {
             self.number()
+        } else if self.matches("new") {
+            self.operator("new")
+        } else if let Some(op) = OPERATORS.iter().find(|op| self.sees(op)) {
+            self.operator(op)
         } else if self.char == '@' {
             self.injunction()
         } else if self.is_bracket() {
             self.bracket()
         } else if self.char == ';' {
             self.semi_colon()
-        } else if self.is_ident() {
+        } else if is_identifier_char(self.char) {
             self.identifier_or_keyword()
         } else {
             println!(r#"No production for {}"#, self.char);
@@ -249,11 +264,17 @@ impl<'a> Scanner<'a> {
         }
         exponential
     }
+    fn operator(&mut self, op: &str) -> Token<'a> {
+        self.mark_start();
+        self.next_by(op.len());
+        self.mark_end();
+        Token::create_operator(op, self.span.clone())
+    }
     fn injunction(&mut self) -> Token<'a> {
         self.mark_start();
         self.next();
         let mut value = String::new();
-        while self.is_ident() {
+        while is_identifier_char(self.char) {
             value.push(self.char);
             self.next();
         }
@@ -263,7 +284,7 @@ impl<'a> Scanner<'a> {
     fn identifier_or_keyword(&mut self) -> Token<'a> {
         self.mark_start();
         let mut value = String::new();
-        while self.is_ident() {
+        while is_identifier_char(self.char) {
             value.push(self.char);
             self.next();
         }

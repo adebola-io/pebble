@@ -1,9 +1,11 @@
 #![cfg(test)]
 
+use std::vec;
+
 use crate::scanner::Scanner;
 use ast::{
     BracketKind, Comment, CommentKind, Identifier, Injunction, Keyword, Literal, LiteralKind,
-    Punctuation, Token, TokenKind,
+    Operator, Punctuation, Token, TokenKind,
 };
 
 #[test]
@@ -270,4 +272,76 @@ fn it_scans_identifiers_and_keywords() {
             }
         ]
     );
+}
+
+#[test]
+fn it_scans_operators() {
+    let mut scanner = Scanner::new("name++");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens,
+        vec![
+            Token {
+                span: [[1, 1], [1, 5]],
+                kind: TokenKind::Identifier(Identifier {
+                    value: String::from("name")
+                })
+            },
+            Token {
+                span: [[1, 5], [1, 6]],
+                kind: TokenKind::Operator(Operator::Increment)
+            }
+        ]
+    )
+}
+
+#[test]
+fn it_scans_operators_2() {
+    let mut scanner = Scanner::new("2+4+new Number()");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens,
+        vec![
+            Token {
+                span: [[1, 1], [1, 2]],
+                kind: TokenKind::Literal(Literal {
+                    kind: LiteralKind::NumericLiteral,
+                    value: String::from("2")
+                })
+            },
+            Token {
+                span: [[1, 2], [1, 3]],
+                kind: TokenKind::Operator(Operator::Add)
+            },
+            Token {
+                span: [[1, 3], [1, 4]],
+                kind: TokenKind::Literal(Literal {
+                    kind: LiteralKind::NumericLiteral,
+                    value: String::from("4")
+                })
+            },
+            Token {
+                span: [[1, 4], [1, 5]],
+                kind: TokenKind::Operator(Operator::Add)
+            },
+            Token {
+                span: [[1, 5], [1, 8]],
+                kind: TokenKind::Operator(Operator::New)
+            },
+            Token {
+                span: [[1, 9], [1, 15]],
+                kind: TokenKind::Identifier(Identifier {
+                    value: String::from("Number")
+                })
+            },
+            Token {
+                span: [[1, 15], [1, 16]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis))
+            },
+            Token {
+                span: [[1, 16], [1, 16]],
+                kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightParenthesis))
+            }
+        ]
+    )
 }
