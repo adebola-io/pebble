@@ -5,24 +5,24 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum TokenKind<'a> {
+pub enum TokenKind {
     Operator(Operator),
     Punctuation(Punctuation),
     Keyword(Keyword),
     Comment(Comment),
     Literal(Literal),
     Identifier(Identifier),
-    Invalid { value: &'a str },
+    Invalid(String),
 }
 
 /// A piece of code collected when scanning the input source file.
 #[derive(Debug, PartialEq, Clone)]
-pub struct Token<'a> {
+pub struct Token {
     pub span: TextSpan,
-    pub kind: TokenKind<'a>,
+    pub kind: TokenKind,
 }
 
-impl<'a> Token<'a> {
+impl Token {
     pub fn create_line_comment(content: String, span: TextSpan) -> Self {
         Token {
             kind: TokenKind::Comment(Comment {
@@ -198,6 +198,12 @@ impl<'a> Token<'a> {
                 "--" => Operator::Decrement,
                 _ => unreachable!(),
             }),
+        }
+    }
+    pub fn create_unknown(value: String, span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::Invalid(value),
         }
     }
 }

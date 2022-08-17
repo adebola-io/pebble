@@ -345,3 +345,16 @@ fn it_scans_operators_2() {
         ]
     )
 }
+
+#[test]
+fn it_scans_unknown_token() {
+    let mut scanner = Scanner::new("`");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens,
+        vec![Token {
+            span: [[1, 1], [1, 1]],
+            kind: TokenKind::Invalid(String::from("`"))
+        }]
+    )
+}
