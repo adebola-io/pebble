@@ -11,7 +11,7 @@ pub enum TokenKind<'a> {
     Keyword(Keyword),
     Comment(Comment),
     Literal(Literal),
-    Identifier(Identifier<'a>),
+    Identifier(Identifier),
     Invalid { value: &'a str },
 }
 
@@ -99,6 +99,51 @@ impl<'a> Token<'a> {
                 ')' => BracketKind::RightParenthesis,
                 _ => unreachable!(),
             })),
+        }
+    }
+    pub fn create_semi_colon(span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::Punctuation(Punctuation::SemiColon),
+        }
+    }
+    pub fn create_comma(span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::Punctuation(Punctuation::Comma),
+        }
+    }
+    pub fn create_identifier(value: String, span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::Identifier(Identifier { value }),
+        }
+    }
+    pub fn create_keyword(value: String, span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::Keyword(match value.as_str() {
+                "as" => Keyword::As,
+                "for" => Keyword::For,
+                "if" => Keyword::If,
+                "else" => Keyword::Else,
+                "match" => Keyword::Match,
+                "in" => Keyword::In,
+                "loop" => Keyword::Loop,
+                "case" => Keyword::Case,
+                "break" => Keyword::Break,
+                "do" => Keyword::Do,
+                "while" => Keyword::While,
+                "continue" => Keyword::Continue,
+                "return" => Keyword::Return,
+                "crash" => Keyword::Crash,
+                "try" => Keyword::Try,
+                "recover" => Keyword::Recover,
+                "println" => Keyword::Println,
+                "sleep" => Keyword::Sleep,
+                "static" => Keyword::Static,
+                _ => unreachable!(),
+            }),
         }
     }
 }

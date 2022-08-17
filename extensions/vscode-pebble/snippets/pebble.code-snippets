@@ -1,86 +1,90 @@
 {
-   "Public Declaration": {
-      "prefix": "@pub",
-      "description": "Creates a new public declaration.",
-      "body": "@public $1"
-   },
-   "Function Declaration": {
-      "prefix": "@func",
-      "description": "Creates a new function declaration",
-      "body": ["@function ${1:name}() {", "   $2", "}"]
-   },
-   "Record Declaration": {
-      "prefix": "@rec",
-      "body": [
-         "@record ${1:RECORD_NAME} = {",
-         "   ${2:property} -> ${3:value}",
-         "}"
-      ]
-   },
-   "Constant Declaration": {
-      "prefix": "@const",
-      "body": "@const $1"
-   },
-   "Function Declaration with parameters": {
-      "prefix": "@funcp",
-      "description": "Creates a new function declaration with parameters",
-      "body": ["@function ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
-   },
-   "Use Declaration": {
-      "prefix": "@use",
-      "description": "Autofills syntax for use imports.",
-      "body": ["@use { $2 } from \"$1\";"]
-   },
-   "Prepend Declaration": {
-      "prefix": "@prep",
-      "description": "New prepend declaration.",
-      "body": ["@prepend \"$1\";"]
-   },
-   "Specifier": {
-      "prefix": "@util",
-      "description": "Build a specifier block.",
-      "body": [
-         "@specify ${1:Structure} {",
-         "   constructor() {",
-         "      $2",
-         "   }",
-         "   $3",
-         "}"
-      ]
-   },
-   "Interface Declaration": {
-      "prefix": "@int",
-      "description": "Autofill syntax for interface.",
-      "body": ["@interface ${1:Name} {", "   ${2:trait}: ${3:TraitType};", "}"]
-   },
-   "Implementation": {
-      "prefix": "@impl",
-      "description": "Implement a interface inside a model.",
-      "body": "@implement ${1:Interface};"
-   },
-   "Model": {
-      "prefix": ["@mod", "@model"],
-      "description": "Creates a new structure.",
-      "body": ["@model ${1:Name} {", "   $2", "}"]
-   },
-   "Enum": {
-      "prefix": "@enum",
-      "description": "Creates a new enum type.",
-      "body": ["@enum ${1:Name} {", "   ${2:Variant}", "}"]
-   },
-   "Test block": {
-      "prefix": "@tests",
-      "description": "Creates a new test block.",
-      "body": ["@tests {", "   $1", "}"]
-   },
-   "For Loop": {
-      "prefix": "for",
-      "description": "New for Loop.",
-      "body": ["for (${1:item} in ${2:iterator}) {", "   $3", "}"]
-   },
-   "Println": {
-      "prefix": "pr",
-      "description": "Println statement",
-      "body": "println $1;"
-   }
+    "Public Declaration": {
+        "prefix": "@pub",
+        "description": "Creates a new public declaration.",
+        "body": "@public $1"
+    },
+    "Function Declaration": {
+        "prefix": "@func",
+        "description": "Creates a new function declaration",
+        "body": ["@function ${1:name}() {", "   $2", "}"]
+    },
+    "Record Declaration": {
+        "prefix": "@rec",
+        "body": [
+            "@record ${1:RECORD_NAME} = {",
+            "   ${2:property} -> ${3:value}",
+            "}"
+        ]
+    },
+    "Constant Declaration": {
+        "prefix": "@const",
+        "body": "@const $1"
+    },
+    "Function Declaration with parameters": {
+        "prefix": "@funcp",
+        "description": "Creates a new function declaration with parameters",
+        "body": ["@function ${1:name}(${2:param1}: ${3:type}) {", "   $4", "}"]
+    },
+    "Use Declaration": {
+        "prefix": "@use",
+        "description": "Autofills syntax for use imports.",
+        "body": ["@use { $2 } from \"$1\";"]
+    },
+    "Prepend Declaration": {
+        "prefix": "@prep",
+        "description": "New prepend declaration.",
+        "body": ["@prepend \"$1\";"]
+    },
+    "Specifier": {
+        "prefix": "@spec",
+        "description": "Build a specifier block.",
+        "body": [
+            "@specify ${1:Structure} {",
+            "   constructor() {",
+            "      $2",
+            "   }",
+            "   $3",
+            "}"
+        ]
+    },
+    "Interface Declaration": {
+        "prefix": "@int",
+        "description": "Autofill syntax for interface.",
+        "body": [
+            "@interface ${1:Name} {",
+            "   ${2:trait}: ${3:TraitType};",
+            "}"
+        ]
+    },
+    "Implementation": {
+        "prefix": "@impl",
+        "description": "Implement a interface inside a model.",
+        "body": "@implement ${1:Interface};"
+    },
+    "Model": {
+        "prefix": ["@mod", "@model"],
+        "description": "Creates a new structure.",
+        "body": ["@model ${1:Name} {", "   $2", "}"]
+    },
+    "Enum": {
+        "prefix": "@enum",
+        "description": "Creates a new enum type.",
+        "body": ["@enum ${1:Name} {", "   ${2:Variant}", "}"]
+    },
+    "Test block": {
+        "prefix": "@tests",
+        "description": "Creates a new test block.",
+        "body": ["@tests {", "   $1", "}"]
+    },
+    "For Loop": {
+        "prefix": "for",
+        "description": "New for Loop.",
+        "body": ["for (${1:item} in ${2:iterator}) {", "   $3", "}"]
+    },
+    "Println": {
+        "prefix": "pr",
+        "description": "Println statement",
+        "body": "println $1;"
+    }
 }

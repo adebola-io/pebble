@@ -1,16 +1,16 @@
 {
-    "editor.fontFamily": "'Source Code Pro','Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "Andromeda",
+    "editor.fontFamily": "'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "GitHub Dark",
     "editor.tabSize": 4,
     "prettier.tabWidth": 4,
-    "workbench.iconTheme": "material-icon-theme",
+    "workbench.iconTheme": "vscode-icons",
     "rust-analyzer.inlayHints.typeHints.enable": false,
     "rust-analyzer.inlayHints.parameterHints.enable": false,
     "rust-analyzer.inlayHints.closingBraceHints.enable": false,
     "material-icon-theme.files.associations": {
         "*.peb": "/vscode-pebble/icons/pebble-plain",
         "pile.types": "/vscode-pebble/icons/pile-types",
-        "pile.json": "/vscode-pebble/icons/pile-json-plain"
+        "pile.json": "/vscode-pebble/icons/json-plain"
     },
     "material-icon-theme.folders.associations": {
         "piles": "piles",

@@ -1,6 +1,6 @@
 #[derive(Debug, PartialEq, Clone)]
-pub struct Identifier<'a> {
-    value: &'a str,
+pub struct Identifier {
+    pub value: String,
 }
 
 #[derive(Debug, PartialEq, Clone)]

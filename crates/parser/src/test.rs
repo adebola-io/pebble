@@ -2,8 +2,8 @@
 
 use crate::scanner::Scanner;
 use ast::{
-    BracketKind, Comment, CommentKind, Injunction, Keyword, Literal, LiteralKind, Punctuation,
-    Token, TokenKind,
+    BracketKind, Comment, CommentKind, Identifier, Injunction, Keyword, Literal, LiteralKind,
+    Punctuation, Token, TokenKind,
 };
 
 #[test]
@@ -40,12 +40,12 @@ fn it_scans_block_comment() {
 
 #[test]
 fn it_scans_doc_comments() {
-    let mut scanner = Scanner::new("# This is a doc comment.");
+    let mut scanner = Scanner::new("## This is a doc comment.");
     scanner.run();
     assert_eq!(
         scanner.tokens[0],
         Token {
-            span: [[1, 1], [1, 24]],
+            span: [[1, 1], [1, 25]],
             kind: TokenKind::Comment(Comment {
                 kind: CommentKind::Doc,
                 content: String::from(" This is a doc comment.")
@@ -243,4 +243,31 @@ fn it_scans_brackets() {
             }
         ]
     )
+}
+
+#[test]
+fn it_scans_identifiers_and_keywords() {
+    let mut scanner = Scanner::new("name in word");
+    scanner.run();
+    assert_eq!(
+        scanner.tokens,
+        vec![
+            Token {
+                span: [[1, 1], [1, 5]],
+                kind: TokenKind::Identifier(Identifier {
+                    value: String::from("name")
+                })
+            },
+            Token {
+                span: [[1, 6], [1, 8]],
+                kind: TokenKind::Keyword(Keyword::In)
+            },
+            Token {
+                span: [[1, 9], [1, 12]],
+                kind: TokenKind::Identifier(Identifier {
+                    value: String::from("word")
+                })
+            }
+        ]
+    );
 }

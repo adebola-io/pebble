@@ -1,4 +1,6 @@
-use ast::Token;
+use ast::{TextSpan, Token, KEYWORDS};
+use errors::Error;
+use std::collections::HashMap;
 
 /// A state machine that goes over the input text and scans it into a stream of tokens.<br>
 /// The scanner does not perform any validation on its input. It picks out recognised tokens and flag the unknown tokens as invalid.
@@ -16,6 +18,7 @@ pub struct Scanner<'a> {
     /// A duo of numbers that mark the position of the scanner in the input text, by line and by column
     pos: [u64; 2],
     span: [[u64; 2]; 2],
+    errors: HashMap<TextSpan, &'static str>,
 }
 
 impl<'a> Scanner<'a> {
@@ -29,6 +32,7 @@ impl<'a> Scanner<'a> {
             char: '\0',
             pos: [1, 1],
             span: [[0, 0], [0, 0]],
+            errors: HashMap::new(),
         }
     }
     // Advances to the next character in the stream.
@@ -65,6 +69,9 @@ impl<'a> Scanner<'a> {
     fn mark_end(&mut self) {
         self.span[1] = self.pos.clone();
     }
+    fn error(&mut self, code: i32) {
+        self.errors.insert(self.span, Error::scanner_error(code));
+    }
     /// Checks if the current character is a valid identifier character.
     fn is_ident(&mut self) -> bool {
         self.char == '$' || self.char == '_' || self.char.is_alphanumeric()
@@ -78,7 +85,7 @@ impl<'a> Scanner<'a> {
         let front = self.index + rule.len();
         if front <= self.text.len() {
             let actual: String = self.text[self.index..front].iter().collect();
-            rule == actual.as_str()
+            rule.chars().nth(0) == actual.chars().nth(0) && rule == actual.as_str()
         } else {
             false
         }
@@ -91,6 +98,9 @@ impl<'a> Scanner<'a> {
         self.char = *self.text.get(0).unwrap_or_else(|| &'\0');
         if self.char != '\0' {
             loop {
+                while self.char == ' ' {
+                    self.next()
+                }
                 let token = self.scan_next();
                 self.tokens.push(token);
                 if self.end {
@@ -102,26 +112,31 @@ impl<'a> Scanner<'a> {
     /// Scans for the next token in the stream.
     fn scan_next(&mut self) -> Token<'a> {
         if self.sees("//") {
-            self.scan_line_comment()
+            self.line_comment()
         } else if self.sees("/*") {
-            self.scan_block_comment()
-        } else if self.char == '#' {
-            self.scan_doc_comment()
+            self.block_comment()
+        } else if self.sees("##") {
+            self.doc_comment()
         } else if self.char == '"' {
-            self.scan_string()
+            self.string()
         } else if self.char == '\'' {
-            self.scan_character()
+            self.character()
         } else if self.char.is_digit(10) {
-            self.scan_number()
+            self.number()
         } else if self.char == '@' {
-            self.scan_injunction()
+            self.injunction()
         } else if self.is_bracket() {
-            self.scan_bracket()
+            self.bracket()
+        } else if self.char == ';' {
+            self.semi_colon()
+        } else if self.is_ident() {
+            self.identifier_or_keyword()
         } else {
+            println!(r#"No production for {}"#, self.char);
             todo!()
         }
     }
-    fn scan_line_comment(&mut self) -> Token<'a> {
+    fn line_comment(&mut self) -> Token<'a> {
         self.mark_start();
         self.next_by(2);
         let mut content = String::new();
@@ -132,7 +147,7 @@ impl<'a> Scanner<'a> {
         self.mark_end();
         Token::create_line_comment(content, self.span.clone())
     }
-    fn scan_block_comment(&mut self) -> Token<'a> {
+    fn block_comment(&mut self) -> Token<'a> {
         self.mark_start();
         self.next_by(2);
         let mut content = String::new();
@@ -144,9 +159,9 @@ impl<'a> Scanner<'a> {
         self.mark_end();
         Token::create_block_comment(content, self.span.clone())
     }
-    fn scan_doc_comment(&mut self) -> Token<'a> {
+    fn doc_comment(&mut self) -> Token<'a> {
         self.mark_start();
-        self.next();
+        self.next_by(2);
         let mut content = String::new();
         while !(self.end || self.char == '\n') {
             content.push(self.char);
@@ -155,7 +170,7 @@ impl<'a> Scanner<'a> {
         self.mark_end();
         Token::create_doc_comment(content, self.span.clone())
     }
-    fn scan_string(&mut self) -> Token<'a> {
+    fn string(&mut self) -> Token<'a> {
         self.mark_start();
         self.next();
         let mut value = String::new();
@@ -172,10 +187,14 @@ impl<'a> Scanner<'a> {
             }
         }
         self.mark_end();
-        self.next();
+        if self.end {
+            self.error(1);
+        } else {
+            self.next();
+        }
         Token::create_literal("string", value, self.span.clone())
     }
-    fn scan_number(&mut self) -> Token<'a> {
+    fn number(&mut self) -> Token<'a> {
         self.mark_start();
         let mut value = String::new();
         if self.sees("0x") {
@@ -230,7 +249,7 @@ impl<'a> Scanner<'a> {
         }
         exponential
     }
-    fn scan_injunction(&mut self) -> Token<'a> {
+    fn injunction(&mut self) -> Token<'a> {
         self.mark_start();
         self.next();
         let mut value = String::new();
@@ -241,7 +260,21 @@ impl<'a> Scanner<'a> {
         self.mark_end();
         Token::create_injunction(&value, self.span.clone())
     }
-    fn scan_character(&mut self) -> Token<'a> {
+    fn identifier_or_keyword(&mut self) -> Token<'a> {
+        self.mark_start();
+        let mut value = String::new();
+        while self.is_ident() {
+            value.push(self.char);
+            self.next();
+        }
+        self.mark_end();
+        if KEYWORDS.contains(&value.as_str()) {
+            Token::create_keyword(value, self.span.clone())
+        } else {
+            Token::create_identifier(value, self.span.clone())
+        }
+    }
+    fn character(&mut self) -> Token<'a> {
         self.mark_start();
         self.next();
         let mut value = String::new();
@@ -261,11 +294,23 @@ impl<'a> Scanner<'a> {
         self.next();
         Token::create_literal("character", value, self.span.clone())
     }
-    fn scan_bracket(&mut self) -> Token<'a> {
+    fn bracket(&mut self) -> Token<'a> {
         self.mark_start();
         let char = self.char;
         self.next();
         self.mark_end();
         Token::create_bracket(&char, self.span.clone())
+    }
+    fn semi_colon(&mut self) -> Token<'a> {
+        self.mark_start();
+        self.next();
+        self.mark_end();
+        Token::create_semi_colon(self.span.clone())
+    }
+    fn comma(&mut self) -> Token<'a> {
+        self.mark_start();
+        self.next();
+        self.mark_end();
+        Token::create_comma(self.span.clone())
     }
 }
