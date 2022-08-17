@@ -8,7 +8,7 @@ pub enum Error {
 impl Error {
     pub fn scanner_error(error_code: i32) -> &'static str {
         match error_code {
-            0 => "Unterminated String Literal.",
+            1 => "Unterminated String Literal.",
             _ => unreachable!(),
         }
     }
