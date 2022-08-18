@@ -1,17 +1,51 @@
 {
+    // "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
     "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "Default Dark+",
+    // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "Red",
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.colorCustomizations": {
+        "editorInlayHint.background": "#00000000",
+        "editorInlayHint.parameterBackground": "#00000000",
+        "editorInlayHint.typeBackground": "#00000000"
+    },
     "editor.tabSize": 4,
     "prettier.tabWidth": 4,
-    "workbench.iconTheme": "material-icon-theme",
-    "rust-analyzer.inlayHints.typeHints.enable": false,
-    "rust-analyzer.inlayHints.parameterHints.enable": false,
-    "rust-analyzer.inlayHints.closingBraceHints.enable": false,
+    "editor.inlayHints.fontSize": 10,
+    "rust-analyzer.inlayHints.typeHints.enable": true,
+    "rust-analyzer.inlayHints.parameterHints.enable": true,
+    "rust-analyzer.inlayHints.closingBraceHints.enable": true,
+    "editor.tokenColorCustomizations": {
+        "[Red]": {
+            "textMateRules": [
+                {
+                    "scope": "variable",
+                    "settings": {
+                        "fontStyle": ""
+                    }
+                },
+                {
+                    "scope": ["entity.name.function", "meta.function-call"],
+                    "settings": {
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": ["comment"],
+                    "settings": {
+                        "foreground": "#744c4c",
+                        "fontStyle": ""
+                    }
+                }
+            ]
+        }
+    },
     "material-icon-theme.files.associations": {
-        "*.peb": "/extensions/vscode-pebble/icons/pebble-plain",
+        "*.peb": "typescript",
         "pile.types": "/extensions/vscode-pebble/icons/pile-types",
         "pile.json": "/extensions/vscode-pebble/icons/json-plain"
     },
+    "vsicons.associations.files": [],
     "material-icon-theme.folders.associations": {
         "piles": "piles",
         "*.pile": "packages"

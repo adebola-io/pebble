@@ -13,6 +13,7 @@ pub enum TokenKind {
     Literal(Literal),
     Identifier(Identifier),
     Invalid(String),
+    EOF,
 }
 
 /// A piece of code collected when scanning the input source file.
@@ -55,6 +56,24 @@ impl Token {
             self,
             Token {
                 kind: TokenKind::Comment(_),
+                ..
+            }
+        )
+    }
+    pub fn is_eof(&self) -> bool {
+        matches!(
+            self,
+            Token {
+                kind: TokenKind::EOF,
+                ..
+            }
+        )
+    }
+    pub fn is_semi_colon(&self) -> bool {
+        matches!(
+            self,
+            Token {
+                kind: TokenKind::Punctuation(Punctuation::SemiColon),
                 ..
             }
         )
@@ -204,6 +223,24 @@ impl Token {
         Token {
             span,
             kind: TokenKind::Invalid(value),
+        }
+    }
+    pub fn eof(span: TextSpan) -> Self {
+        Token {
+            span,
+            kind: TokenKind::EOF,
+        }
+    }
+    pub fn value_of(&self) -> &str {
+        match self.kind {
+            TokenKind::Operator(_) => todo!(),
+            TokenKind::Punctuation(_) => todo!(),
+            TokenKind::Keyword(_) => todo!(),
+            TokenKind::Comment(_) => todo!(),
+            TokenKind::Literal(_) => todo!(),
+            TokenKind::Identifier(_) => todo!(),
+            TokenKind::Invalid(_) => todo!(),
+            TokenKind::EOF => todo!(),
         }
     }
 }

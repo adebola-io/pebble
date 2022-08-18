@@ -126,6 +126,7 @@ impl Scanner {
                 }
             }
         }
+        self.tokens.push(Token::eof(self.span.clone()));
     }
     /// Scans for the next token in the stream.
     fn scan_next(&mut self) -> Token {

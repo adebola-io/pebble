@@ -2,7 +2,7 @@
 
 use std::vec;
 
-use crate::scanner::Scanner;
+use crate::{parser::Parser, scanner::Scanner};
 use ast::{
     BracketKind, Comment, CommentKind, Identifier, Injunction, Keyword, Literal, LiteralKind,
     Operator, Punctuation, Token, TokenKind,
@@ -242,6 +242,10 @@ fn it_scans_brackets() {
             Token {
                 span: [[1, 6], [1, 6]],
                 kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightParenthesis))
+            },
+            Token {
+                span: [[1, 6], [1, 6]],
+                kind: TokenKind::EOF
             }
         ]
     )
@@ -269,6 +273,10 @@ fn it_scans_identifiers_and_keywords() {
                 kind: TokenKind::Identifier(Identifier {
                     value: String::from("word")
                 })
+            },
+            Token {
+                span: [[1, 9], [1, 12]],
+                kind: TokenKind::EOF
             }
         ]
     );
@@ -290,6 +298,10 @@ fn it_scans_operators() {
             Token {
                 span: [[1, 5], [1, 6]],
                 kind: TokenKind::Operator(Operator::Increment)
+            },
+            Token {
+                span: [[1, 5], [1, 6]],
+                kind: TokenKind::EOF
             }
         ]
     )
@@ -341,6 +353,10 @@ fn it_scans_operators_2() {
             Token {
                 span: [[1, 16], [1, 16]],
                 kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightParenthesis))
+            },
+            Token {
+                span: [[1, 16], [1, 16]],
+                kind: TokenKind::EOF
             }
         ]
     )
@@ -352,9 +368,20 @@ fn it_scans_unknown_token() {
     scanner.run();
     assert_eq!(
         scanner.tokens,
-        vec![Token {
-            span: [[1, 1], [1, 1]],
-            kind: TokenKind::Invalid(String::from("`"))
-        }]
+        vec![
+            Token {
+                span: [[1, 1], [1, 1]],
+                kind: TokenKind::Invalid(String::from("`"))
+            },
+            Token {
+                span: [[1, 1], [1, 1]],
+                kind: TokenKind::EOF
+            }
+        ],
     )
+}
+
+#[test]
+fn it_parses_binary_expressions() {
+    let mut parser = Parser::from_scanner(Scanner::new("2+2"));
 }
