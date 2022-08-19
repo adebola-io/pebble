@@ -144,6 +144,8 @@ impl Scanner {
             self.number()
         } else if self.matches("new") {
             self.operator("new")
+        } else if self.matches("true") || self.matches("false") {
+            self.boolean()
         } else if let Some(op) = OPERATORS.iter().find(|op| self.sees(op)) {
             self.operator(op)
         } else if self.char == '@' {
@@ -215,6 +217,19 @@ impl Scanner {
             self.next();
         }
         Token::create_literal("string", value, self.span.clone())
+    }
+    fn boolean(&mut self) -> Token {
+        self.mark_start();
+        let value;
+        if self.char == 't' {
+            self.next_by(4);
+            value = String::from("true");
+        } else {
+            self.next_by(5);
+            value = String::from("false")
+        }
+        self.mark_end();
+        Token::create_literal("boolean", value, self.span.clone())
     }
     fn number(&mut self) -> Token {
         self.mark_start();

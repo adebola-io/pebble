@@ -7,6 +7,7 @@ mod keyword;
 mod node;
 mod operator;
 mod punctuation;
+mod statement;
 mod textrange;
 mod token;
 
@@ -17,5 +18,6 @@ pub use keyword::*;
 pub use node::*;
 pub use operator::*;
 pub use punctuation::*;
+pub use statement::*;
 pub use textrange::TextSpan;
 pub use token::*;

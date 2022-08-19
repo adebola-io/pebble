@@ -24,10 +24,10 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 
 ## Parsing/ Syntactic Analysis
 
--   [ ] Parse strings
--   [ ] Parse numbers
--   [ ] Parse booleans
--   [ ] Parse expression statement
+-   [x] Parse strings
+-   [x] Parse numbers
+-   [x] Parse booleans
+-   [x] Parse expression statement
 -   [ ] Parse binary expression
 -   [ ] Parse call expression
 -   [ ] Parse member expression

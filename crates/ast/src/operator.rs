@@ -48,8 +48,10 @@ pub const OPERATORS: &'static [&'static str; 34] = &[
     "=",
 ];
 
-pub fn precedenceof(operator: &str) -> i32 {
+pub fn precedence_of(operator: &str) -> i32 {
     match operator {
+        "*" => 9,
+        "+" => 8,
         _ => todo!(),
     }
 }

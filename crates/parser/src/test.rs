@@ -4,8 +4,9 @@ use std::vec;
 
 use crate::{parser::Parser, scanner::Scanner};
 use ast::{
-    BracketKind, Comment, CommentKind, Identifier, Injunction, Keyword, Literal, LiteralKind,
-    Operator, Punctuation, Token, TokenKind,
+    BooleanExpr, BracketKind, Comment, CommentKind, Expression, ExpressionStatement, Identifier,
+    Injunction, Keyword, Literal, LiteralKind, Node, NodeData, NumericExpr, Operator, Punctuation,
+    Statement, StringExpr, Token, TokenKind,
 };
 
 #[test]
@@ -382,6 +383,65 @@ fn it_scans_unknown_token() {
 }
 
 #[test]
-fn it_parses_binary_expressions() {
-    let mut parser = Parser::from_scanner(Scanner::new("2+2"));
+fn it_parses_numeric_literal() {
+    assert_eq!(
+        Parser::from_scanner(Scanner::new("2;")).statements[0],
+        Node {
+            range: [[1, 1], [1, 2]],
+            data: NodeData::Statement {
+                kind: Statement::ExpressionStatement(ExpressionStatement {
+                    expression: Box::new(Node {
+                        range: [[1, 1], [1, 2]],
+                        data: NodeData::Expression {
+                            kind: Expression::NumericExpr(NumericExpr {
+                                value: String::from("2")
+                            })
+                        }
+                    })
+                })
+            }
+        }
+    );
+}
+
+#[test]
+fn it_parses_string_literal() {
+    assert_eq!(
+        Parser::from_scanner(Scanner::new("\"Hello, world!\";")).statements[0],
+        Node {
+            range: [[1, 1], [1, 16]],
+            data: NodeData::Statement {
+                kind: Statement::ExpressionStatement(ExpressionStatement {
+                    expression: Box::new(Node {
+                        range: [[1, 1], [1, 15]],
+                        data: NodeData::Expression {
+                            kind: Expression::StringExpr(StringExpr {
+                                value: String::from("Hello, world!")
+                            })
+                        }
+                    })
+                })
+            }
+        }
+    );
+}
+
+#[test]
+fn it_parses_boolean_literal() {
+    assert_eq!(
+        Parser::from_scanner(Scanner::new("true;")).statements[0],
+        Node {
+            range: [[1, 1], [1, 5]],
+            data: NodeData::Statement {
+                kind: Statement::ExpressionStatement(ExpressionStatement {
+                    expression: Box::new(Node {
+                        range: [[1, 1], [1, 5]],
+                        data: NodeData::Expression {
+                            kind: Expression::BooleanExpr(BooleanExpr { value: true })
+                        }
+                    })
+                })
+            }
+        }
+    );
 }

@@ -5,11 +5,13 @@ use crate::{Node, Operator};
 pub enum Expression {
     StringExpr(StringExpr),
     NumericExpr(NumericExpr),
+    BooleanExpr(BooleanExpr),
     UnaryExpr(UnaryExpr),
     ArrayExpr(ArrayExpr),
     AccessExpr(AccessExpr),
     DotExpr(DotExpr),
     RangeExpr(RangeExpr),
+    BinaryExpr(BinaryExpr),
 }
 
 /// A string literal in Pebble. e.g. `"John Doe", "One does not simply walk into Mordor"`
@@ -24,6 +26,11 @@ pub struct NumericExpr {
     pub value: String,
 }
 
+// A boolean literal, i.e. `true` or `false`
+#[derive(Debug, Clone, PartialEq)]
+pub struct BooleanExpr {
+    pub value: bool,
+}
 /// An operation that occurs on only one operand. e.g. `!a, ~b`
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnaryExpr {
