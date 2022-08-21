@@ -1,12 +1,12 @@
 #![cfg(test)]
 
-use std::vec;
-
-use crate::{parser::Parser, scanner::Scanner};
+use crate::{
+    parser::{Parser, Provider},
+    scanner::Scanner,
+};
 use ast::{
-    BooleanExpr, BracketKind, Comment, CommentKind, Expression, ExpressionStatement, Identifier,
-    Injunction, Keyword, Literal, LiteralKind, Node, NodeData, NumericExpr, Operator, Punctuation,
-    Statement, StringExpr, Token, TokenKind,
+    BracketKind, Comment, CommentKind, Expression, Identifier, Injunction, Keyword, Literal,
+    LiteralKind, Operator, Punctuation, Statement, Token, TokenKind,
 };
 
 #[test]
@@ -384,64 +384,115 @@ fn it_scans_unknown_token() {
 
 #[test]
 fn it_parses_numeric_literal() {
+    let mut scanner = Scanner::new("2;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
     assert_eq!(
-        Parser::from_scanner(Scanner::new("2;")).statements[0],
-        Node {
-            range: [[1, 1], [1, 2]],
-            data: NodeData::Statement {
-                kind: Statement::ExpressionStatement(ExpressionStatement {
-                    expression: Box::new(Node {
-                        range: [[1, 1], [1, 2]],
-                        data: NodeData::Expression {
-                            kind: Expression::NumericExpr(NumericExpr {
-                                value: String::from("2")
-                            })
-                        }
-                    })
-                })
-            }
+        statements[0],
+        Statement::ExprStmnt {
+            expression: Expression::NumericExpr {
+                value: "2",
+                span: [[1, 1], [1, 2]]
+            },
+            span: [[1, 1], [1, 2]]
         }
-    );
+    )
 }
 
-#[test]
-fn it_parses_string_literal() {
-    assert_eq!(
-        Parser::from_scanner(Scanner::new("\"Hello, world!\";")).statements[0],
-        Node {
-            range: [[1, 1], [1, 16]],
-            data: NodeData::Statement {
-                kind: Statement::ExpressionStatement(ExpressionStatement {
-                    expression: Box::new(Node {
-                        range: [[1, 1], [1, 15]],
-                        data: NodeData::Expression {
-                            kind: Expression::StringExpr(StringExpr {
-                                value: String::from("Hello, world!")
-                            })
-                        }
-                    })
-                })
-            }
-        }
-    );
-}
+// #[test]
+// fn it_parses_string_literal() {
+//     assert_eq!(
+//         Parser::from_scanner(Scanner::new("\"Hello, world!\";")).statements[0],
+//         Node {
+//             range: [[1, 1], [1, 16]],
+//             data: NodeData::Statement {
+//                 kind: Statement::ExpressionStatement(ExpressionStatement {
+//                     expression: Box::new(Node {
+//                         range: [[1, 1], [1, 15]],
+//                         data: NodeData::Expression {
+//                             kind: Expression::StringExpr(StringExpr {
+//                                 value: String::from("Hello, world!")
+//                             })
+//                         }
+//                     })
+//                 })
+//             }
+//         }
+//     );
+// }
 
-#[test]
-fn it_parses_boolean_literal() {
-    assert_eq!(
-        Parser::from_scanner(Scanner::new("true;")).statements[0],
-        Node {
-            range: [[1, 1], [1, 5]],
-            data: NodeData::Statement {
-                kind: Statement::ExpressionStatement(ExpressionStatement {
-                    expression: Box::new(Node {
-                        range: [[1, 1], [1, 5]],
-                        data: NodeData::Expression {
-                            kind: Expression::BooleanExpr(BooleanExpr { value: true })
-                        }
-                    })
-                })
-            }
-        }
-    );
-}
+// #[test]
+// fn it_parses_boolean_literal() {
+//     assert_eq!(
+//         Parser::from_scanner(Scanner::new("true;")).statements[0],
+//         Node {
+//             range: [[1, 1], [1, 5]],
+//             data: NodeData::Statement {
+//                 kind: Statement::ExpressionStatement(ExpressionStatement {
+//                     expression: Box::new(Node {
+//                         range: [[1, 1], [1, 5]],
+//                         data: NodeData::Expression {
+//                             kind: Expression::BooleanExpr(BooleanExpr { value: true })
+//                         }
+//                     })
+//                 })
+//             }
+//         }
+//     );
+// }
+
+// #[test]
+// fn it_parses_binary_expression() {
+//     assert_eq!(
+//         Parser::from_scanner(Scanner::new("2 + 2;")).statements[0],
+//         Node::expression_statement(
+//             [[1, 1], [1, 6]],
+//             Node::binary_expression(
+//                 Node::number_expression([[1, 1], [1, 2]], String::from("2")),
+//                 Node::number_expression([[1, 5], [1, 6]], String::from("2")),
+//                 Operator::Add
+//             )
+//         )
+//     )
+// }
+
+// #[test]
+// fn it_parses_continous_binary_expression() {
+//     assert_eq!(
+//         Parser::from_scanner(Scanner::new("2 + 3e4 + 4.5;")).statements[0],
+//         Node::expression_statement(
+//             [[1, 1], [1, 14]],
+//             Node::binary_expression(
+//                 Node::binary_expression(
+//                     Node::number_expression([[1, 1], [1, 2]], String::from("2")),
+//                     Node::number_expression([[1, 5], [1, 8]], String::from("3e4")),
+//                     Operator::Add
+//                 ),
+//                 Node::number_expression([[1, 11], [1, 14]], String::from("4.5")),
+//                 Operator::Add
+//             )
+//         )
+//     )
+// }
+
+// #[test]
+// fn it_parses_binary_expression_based_on_precedence() {
+//     assert_eq!(
+//         Parser::from_scanner(Scanner::new("45+23*4;")).statements[0],
+//         Node::expression_statement(
+//             [[1, 1], [1, 8]],
+//             Node::binary_expression(
+//                 Node::number_expression([[1, 1], [1, 3]], String::from("45")),
+//                 Node::binary_expression(
+//                     Node::number_expression([[1, 4], [1, 6]], String::from("23")),
+//                     Node::number_expression([[1, 7], [1, 8]], String::from("4")),
+//                     Operator::Multiply,
+//                 ),
+//                 Operator::Add,
+//             ),
+//         ),
+//     )
+// }

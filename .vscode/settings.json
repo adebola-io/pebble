@@ -2,8 +2,8 @@
     "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
     // "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
     // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "GitHub Dark",
-    "workbench.iconTheme": "vscode-icons",
+    "workbench.colorTheme": "Theme",
+    "workbench.iconTheme": "material-icon-theme",
     "workbench.colorCustomizations": {
         "editorInlayHint.background": "#00000000",
         "editorInlayHint.parameterBackground": "#00000000",
@@ -15,31 +15,31 @@
     "rust-analyzer.inlayHints.typeHints.enable": true,
     "rust-analyzer.inlayHints.parameterHints.enable": true,
     "rust-analyzer.inlayHints.closingBraceHints.enable": true,
-    // "editor.tokenColorCustomizations": {
-    //     "[GitHub Dark]": {
-    //         "textMateRules": [
-    //             {
-    //                 "scope": "variable",
-    //                 "settings": {
-    //                     "fontStyle": ""
-    //                 }
-    //             },
-    //             {
-    //                 "scope": ["entity.name.function", "meta.function-call"],
-    //                 "settings": {
-    //                     "fontStyle": "bold"
-    //                 }
-    //             },
-    //             {
-    //                 "scope": ["comment"],
-    //                 "settings": {
-    //                     "foreground": "#744c4c",
-    //                     "fontStyle": ""
-    //                 }
-    //             }
-    //         ]
-    //     }
-    // },
+    "editor.tokenColorCustomizations": {
+        "[Red]": {
+            "textMateRules": [
+                {
+                    "scope": "variable",
+                    "settings": {
+                        "fontStyle": ""
+                    }
+                },
+                {
+                    "scope": ["entity.name.function", "meta.function-call"],
+                    "settings": {
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope": ["comment"],
+                    "settings": {
+                        "foreground": "#744c4c",
+                        "fontStyle": ""
+                    }
+                }
+            ]
+        }
+    },
     "material-icon-theme.files.associations": {
         "*.peb": "typescript",
         "pile.types": "/extensions/vscode-pebble/icons/pile-types",

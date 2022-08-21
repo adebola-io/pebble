@@ -179,7 +179,7 @@ impl Token {
             span,
             kind: TokenKind::Operator(match value {
                 "+" => Operator::Add,
-                "*" => Operator::AddAssign,
+                "*" => Operator::Multiply,
                 "-" => Operator::Subtract,
                 "/" => Operator::Divide,
                 "%" => Operator::Remainder,
