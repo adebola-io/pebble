@@ -24,9 +24,9 @@ pub enum Expression<'a> {
     },
     /// An operation that occurs on two operands e.g. `a + b`
     BinaryExpr {
-        operator: Operator,
-        left: &'a Self,
-        right: &'a Self,
+        operator: &'a Operator,
+        left: Box<Self>,
+        right: Box<Self>,
         span: TextSpan,
     },
     /// An operation that occurs on only one operand. e.g. `!a, ~b`
@@ -79,6 +79,15 @@ impl<'a> Expression<'a> {
     /// Creates a character expression node.
     pub fn create_char_expr(value: &'a str, span: TextSpan) -> Self {
         Expression::CharacterExpr { value, span }
+    }
+    pub fn create_bin_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
+        let span = [left.get_range()[0], right.get_range()[1]];
+        Expression::BinaryExpr {
+            operator,
+            left: Box::new(left),
+            right: Box::new(right),
+            span,
+        }
     }
 }
 

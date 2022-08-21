@@ -430,97 +430,64 @@ fn it_parses_string_literal() {
     )
 }
 
-// #[test]
-// fn it_parses_string_literal() {
-//     assert_eq!(
-//         Parser::from_scanner(Scanner::new("\"Hello, world!\";")).statements[0],
-//         Node {
-//             range: [[1, 1], [1, 16]],
-//             data: NodeData::Statement {
-//                 kind: Statement::ExpressionStatement(ExpressionStatement {
-//                     expression: Box::new(Node {
-//                         range: [[1, 1], [1, 15]],
-//                         data: NodeData::Expression {
-//                             kind: Expression::StringExpr(StringExpr {
-//                                 value: String::from("Hello, world!")
-//                             })
-//                         }
-//                     })
-//                 })
-//             }
-//         }
-//     );
-// }
+#[test]
+fn it_parses_binary_expression() {
+    let mut scanner = Scanner::new("2+2;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_bin_expr(
+            Expression::create_num_expr("2", [[1, 1], [1, 2]]),
+            &Operator::Add,
+            Expression::create_num_expr("2", [[1, 3], [1, 4]])
+        ))
+    )
+}
 
-// #[test]
-// fn it_parses_boolean_literal() {
-//     assert_eq!(
-//         Parser::from_scanner(Scanner::new("true;")).statements[0],
-//         Node {
-//             range: [[1, 1], [1, 5]],
-//             data: NodeData::Statement {
-//                 kind: Statement::ExpressionStatement(ExpressionStatement {
-//                     expression: Box::new(Node {
-//                         range: [[1, 1], [1, 5]],
-//                         data: NodeData::Expression {
-//                             kind: Expression::BooleanExpr(BooleanExpr { value: true })
-//                         }
-//                     })
-//                 })
-//             }
-//         }
-//     );
-// }
+#[test]
+fn it_parses_continuous_binary_expression() {
+    let mut scanner = Scanner::new("2 + 2 + 2;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_bin_expr(
+            Expression::create_bin_expr(
+                Expression::create_num_expr("2", [[1, 1], [1, 2]]),
+                &Operator::Add,
+                Expression::create_num_expr("2", [[1, 5], [1, 6]])
+            ),
+            &Operator::Add,
+            Expression::create_num_expr("2", [[1, 9], [1, 10]])
+        ))
+    )
+}
 
-// #[test]
-// fn it_parses_binary_expression() {
-//     assert_eq!(
-//         Parser::from_scanner(Scanner::new("2 + 2;")).statements[0],
-//         Node::expression_statement(
-//             [[1, 1], [1, 6]],
-//             Node::binary_expression(
-//                 Node::number_expression([[1, 1], [1, 2]], String::from("2")),
-//                 Node::number_expression([[1, 5], [1, 6]], String::from("2")),
-//                 Operator::Add
-//             )
-//         )
-//     )
-// }
-
-// #[test]
-// fn it_parses_continous_binary_expression() {
-//     assert_eq!(
-//         Parser::from_scanner(Scanner::new("2 + 3e4 + 4.5;")).statements[0],
-//         Node::expression_statement(
-//             [[1, 1], [1, 14]],
-//             Node::binary_expression(
-//                 Node::binary_expression(
-//                     Node::number_expression([[1, 1], [1, 2]], String::from("2")),
-//                     Node::number_expression([[1, 5], [1, 8]], String::from("3e4")),
-//                     Operator::Add
-//                 ),
-//                 Node::number_expression([[1, 11], [1, 14]], String::from("4.5")),
-//                 Operator::Add
-//             )
-//         )
-//     )
-// }
-
-// #[test]
-// fn it_parses_binary_expression_based_on_precedence() {
-//     assert_eq!(
-//         Parser::from_scanner(Scanner::new("45+23*4;")).statements[0],
-//         Node::expression_statement(
-//             [[1, 1], [1, 8]],
-//             Node::binary_expression(
-//                 Node::number_expression([[1, 1], [1, 3]], String::from("45")),
-//                 Node::binary_expression(
-//                     Node::number_expression([[1, 4], [1, 6]], String::from("23")),
-//                     Node::number_expression([[1, 7], [1, 8]], String::from("4")),
-//                     Operator::Multiply,
-//                 ),
-//                 Operator::Add,
-//             ),
-//         ),
-//     )
-// }
+#[test]
+fn it_parses_binary_expression_with_multiple_operands() {
+    let mut scanner = Scanner::new("2 + 4 * 5;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_bin_expr(
+            Expression::create_num_expr("2", [[1, 1], [1, 2]]),
+            &Operator::Add,
+            Expression::create_bin_expr(
+                Expression::create_num_expr("4", [[1, 5], [1, 6]]),
+                &Operator::Multiply,
+                Expression::create_num_expr("5", [[1, 9], [1, 10]])
+            ),
+        ))
+    )
+}

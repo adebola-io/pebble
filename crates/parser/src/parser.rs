@@ -147,19 +147,50 @@ impl<'a> Parser<'a> {
 
 impl<'a> Parser<'a> {
     fn reparse(&'a self, node: Expression<'a>) -> NodeOrError<Expression<'a>> {
-        if self.token().is_semi_colon() {
-            Ok(node)
-        } else if let Token {
+        if let Token {
             kind: TokenKind::Operator(operator),
             ..
         } = self.token()
         {
             match operator {
-                Operator::Add | Operator::Multiply => todo!(),
+                Operator::Add
+                | Operator::Multiply
+                | Operator::Divide
+                | Operator::Subtract
+                | Operator::Remainder
+                | Operator::LessThan
+                | Operator::GreaterThan
+                | Operator::GreaterThanOrEquals
+                | Operator::LessThanOrEquals
+                | Operator::BitwiseLeftShift
+                | Operator::BitwiseRightShift
+                | Operator::BitwiseOr
+                | Operator::BitwiseAnd
+                | Operator::Equals
+                | Operator::NotEquals
+                | Operator::RangeBetween
+                | Operator::PowerOf => self.binary_expression(node, operator),
                 _ => todo!(),
             }
         } else {
-            Err(("Expected an operator.", self.token().span.clone()))
+            Ok(node)
+        }
+    }
+    /// Parses a binary expression.
+    fn binary_expression(
+        &'a self,
+        left: Expression<'a>,
+        operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
+        if self.is_lower_precedence(&operator) {
+            Ok(left)
+        } else {
+            self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(operator); // Push the binary operator onto the stack.
+            let right = self.expression()?; // Parse the expression at the right hand side of the binary expression.
+            self.operators.borrow_mut().pop(); // Remove the binary operator from the stack.
+            let bin_exp = Expression::create_bin_expr(left, operator, right);
+            Ok(self.reparse(bin_exp)?)
         }
     }
 }

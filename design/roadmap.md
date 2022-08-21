@@ -28,7 +28,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse numbers
 -   [x] Parse booleans
 -   [x] Parse expression statement
--   [ ] Parse binary expression
+-   [x] Parse binary expression
 -   [ ] Parse call expression
 -   [ ] Parse member expression
 -   [ ] Parse namespace expression

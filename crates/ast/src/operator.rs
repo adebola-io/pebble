@@ -12,7 +12,7 @@ pub enum Operator {
     LogicalOr,           // a || b
     LogicalNot,          // !a
     BitwiseOr,           // a | b
-    BiwiseAnd,           // a & b
+    BitwiseAnd,          // a & b
     BitWiseNot,          // ~a
     BitwiseLeftShift,    // a << b
     BitwiseRightShift,   // a >> b
@@ -50,8 +50,12 @@ pub const OPERATORS: &'static [&'static str; 34] = &[
 
 pub fn precedence_of(operator: &Operator) -> i32 {
     match operator {
+        Operator::PowerOf => 11,
         Operator::Multiply => 10,
+        Operator::Remainder => 10,
+        Operator::Divide => 10,
         Operator::Add => 9,
+        Operator::Subtract => 9,
         Operator::Assign => 8,
         _ => todo!(),
     }

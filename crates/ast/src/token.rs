@@ -189,7 +189,7 @@ impl Token {
                 "&&" => Operator::LogicalAnd,
                 "!" => Operator::LogicalNot,
                 "|" => Operator::BitwiseOr,
-                "&" => Operator::BiwiseAnd,
+                "&" => Operator::BitwiseAnd,
                 "~" => Operator::BitWiseNot,
                 "<<" => Operator::BitwiseLeftShift,
                 ">>" => Operator::BitwiseRightShift,
