@@ -1,4 +1,4 @@
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 
 use crate::scanner::Scanner;
 use ast::{

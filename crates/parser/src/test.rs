@@ -392,13 +392,41 @@ fn it_parses_numeric_literal() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::ExprStmnt {
-            expression: Expression::NumericExpr {
-                value: "2",
-                span: [[1, 1], [1, 2]]
-            },
-            span: [[1, 1], [1, 2]]
-        }
+        Statement::create_expression_statement(Expression::create_num_expr("2", [[1, 1], [1, 2]]))
+    )
+}
+
+#[test]
+fn it_parses_boolean_literal() {
+    let mut scanner = Scanner::new("true;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_bool_expr(
+            "true",
+            [[1, 1], [1, 5]]
+        ))
+    )
+}
+
+#[test]
+fn it_parses_string_literal() {
+    let mut scanner = Scanner::new("\"This is a string.\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_str_expr(
+            "This is a string.",
+            [[1, 1], [1, 19]]
+        ))
     )
 }
 
