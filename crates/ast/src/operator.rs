@@ -7,7 +7,6 @@ pub enum Operator {
     Divide,              // a / b
     Remainder,           // a % b
     PowerOf,             // a ** b
-    New,                 // new a
     LogicalAnd,          // a && b
     LogicalOr,           // a || b
     LogicalNot,          // !a

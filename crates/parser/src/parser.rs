@@ -170,6 +170,13 @@ impl<'a> Parser<'a> {
                 | Operator::NotEquals
                 | Operator::RangeBetween
                 | Operator::PowerOf => self.binary_expression(node, operator),
+                Operator::Assign
+                | Operator::AddAssign
+                | Operator::DivideAssign
+                | Operator::MultiplyAssign
+                | Operator::SubtractAssign
+                | Operator::LogicalOrAssign
+                | Operator::LogicalAndAssign => self.assign_expression(),
                 _ => todo!(),
             }
         } else {
@@ -192,6 +199,10 @@ impl<'a> Parser<'a> {
             let bin_exp = Expression::create_bin_expr(left, operator, right);
             Ok(self.reparse(bin_exp)?)
         }
+    }
+    /// Parses an assignment expression.
+    fn assign_expression(&'a self) -> NodeOrError<Expression<'a>> {
+        todo!()
     }
 }
 

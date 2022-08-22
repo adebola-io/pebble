@@ -1,1 +1,16 @@
-println "Hello, world!";
+@public @class Point {
+    x: Number;
+    y: Number;
+}
+
+@specify Point {
+    Point(x: Number, y: Number) {
+        self.x = x;
+        self.y = y;
+    }
+}
+
+@function start() {
+   @let point1 = Point(1, 2);
+   println point1;
+}

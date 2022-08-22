@@ -170,6 +170,6 @@ Other things that may not be noticed from the examples but are equally important
 }
 ```
 
-### Model Declarations
+### Class Declarations
 
-Models are
+Classes are

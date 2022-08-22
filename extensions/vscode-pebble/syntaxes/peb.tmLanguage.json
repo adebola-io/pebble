@@ -1,189 +1,189 @@
 {
-   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-   "name": "Pebble",
-   "patterns": [
-      { "include": "#comment" },
-      { "include": "#string" },
-      { "include": "#character" },
-      { "include": "#number" },
-      { "include": "#literal" },
-      { "include": "#keyword" },
-      { "include": "#injunction" },
-      { "include": "#instantiator" },
-      { "include": "#function" },
-      { "include": "#inferred_function" },
-      { "include": "#enumerated" },
-      { "include": "#return_type" },
-      { "include": "#custom_type" },
-      { "include": "#constant" },
-      { "include": "#type_label" },
-      { "include": "#identifier" }
-   ],
-   "repository": {
-      "comment": {
-         "patterns": [
-            { "include": "#doc_comment" },
-            { "include": "#line_comment" },
-            { "include": "#block_comment" }
-         ]
-      },
-      "doc_comment": {
-         "name": "comment.doc",
-         "begin": "^\\s*##",
-         "end": "\n"
-      },
-      "line_comment": {
-         "name": "comment.line",
-         "begin": "//",
-         "end": "\n"
-      },
-      "block_comment": {
-         "name": "comment.block",
-         "begin": "\\/\\*",
-         "end": "\\*\\/"
-      },
-      "string": {
-         "name": "string.quoted meta.string",
-         "begin": "\"",
-         "patterns": [
-            { "include": "#string_character_escape" },
-            { "include": "#string_template_expression" }
-         ],
-         "end": "\""
-      },
-      "string_character_escape": {
-         "name": "constant.character.escape",
-         "match": "\\\\(x[\\dA-Fa-f]{2}|u([\\dA-Fa-f]{4}|\\{[\\dA-Fa-f]+\\})|[0-2][0-7]{0,2}|(3[0-6]|37|[4-7])[0-7]?|.|$)"
-      },
-      "string_template_expression": {
-         "name": "meta.template.expression",
-         "begin": "(#\\{)",
-         "beginCaptures": {
-            "1": {
-               "name": "punctuation.expression.embedded-expression-start constant.language.embedded.start"
-            }
-         },
-         "patterns": [{ "include": "$self" }],
-         "end": "(\\})",
-         "endCaptures": {
-            "1": {
-               "name": "punctuation.expression.embedded-expression-end constant.language.embedded.end"
-            }
-         }
-      },
-      "character": {
-         "name": "character constant.character meta.character string",
-         "match": "'(.{1}|(\\\\(x[\\dA-Fa-f]{2}|u([\\dA-Fa-f]{4}|\\{[\\dA-Fa-f]+\\})|[0-2][0-7]{0,2}|(3[0-6]|37|[4-7])[0-7]?|.|$)))'",
-         "captures": {
-            "2": {
-               "name": "constant.character.escape"
-            }
-         }
-      },
-      "number": {
-         "patterns": [
-            {
-               "name": "constant.numeric.hex",
-               "match": "\\b(?<!\\$)0(?:x|X)[\\dA-Fa-f]+(n)?\\b(?!\\$)"
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "Pebble",
+    "patterns": [
+        { "include": "#comment" },
+        { "include": "#string" },
+        { "include": "#character" },
+        { "include": "#number" },
+        { "include": "#literal" },
+        { "include": "#keyword" },
+        { "include": "#injunction" },
+        { "include": "#instantiator" },
+        { "include": "#function" },
+        { "include": "#inferred_function" },
+        { "include": "#enumerated" },
+        { "include": "#return_type" },
+        { "include": "#custom_type" },
+        { "include": "#constant" },
+        { "include": "#type_label" },
+        { "include": "#identifier" }
+    ],
+    "repository": {
+        "comment": {
+            "patterns": [
+                { "include": "#doc_comment" },
+                { "include": "#line_comment" },
+                { "include": "#block_comment" }
+            ]
+        },
+        "doc_comment": {
+            "name": "comment.doc",
+            "begin": "^\\s*##",
+            "end": "\n"
+        },
+        "line_comment": {
+            "name": "comment.line",
+            "begin": "//",
+            "end": "\n"
+        },
+        "block_comment": {
+            "name": "comment.block",
+            "begin": "\\/\\*",
+            "end": "\\*\\/"
+        },
+        "string": {
+            "name": "string.quoted meta.string",
+            "begin": "\"",
+            "patterns": [
+                { "include": "#string_character_escape" },
+                { "include": "#string_template_expression" }
+            ],
+            "end": "\""
+        },
+        "string_character_escape": {
+            "name": "constant.character.escape",
+            "match": "\\\\(x[\\dA-Fa-f]{2}|u([\\dA-Fa-f]{4}|\\{[\\dA-Fa-f]+\\})|[0-2][0-7]{0,2}|(3[0-6]|37|[4-7])[0-7]?|.|$)"
+        },
+        "string_template_expression": {
+            "name": "meta.template.expression",
+            "begin": "(#\\{)",
+            "beginCaptures": {
+                "1": {
+                    "name": "punctuation.expression.embedded-expression-start constant.language.embedded.start"
+                }
             },
-            {
-               "name": "constant.numeric.octal",
-               "match": "\\b(?<!\\$)0(?:o|O)[0-7]+(n)?\\b(?!\\$)"
-            },
-            {
-               "name": "constant.numeric.binary",
-               "match": "\\b(?<!\\$)0(?:b|B)[0-1]+(n)?\\b(?!\\$)"
-            },
-            {
-               "name": "constant.numeric.decimal",
-               "match": "\\b\\d+((\\.\\d+)|n)?\\b(?!\\$)"
-            },
-            {
-               "name": "constant.numeric.exponent",
-               "match": "\\b\\d+e\\d+\\b(?!\\$)"
+            "patterns": [{ "include": "$self" }],
+            "end": "(\\})",
+            "endCaptures": {
+                "1": {
+                    "name": "punctuation.expression.embedded-expression-end constant.language.embedded.end"
+                }
             }
-         ]
-      },
-      "literal": {
-         "name": "constant.language.literal",
-         "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|static|constructor|sleep)(?![$@])\\b"
-      },
-      "custom_type": {
-         "begin": "(?<=(@(enum|model|specify|interface|type|implement))\\s+)",
-         "patterns": [{ "include": "#type" }],
-         "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
-      },
-      "constant": {
-         "name": "constant.other.caps support.constant variable.other.constant",
-         "begin": "(?<=(@(record|const)|readonly)\\s+)",
-         "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
-      },
-      "injunction": {
-         "name": "meta.injunction keyword.storage.injunction",
-         "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|model|specify|record|interface|implement|tests)(?![$@])\\b"
-      },
-      "keyword": {
-         "name": "keyword.control",
-         "match": "\\s*\\b(?<![$@\\.])(for|fn|in|do|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case|loop)(?![$@])\\b\\s*"
-      },
-      "function": {
-         "begin": "((?<![\\d@])\\s*\\w+(?=\\s*\\()|(?<=@function\\s+)\\w+)",
-         "beginCaptures": {
-            "1": {
-               "name": "entity.name.function"
+        },
+        "character": {
+            "name": "character constant.character meta.character string",
+            "match": "'(.{1}|(\\\\(x[\\dA-Fa-f]{2}|u([\\dA-Fa-f]{4}|\\{[\\dA-Fa-f]+\\})|[0-2][0-7]{0,2}|(3[0-6]|37|[4-7])[0-7]?|.|$)))'",
+            "captures": {
+                "2": {
+                    "name": "constant.character.escape"
+                }
             }
-         },
-         "patterns": [{ "include": "#type_argument" }],
-         "end": "(?=\\s*\\()"
-      },
-      "inferred_function": {
-         "name": "entity.name.function",
-         "match": "(?<![\\d@])\\w+(?=\\s*\\:\\s*\\((\\s|\\S)*\\))"
-      },
-      "enumerated": {
-         "match": "((?<![\\d@])\\w+)\\s*\\:\\:\\s*((?<![\\d$@])\\w+)",
-         "captures": {
-            "1": {
-               "name": "entity.name.type"
+        },
+        "number": {
+            "patterns": [
+                {
+                    "name": "constant.numeric.hex",
+                    "match": "\\b(?<!\\$)0(?:x|X)[\\dA-Fa-f]+(n)?\\b(?!\\$)"
+                },
+                {
+                    "name": "constant.numeric.octal",
+                    "match": "\\b(?<!\\$)0(?:o|O)[0-7]+(n)?\\b(?!\\$)"
+                },
+                {
+                    "name": "constant.numeric.binary",
+                    "match": "\\b(?<!\\$)0(?:b|B)[0-1]+(n)?\\b(?!\\$)"
+                },
+                {
+                    "name": "constant.numeric.decimal",
+                    "match": "\\b\\d+((\\.\\d+)|n)?\\b(?!\\$)"
+                },
+                {
+                    "name": "constant.numeric.exponent",
+                    "match": "\\b\\d+e\\d+\\b(?!\\$)"
+                }
+            ]
+        },
+        "literal": {
+            "name": "constant.language.literal",
+            "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|static|constructor|sleep)(?![$@])\\b"
+        },
+        "custom_type": {
+            "begin": "(?<=(@(enum|class|specify|interface|type|implement))\\s+)",
+            "patterns": [{ "include": "#type" }],
+            "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+        },
+        "constant": {
+            "name": "constant.other.caps support.constant variable.other.constant",
+            "begin": "(?<=(@(record|const)|readonly)\\s+)",
+            "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+        },
+        "injunction": {
+            "name": "meta.injunction keyword.storage.injunction",
+            "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|class|specify|record|interface|implement|tests)(?![$@])\\b"
+        },
+        "keyword": {
+            "name": "keyword.control",
+            "match": "\\s*\\b(?<![$@\\.])(for|fn|in|do|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case|loop)(?![$@])\\b\\s*"
+        },
+        "function": {
+            "begin": "((?<![\\d@])\\s*\\w+(?=\\s*\\()|(?<=@function\\s+)\\w+)",
+            "beginCaptures": {
+                "1": {
+                    "name": "entity.name.function"
+                }
             },
-            "2": {
-               "name": "variable.identifier"
+            "patterns": [{ "include": "#type_argument" }],
+            "end": "(?=\\s*\\()"
+        },
+        "inferred_function": {
+            "name": "entity.name.function",
+            "match": "(?<![\\d@])\\w+(?=\\s*\\:\\s*\\((\\s|\\S)*\\))"
+        },
+        "enumerated": {
+            "match": "((?<![\\d@])\\w+)\\s*\\:\\:\\s*((?<![\\d$@])\\w+)",
+            "captures": {
+                "1": {
+                    "name": "entity.name.type"
+                },
+                "2": {
+                    "name": "variable.identifier"
+                }
             }
-         }
-      },
-      "return_type": {
-         "begin": "(?<=\\s*\\((\\s|\\S)*\\)\\s*)\\-\\>\\s*",
-         "patterns": [{ "include": "#literal" }, { "include": "#type" }],
-         "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
-      },
-      "type_label": {
-         "begin": "(?<=\\w+\\s*\\:)(?<!\\?\\s*\\w+\\s*\\:)\\s*",
-         "patterns": [{ "include": "#type" }],
-         "end": "(?=(\\;|\\,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
-      },
-      "type": {
-         "patterns": [
-            { "include": "#type_name" },
-            { "include": "#type_argument" }
-         ]
-      },
-      "type_name": {
-         "name": "type meta.type entity.name.type",
-         "match": "\\b(?<![\\d@])\\w+\\b\\s*"
-      },
-      "type_argument": {
-         "begin": "\\<\\s*",
-         "patterns": [{ "include": "#type" }],
-         "end": "\\>"
-      },
-      "instantiator": {
-         "name": "meta.model model entity.name.class",
-         "match": "(?<=(new|@implement)\\s+((\\w+\\.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
-      },
-      "identifier": {
-         "name": "identifier meta.identifier variable.identifier",
-         "match": "\\b(?<![\\d$@])\\w+(?!@)\\b"
-      }
-   },
-   "scopeName": "source.peb"
+        },
+        "return_type": {
+            "begin": "(?<=\\s*\\((\\s|\\S)*\\)\\s*)\\-\\>\\s*",
+            "patterns": [{ "include": "#literal" }, { "include": "#type" }],
+            "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+        },
+        "type_label": {
+            "begin": "(?<=\\w+\\s*\\:)(?<!\\?\\s*\\w+\\s*\\:)\\s*",
+            "patterns": [{ "include": "#type" }],
+            "end": "(?=(\\;|\\,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
+        },
+        "type": {
+            "patterns": [
+                { "include": "#type_name" },
+                { "include": "#type_argument" }
+            ]
+        },
+        "type_name": {
+            "name": "type meta.type entity.name.type",
+            "match": "\\b(?<![\\d@])\\w+\\b\\s*"
+        },
+        "type_argument": {
+            "begin": "\\<\\s*",
+            "patterns": [{ "include": "#type" }],
+            "end": "\\>"
+        },
+        "instantiator": {
+            "name": "meta.class class entity.name.class",
+            "match": "(?<=(new|@implement)\\s+((\\w+\\.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
+        },
+        "identifier": {
+            "name": "identifier meta.identifier variable.identifier",
+            "match": "\\b(?<![\\d$@])\\w+(?!@)\\b"
+        }
+    },
+    "scopeName": "source.peb"
 }

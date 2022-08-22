@@ -34,7 +34,6 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse namespace expression
 -   [ ] Parse access expression
 -   [ ] Parse unary expression
--   [ ] Parse new expression
 -   [ ] Parse range expression
 -   [ ] Parse logical expression
 -   [ ] Parse conditional expression
@@ -62,8 +61,8 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse record declaration
 -   [ ] Parse function declaration
 -   [ ] Parse type declaration
--   [ ] Parse model declaration
--   [ ] Parse model property
+-   [ ] Parse class declaration
+-   [ ] Parse class property
 -   [ ] Parse implement statement
 -   [ ] Parse interface declaration
 -   [ ] Parse enum declaration

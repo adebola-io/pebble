@@ -142,8 +142,6 @@ impl Scanner {
             self.character()
         } else if self.char.is_digit(10) {
             self.number()
-        } else if self.matches("new") {
-            self.operator("new")
         } else if self.matches("true") || self.matches("false") {
             self.boolean()
         } else if let Some(op) = OPERATORS.iter().find(|op| self.sees(op)) {

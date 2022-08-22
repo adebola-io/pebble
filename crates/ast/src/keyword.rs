@@ -6,7 +6,7 @@ pub const KEYWORDS: &'static [&'static str; 23] = &[
 pub const INJUNCTIONS: &'static [&'static str; 14] = &[
     "implement",
     "interface",
-    "model",
+    "class",
     "public",
     "specify",
     "record",
@@ -48,7 +48,7 @@ pub enum Keyword {
 pub enum Injunction {
     Function,
     Type,
-    Model,
+    Class,
     Record,
     Const,
     Let,

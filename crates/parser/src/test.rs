@@ -310,7 +310,7 @@ fn it_scans_operators() {
 
 #[test]
 fn it_scans_operators_2() {
-    let mut scanner = Scanner::new("2+4+new Number()");
+    let mut scanner = Scanner::new("2+4+ Number()");
     scanner.run();
     assert_eq!(
         scanner.tokens,
@@ -338,25 +338,21 @@ fn it_scans_operators_2() {
                 kind: TokenKind::Operator(Operator::Add)
             },
             Token {
-                span: [[1, 5], [1, 8]],
-                kind: TokenKind::Operator(Operator::New)
-            },
-            Token {
-                span: [[1, 9], [1, 15]],
+                span: [[1, 6], [1, 12]],
                 kind: TokenKind::Identifier(Identifier {
                     value: String::from("Number")
                 })
             },
             Token {
-                span: [[1, 15], [1, 16]],
+                span: [[1, 12], [1, 13]],
                 kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis))
             },
             Token {
-                span: [[1, 16], [1, 16]],
+                span: [[1, 13], [1, 13]],
                 kind: TokenKind::Punctuation(Punctuation::Bracket(BracketKind::RightParenthesis))
             },
             Token {
-                span: [[1, 16], [1, 16]],
+                span: [[1, 13], [1, 13]],
                 kind: TokenKind::EOF
             }
         ]

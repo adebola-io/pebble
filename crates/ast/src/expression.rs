@@ -46,9 +46,9 @@ pub enum Expression<'a> {
         property: &'a Self,
         span: TextSpan,
     },
-    /// A member or dot access of a model. e.g. `a.b`
+    /// A member or dot access of a class. e.g. `a.b`
     DotExpr {
-        model: &'a Self,
+        class: &'a Self,
         property: &'a Self,
         span: TextSpan,
     },

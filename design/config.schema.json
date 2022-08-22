@@ -41,7 +41,7 @@
                     "enum": [
                         "strict-required",
                         "functions-only",
-                        "model-only",
+                        "class-only",
                         "public-only",
                         "not-required"
                     ]

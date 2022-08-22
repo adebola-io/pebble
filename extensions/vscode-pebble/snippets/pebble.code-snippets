@@ -40,8 +40,8 @@
         "prefix": "@spec",
         "description": "Build a specifier block.",
         "body": [
-            "@specify ${1:Structure} {",
-            "   constructor() {",
+            "@specify ${1:Class} {",
+            "   ${1:Class}() {",
             "      $2",
             "   }",
             "   $3",
@@ -59,13 +59,13 @@
     },
     "Implementation": {
         "prefix": "@impl",
-        "description": "Implement a interface inside a model.",
+        "description": "Implement a interface inside a class.",
         "body": "@implement ${1:Interface};"
     },
-    "Model": {
-        "prefix": ["@mod", "@model"],
-        "description": "Creates a new structure.",
-        "body": ["@model ${1:Name} {", "   $2", "}"]
+    "Class": {
+        "prefix": ["@cl", "@class"],
+        "description": "Creates a new class.",
+        "body": ["@class ${1:Name} {", "   $2", "}"]
     },
     "Enum": {
         "prefix": "@enum",
