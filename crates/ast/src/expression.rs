@@ -3,6 +3,11 @@ use crate::{Location, Operator, TextSpan};
 /// The base node for an expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression<'a> {
+    /// An expression consisting of a single identifier.
+    IdentifierExpr {
+        value: &'a str,
+        span: TextSpan,
+    },
     /// A string literal in Pebble. e.g. `"John Doe", "One does not simply walk into Mordor"`
     StringExpr {
         value: &'a str,
@@ -35,6 +40,12 @@ pub enum Expression<'a> {
         operand: &'a Self,
         span: TextSpan,
     },
+    /// A function call expression. e.g. `a(b)`.
+    CallExpr {
+        callee: Box<Self>,
+        arguments: Vec<Self>,
+        span: TextSpan,
+    },
     /// An array of expression. e.g. `[a, b, c]`
     ArrayExpr {
         elements: Vec<&'a Self>,
@@ -61,6 +72,10 @@ pub enum Expression<'a> {
 }
 
 impl<'a> Expression<'a> {
+    /// Creates am identifier expression node.
+    pub fn create_ident_expr(value: &'a str, span: TextSpan) -> Self {
+        Expression::IdentifierExpr { value, span }
+    }
     /// Creates a string expression node.
     pub fn create_str_expr(value: &'a str, span: TextSpan) -> Self {
         Expression::StringExpr { value, span }
@@ -80,6 +95,7 @@ impl<'a> Expression<'a> {
     pub fn create_char_expr(value: &'a str, span: TextSpan) -> Self {
         Expression::CharacterExpr { value, span }
     }
+    /// Creates a binary expression.
     pub fn create_bin_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
         let span = [left.get_range()[0], right.get_range()[1]];
         Expression::BinaryExpr {
@@ -89,21 +105,36 @@ impl<'a> Expression<'a> {
             span,
         }
     }
+    /// Creates a call expression.
+    pub fn create_call_expr(
+        callee: Expression<'a>,
+        arguments: Vec<Expression<'a>>,
+        end: [u64; 2],
+    ) -> Self {
+        let start = callee.get_range()[0];
+        Expression::CallExpr {
+            callee: Box::new(callee),
+            arguments,
+            span: [start, end],
+        }
+    }
 }
 
 impl Location for Expression<'_> {
     fn get_range(&self) -> TextSpan {
         match self {
-            Expression::StringExpr { span, .. }
-            | Expression::NumericExpr { span, .. }
-            | Expression::BooleanExpr { span, .. }
-            | Expression::CharacterExpr { span, .. }
-            | Expression::BinaryExpr { span, .. }
-            | Expression::UnaryExpr { span, .. }
-            | Expression::ArrayExpr { span, .. }
-            | Expression::AccessExpr { span, .. }
-            | Expression::DotExpr { span, .. }
-            | Expression::RangeExpr { span, .. } => *span,
+            Self::IdentifierExpr { span, .. }
+            | Self::StringExpr { span, .. }
+            | Self::NumericExpr { span, .. }
+            | Self::BooleanExpr { span, .. }
+            | Self::CharacterExpr { span, .. }
+            | Self::BinaryExpr { span, .. }
+            | Self::UnaryExpr { span, .. }
+            | Self::CallExpr { span, .. }
+            | Self::ArrayExpr { span, .. }
+            | Self::AccessExpr { span, .. }
+            | Self::DotExpr { span, .. }
+            | Self::RangeExpr { span, .. } => *span,
         }
     }
 }

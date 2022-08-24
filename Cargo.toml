@@ -1,9 +1,10 @@
 [workspace]
-members = [ 
+members = [
    "crates/server",
    "crates/utils",
    "crates/ast",
    "crates/parser",
    "crates/errors",
-   "crates/repl"
+   "crates/prepiler",
+   "crates/repl",
 ]

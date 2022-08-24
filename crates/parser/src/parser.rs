@@ -2,7 +2,8 @@ use std::cell::RefCell;
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, Expression, LiteralKind, Operator, Statement, TextSpan, Token, TokenKind,
+    precedence_of, BracketKind, Expression, Identifier, LiteralKind, Operator, Punctuation,
+    Statement, TextSpan, Token, TokenKind,
 };
 use utils::Stack;
 
@@ -119,6 +120,7 @@ impl<'a> Parser<'a> {
     fn expression(&'a self) -> NodeOrError<Expression<'a>> {
         match self.token().kind {
             TokenKind::Literal(_) => self.literal(),
+            TokenKind::Identifier(_) => self.identifier(),
             _ => todo!(),
         }
     }
@@ -143,16 +145,26 @@ impl<'a> Parser<'a> {
             unreachable!()
         }
     }
+    /// Parses an identifier token into an identifier expression.
+    fn identifier(&'a self) -> NodeOrError<Expression<'a>> {
+        match self.token() {
+            Token {
+                span,
+                kind: TokenKind::Identifier(Identifier { value }),
+            } => {
+                let node = Expression::create_ident_expr(value, *span);
+                self.advance();
+                Ok(self.reparse(node)?)
+            }
+            _ => unreachable!(),
+        }
+    }
 }
 
 impl<'a> Parser<'a> {
     fn reparse(&'a self, node: Expression<'a>) -> NodeOrError<Expression<'a>> {
-        if let Token {
-            kind: TokenKind::Operator(operator),
-            ..
-        } = self.token()
-        {
-            match operator {
+        match &self.token().kind {
+            TokenKind::Operator(operator) => match operator {
                 Operator::Add
                 | Operator::Multiply
                 | Operator::Divide
@@ -176,11 +188,14 @@ impl<'a> Parser<'a> {
                 | Operator::MultiplyAssign
                 | Operator::SubtractAssign
                 | Operator::LogicalOrAssign
-                | Operator::LogicalAndAssign => self.assign_expression(),
-                _ => todo!(),
-            }
-        } else {
-            Ok(node)
+                | Operator::LogicalAndAssign => self.assign_expression(node, operator),
+                _ => Ok(node),
+            },
+            TokenKind::Punctuation(punctuation) => match punctuation {
+                Punctuation::Bracket(BracketKind::LeftParenthesis) => self.call_expression(node),
+                _ => Ok(node),
+            },
+            _ => Ok(node),
         }
     }
     /// Parses a binary expression.
@@ -200,141 +215,47 @@ impl<'a> Parser<'a> {
             Ok(self.reparse(bin_exp)?)
         }
     }
+    /// Parses a call expression.
+    fn call_expression(&'a self, callee: Expression<'a>) -> NodeOrError<Expression<'a>> {
+        let call_op = Operator::Call;
+        if self.is_lower_precedence(&call_op) {
+            Ok(callee)
+        } else {
+            self.advance(); // Move past operator.
+            let mut arguments = vec![];
+            let right_bracket = BracketKind::RightParenthesis;
+            while !(self.end() || self.token().is_bracket(&right_bracket)) {
+                let argument = self.expression()?;
+                arguments.push(argument);
+                if self.token().is_comma() {
+                    self.advance(); // Move past the comma.
+                } else if !self.token().is_bracket(&right_bracket) {
+                    return Err((
+                        "Unexpected token. Expected a function argument.",
+                        self.token().span.clone(),
+                    ));
+                }
+            }
+            if self.end() {
+                Err((
+                    "Unexpected end of text. Expected a ).",
+                    self.token().span.clone(),
+                ))
+            } else {
+                let end = self.token().span.clone()[1];
+                self.advance(); // Move past )
+                let callexp = Expression::create_call_expr(callee, arguments, end);
+
+                Ok(self.reparse(callexp)?)
+            }
+        }
+    }
     /// Parses an assignment expression.
-    fn assign_expression(&'a self) -> NodeOrError<Expression<'a>> {
+    fn assign_expression(
+        &'a self,
+        _left: Expression<'a>,
+        _operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
         todo!()
     }
 }
-
-// impl Parser {
-//     pub fn from_scanner(mut scanner: Scanner) -> Self {
-//         scanner.run();
-//         let mut parser = Parser {
-//             token: scanner.tokens[0].clone(),
-//             scanner,
-//             statements: vec![],
-//             index: 0,
-//             op_stack: Stack::new(),
-//         };
-//         while !parser.token.is_eof() {
-//             let parsed = parser.statement();
-//             match parsed {
-//                 Ok(statement) => parser.statements.push(statement),
-//                 Err(_) => todo!(),
-//             }
-//         }
-//         parser
-//     }
-//     fn statement(&mut self) -> NodeOrError<Statement> {
-//         match self.token.kind {
-//             TokenKind::Keyword(_) => todo!(),
-//             TokenKind::Identifier(_) | TokenKind::Literal(_) => self.expression_statement(),
-//             _ => todo!(),
-//         }
-//     }
-//     fn expression_statement(&mut self) -> NodeOrError<Statement> {
-//         let start = self.token.span;
-//         println!("Building expression statement...");
-//         let expression = self.expression()?;
-//         if self.token.is_semi_colon() {
-//             self.next();
-//             let end = self.token.span;
-//             Ok(Node::expression_statement([start[0], end[1]], expression))
-//         } else {
-//             Err(("Expected a semicolon here.", self.token.span[1]))
-//         }
-//     }
-//     /// Parses an expression.
-//     fn expression(&mut self) -> NodeOrError<Expression> {
-//         println!("Parsing, expresion...");
-//         match self.token.kind {
-//             TokenKind::Literal(_) => {
-//                 let literal = self.literal();
-//                 self.reparse(literal)
-//             }
-//             _ => todo!(),
-//         }
-//     }
-//     /// Recursively parse an expression.
-//     fn reparse(&mut self, n: NodeOrError) -> NodeOrError<Expression> {
-//         match n {
-//             Ok(node) => {
-//                 if self.token.is_semi_colon() {
-//                     return Ok(node);
-//                 }
-//                 match &self.token {
-//                     Token {
-//                         kind:
-//                             TokenKind::Operator(
-//                                 Operator::Add
-//                                 | Operator::Subtract
-//                                 | Operator::Multiply
-//                                 | Operator::Divide
-//                                 | Operator::LessThan,
-//                             ),
-//                         ..
-//                     } => self.binary_expression(node),
-//                     _ => Ok(node),
-//                 }
-//             }
-//             Err(e) => Err(e),
-//         }
-//     }
-//     /// Parses a literal.
-//     fn literal(&mut self) -> NodeOrError<Expression> {
-//         {
-//             println!("Parsing literal...");
-//             if let Token {
-//                 span,
-//                 kind: TokenKind::Literal(literal),
-//             } = self.token.clone()
-//             {
-//                 let node = match literal {
-//                     Literal {
-//                         kind: LiteralKind::BooleanLiteral,
-//                         value,
-//                     } => Node::boolean_expression(span, if value == "true" { true } else { false }),
-//                     Literal {
-//                         kind: LiteralKind::StringLiteral,
-//                         value,
-//                     } => Node::string_expression(span, value.to_string()),
-//                     Literal {
-//                         kind: LiteralKind::NumericLiteral,
-//                         value,
-//                     } => Node::number_expression(span, value.to_string()),
-//                     _ => unreachable!(),
-//                 };
-//                 self.next();
-//                 println!("Finished parsing literal. Current node is {:?}", self.token);
-//                 Ok(node)
-//             } else {
-//                 unreachable!()
-//             }
-//         }
-//         /// Parses a binary expression.
-//         fn binary_expression(&mut self, left: Node) -> NodeOrError<Expression> {
-//             if let Token {
-//                 kind: TokenKind::Operator(op),
-//                 ..
-//             } = self.token.clone()
-//             {
-//                 println!("Binary expression... The current token is {:?}", self.token);
-//                 if self.is_lower_precedence(&op) {
-//                     println!("yes.");
-//                     Ok(left)
-//                 } else {
-//                     self.op_stack.push(op.clone());
-//                     let operator = op.clone();
-//                     self.next(); // Move past operator.
-//                     println!("{:?}", self.token);
-//                     let right = self.expression()?;
-//                     self.op_stack.pop();
-//                     let binexp = Node::binary_expression(left, right, operator);
-//                     Ok(self.reparse(Ok(binexp))?)
-//                 }
-//             } else {
-//                 unreachable!()
-//             }
-//         }
-//     }
-// }

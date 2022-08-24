@@ -146,6 +146,8 @@ impl Scanner {
             self.boolean()
         } else if let Some(op) = OPERATORS.iter().find(|op| self.sees(op)) {
             self.operator(op)
+        } else if self.char == ',' {
+            self.comma()
         } else if self.char == '@' {
             self.injunction()
         } else if self.is_bracket() {

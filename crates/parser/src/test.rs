@@ -487,3 +487,59 @@ fn it_parses_binary_expression_with_multiple_operands() {
         ))
     )
 }
+
+#[test]
+fn it_parses_identifier() {
+    let mut scanner = Scanner::new("identifier_1;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_ident_expr(
+            "identifier_1",
+            [[1, 1], [1, 13]]
+        ))
+    )
+}
+
+#[test]
+fn it_parses_call_expression() {
+    let mut scanner = Scanner::new("doStuff();");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_call_expr(
+            Expression::create_ident_expr("doStuff", [[1, 1], [1, 8]]),
+            vec![],
+            [1, 10]
+        ))
+    )
+}
+
+#[test]
+fn it_parses_call_expression_with_arguments() {
+    let mut scanner = Scanner::new("doStuff(argument1, argument2);");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expression_statement(Expression::create_call_expr(
+            Expression::create_ident_expr("doStuff", [[1, 1], [1, 8]]),
+            vec![
+                Expression::create_ident_expr("argument1", [[1, 9], [1, 18]]),
+                Expression::create_ident_expr("argument2", [[1, 20], [1, 29]])
+            ],
+            [1, 30]
+        ))
+    )
+}

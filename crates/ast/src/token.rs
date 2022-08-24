@@ -78,6 +78,26 @@ impl Token {
             }
         )
     }
+    pub fn is_bracket(&self, bracket_kind: &BracketKind) -> bool {
+        if let Token {
+            kind: TokenKind::Punctuation(Punctuation::Bracket(b)),
+            ..
+        } = self
+        {
+            b == bracket_kind
+        } else {
+            false
+        }
+    }
+    pub fn is_comma(&self) -> bool {
+        matches!(
+            self,
+            Token {
+                kind: TokenKind::Punctuation(Punctuation::Comma),
+                ..
+            }
+        )
+    }
     pub fn create_literal(literal_type: &str, value: String, span: TextSpan) -> Self {
         Token {
             span,
