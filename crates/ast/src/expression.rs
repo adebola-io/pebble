@@ -36,8 +36,8 @@ pub enum Expression<'a> {
     },
     /// An operation that occurs on only one operand. e.g. `!a, ~b`
     UnaryExpr {
-        operator: Operator,
-        operand: &'a Self,
+        operator: &'a Operator,
+        operand: Box<Self>,
         span: TextSpan,
     },
     /// A function call expression. e.g. `a(b)`.
@@ -143,6 +143,15 @@ impl<'a> Expression<'a> {
         Expression::IndexExpr {
             accessor: Box::new(accessor),
             property: Box::new(property),
+            span,
+        }
+    }
+    /// Creates a unary expression.
+    pub fn create_unary_expr(start: [u64; 2], operator: &'a Operator, operand: Self) -> Self {
+        let span = [start, operand.get_range()[1]];
+        Expression::UnaryExpr {
+            operator,
+            operand: Box::new(operand),
             span,
         }
     }

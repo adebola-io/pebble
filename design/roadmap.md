@@ -34,7 +34,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse member/dot expression
 -   [x] Parse namespace expression
 -   [x] Parse index expression
--   [ ] Parse unary expression
+-   [x] Parse unary expression
 -   [ ] Parse range expression
 -   [ ] Parse logical expression
 -   [ ] Parse conditional expression

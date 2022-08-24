@@ -168,6 +168,7 @@ fn it_scans_octal_numbers() {
         }
     )
 }
+
 #[test]
 fn it_scans_octal_exponents() {
     let mut scanner = Scanner::new("0o75266e2");
@@ -625,6 +626,28 @@ fn it_parses_complex_expression_1() {
             ),
             Expression::create_ident_expr("index", [[1, 37], [1, 42]]),
             [1, 43]
+        ))
+    )
+}
+
+#[test]
+fn it_parses_unary_expression() {
+    let mut scanner = Scanner::new("-2 + 3;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_bin_expr(
+            Expression::create_unary_expr(
+                [1, 1],
+                &Operator::Subtract,
+                Expression::create_num_expr("2", [[1, 2], [1, 3]])
+            ),
+            &Operator::Add,
+            Expression::create_num_expr("3", [[1, 6], [1, 7]])
         ))
     )
 }

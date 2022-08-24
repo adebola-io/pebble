@@ -118,9 +118,10 @@ impl<'a> Parser<'a> {
         }
     }
     fn expression(&'a self) -> NodeOrError<Expression<'a>> {
-        match self.token().kind {
+        match &self.token().kind {
             TokenKind::Literal(_) => self.literal(),
             TokenKind::Identifier(_) => self.identifier(),
+            TokenKind::Operator(operator) => self.unary_expression(operator),
             _ => todo!(),
         }
     }
@@ -306,6 +307,29 @@ impl<'a> Parser<'a> {
             self.advance(); // Move past ]
             let index_exp = Expression::create_index_expr(accessor, property, end);
             Ok(self.reparse(index_exp)?)
+        }
+    }
+    /// Parses a unary expression.
+    fn unary_expression(&'a self, operator: &'a Operator) -> NodeOrError<Expression<'a>> {
+        match operator {
+            Operator::Add
+            | Operator::Subtract
+            | Operator::Decrement
+            | Operator::Increment
+            | Operator::LogicalNot
+            | Operator::BitWiseNot => {
+                self.operators.borrow_mut().push(operator);
+                let start = self.token().span.clone()[0];
+                self.advance(); // Move past operator.
+                let operand = self.expression()?;
+                self.operators.borrow_mut().pop();
+                let un_exp = Expression::create_unary_expr(start, operator, operand);
+                Ok(self.reparse(un_exp)?)
+            }
+            _ => Err((
+                "Unexpected operator. Expected an expression",
+                self.token().span.clone(),
+            )),
         }
     }
     /// Parses an assignment expression.
