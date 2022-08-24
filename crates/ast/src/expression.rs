@@ -34,6 +34,12 @@ pub enum Expression<'a> {
         right: Box<Self>,
         span: TextSpan,
     },
+    LogicalExpr {
+        operator: &'a Operator,
+        left: Box<Self>,
+        right: Box<Self>,
+        span: TextSpan,
+    },
     /// An operation that occurs on only one operand. e.g. `!a, ~b`
     UnaryExpr {
         operator: &'a Operator,
@@ -70,8 +76,8 @@ pub enum Expression<'a> {
     },
     /// An expression that expresses a numeric or alphabetic range. e.g. `a..b`
     RangeExpr {
-        top: &'a Self,
-        bottom: &'a Self,
+        top: Box<Self>,
+        bottom: Box<Self>,
         span: TextSpan,
     },
 }
@@ -155,6 +161,26 @@ impl<'a> Expression<'a> {
             span,
         }
     }
+    /// Creates a range expression.
+    pub fn create_range_expr(top: Self, bottom: Self) -> Self {
+        let span = [top.get_range()[0], bottom.get_range()[1]];
+        Expression::RangeExpr {
+            top: Box::new(top),
+            bottom: Box::new(bottom),
+            span,
+        }
+    }
+    /// Creates a logical expression.
+    pub fn create_logical_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
+        let span = [left.get_range()[0], right.get_range()[1]];
+        Expression::LogicalExpr {
+            operator,
+            left: Box::new(left),
+            right: Box::new(right),
+
+            span,
+        }
+    }
 }
 
 impl Location for Expression<'_> {
@@ -166,6 +192,7 @@ impl Location for Expression<'_> {
             | Self::BooleanExpr { span, .. }
             | Self::CharacterExpr { span, .. }
             | Self::BinaryExpr { span, .. }
+            | Self::LogicalExpr { span, .. }
             | Self::UnaryExpr { span, .. }
             | Self::CallExpr { span, .. }
             | Self::ArrayExpr { span, .. }

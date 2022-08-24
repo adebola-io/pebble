@@ -260,7 +260,7 @@ impl Scanner {
                 value.push(self.char);
                 self.next();
             }
-            if self.char == '.' {
+            if self.char == '.' && !self.sees("..") {
                 value.push(self.char);
                 self.next();
                 while self.char.is_digit(10) {

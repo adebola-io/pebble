@@ -651,3 +651,42 @@ fn it_parses_unary_expression() {
         ))
     )
 }
+
+#[test]
+fn it_parses_range_expression() {
+    let mut scanner = Scanner::new("psrandom(2..9);");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_call_expr(
+            Expression::create_ident_expr("psrandom", [[1, 1], [1, 9]]),
+            vec![Expression::create_range_expr(
+                Expression::create_num_expr("2", [[1, 10], [1, 11]]),
+                Expression::create_num_expr("9", [[1, 13], [1, 14]])
+            )],
+            [1, 15]
+        ))
+    )
+}
+
+#[test]
+fn it_parses_logical_expression() {
+    let mut scanner = Scanner::new("is_false || is_true;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_logical_expr(
+            Expression::create_ident_expr("is_false", [[1, 1], [1, 9]]),
+            &Operator::LogicalOr,
+            Expression::create_ident_expr("is_true", [[1, 13], [1, 20]])
+        ))
+    )
+}

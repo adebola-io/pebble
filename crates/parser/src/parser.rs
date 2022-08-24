@@ -168,6 +168,10 @@ impl<'a> Parser<'a> {
             TokenKind::Operator(operator) => match operator {
                 Operator::Dot => self.dot_expression(node, operator),
                 Operator::Namespace => self.namespace_expression(node, operator),
+                Operator::RangeBetween => self.range_expression(node, operator),
+                Operator::LogicalAnd | Operator::LogicalOr => {
+                    self.logical_expression(node, operator)
+                }
                 Operator::Add
                 | Operator::Multiply
                 | Operator::Divide
@@ -183,7 +187,6 @@ impl<'a> Parser<'a> {
                 | Operator::BitwiseAnd
                 | Operator::Equals
                 | Operator::NotEquals
-                | Operator::RangeBetween
                 | Operator::PowerOf => self.binary_expression(node, operator),
                 Operator::Assign
                 | Operator::AddAssign
@@ -330,6 +333,39 @@ impl<'a> Parser<'a> {
                 "Unexpected operator. Expected an expression",
                 self.token().span.clone(),
             )),
+        }
+    }
+    fn range_expression(
+        &'a self,
+        top: Expression<'a>,
+        operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
+        if self.is_lower_precedence(operator) {
+            Ok(top)
+        } else {
+            self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(operator);
+            let bottom = self.expression()?;
+            self.operators.borrow_mut().pop();
+            let range_exp = Expression::create_range_expr(top, bottom);
+            Ok(self.reparse(range_exp)?)
+        }
+    }
+    /// Parses a logical expression.
+    fn logical_expression(
+        &'a self,
+        left: Expression<'a>,
+        operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
+        if self.is_lower_precedence(operator) {
+            Ok(left)
+        } else {
+            self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(operator);
+            let right = self.expression()?;
+            self.operators.borrow_mut().pop();
+            let log_exp = Expression::create_logical_expr(left, operator, right);
+            Ok(self.reparse(log_exp)?)
         }
     }
     /// Parses an assignment expression.

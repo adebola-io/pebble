@@ -52,19 +52,32 @@ pub const OPERATORS: &'static [&'static str; 34] = &[
 
 pub fn precedence_of(operator: &Operator) -> i32 {
     match operator {
-        Operator::Dot => 16,
-        Operator::Namespace => 15,
-        Operator::Index => 14,
-        Operator::Call => 13,
-        Operator::LogicalNot => 12,
-        Operator::BitWiseNot => 12,
-        Operator::PowerOf => 11,
-        Operator::Multiply => 10,
-        Operator::Remainder => 10,
-        Operator::Divide => 10,
-        Operator::Add => 9,
-        Operator::Subtract => 9,
-        Operator::Assign => 8,
+        Operator::Dot => 20,
+        Operator::Namespace => 19,
+        Operator::Index => 18,
+        Operator::Call => 17,
+        Operator::RangeBetween => 16,
+        Operator::LogicalNot | Operator::BitWiseNot => 15,
+        Operator::PowerOf => 14,
+        Operator::Multiply | Operator::Remainder | Operator::Divide => 13,
+        Operator::Add | Operator::Subtract => 12,
+        Operator::BitwiseLeftShift | Operator::BitwiseRightShift => 11,
+        Operator::LessThan
+        | Operator::GreaterThan
+        | Operator::LessThanOrEquals
+        | Operator::GreaterThanOrEquals => 10,
+        Operator::Equals | Operator::NotEquals => 11,
+        Operator::BitwiseAnd => 10,
+        Operator::BitwiseOr => 9,
+        Operator::LogicalAnd => 8,
+        Operator::LogicalOr => 7,
+        Operator::Assign
+        | Operator::AddAssign
+        | Operator::DivideAssign
+        | Operator::MultiplyAssign
+        | Operator::SubtractAssign
+        | Operator::LogicalOrAssign
+        | Operator::LogicalAndAssign => 7,
         Operator::Temp => 0,
         _ => todo!(),
     }

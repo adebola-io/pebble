@@ -35,8 +35,8 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse namespace expression
 -   [x] Parse index expression
 -   [x] Parse unary expression
--   [ ] Parse range expression
--   [ ] Parse logical expression
+-   [x] Parse range expression
+-   [x] Parse logical expression
 -   [ ] Parse conditional expression
 -   [ ] Parse assignment expression
 -   [ ] Parse type labels
@@ -99,4 +99,4 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Support for @prepend
 -   [ ] Code Completion
 
-## Granite
+## Prepiler
