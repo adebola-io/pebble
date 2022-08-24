@@ -31,9 +31,9 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse identifiers
 -   [x] Parse binary expression
 -   [x] Parse call expression
--   [ ] Parse member expression
--   [ ] Parse namespace expression
--   [ ] Parse access expression
+-   [x] Parse member/dot expression
+-   [x] Parse namespace expression
+-   [x] Parse index expression
 -   [ ] Parse unary expression
 -   [ ] Parse range expression
 -   [ ] Parse logical expression

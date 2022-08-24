@@ -109,7 +109,7 @@ impl<'a> Parser<'a> {
             Ok(exp) => {
                 if self.token().is_semi_colon() {
                     self.advance();
-                    Ok(Statement::create_expression_statement(exp))
+                    Ok(Statement::create_expr_stmnt(exp))
                 } else {
                     // Every expression statement must end with a semi-colon.
                     Err(("Expected a semi-colon.", self.token().span.clone()))
@@ -165,6 +165,8 @@ impl<'a> Parser<'a> {
     fn reparse(&'a self, node: Expression<'a>) -> NodeOrError<Expression<'a>> {
         match &self.token().kind {
             TokenKind::Operator(operator) => match operator {
+                Operator::Dot => self.dot_expression(node, operator),
+                Operator::Namespace => self.namespace_expression(node, operator),
                 Operator::Add
                 | Operator::Multiply
                 | Operator::Divide
@@ -193,9 +195,44 @@ impl<'a> Parser<'a> {
             },
             TokenKind::Punctuation(punctuation) => match punctuation {
                 Punctuation::Bracket(BracketKind::LeftParenthesis) => self.call_expression(node),
+                Punctuation::Bracket(BracketKind::LeftSquare) => self.index_expression(node),
                 _ => Ok(node),
             },
             _ => Ok(node),
+        }
+    }
+    /// Parses a dot or member expression.
+    fn dot_expression(
+        &'a self,
+        object: Expression<'a>,
+        operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
+        if self.is_lower_precedence(operator) {
+            Ok(object)
+        } else {
+            self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(operator); // Push the dot operator onto the stack.
+            let property = self.expression()?; // Parse the property of the object.
+            self.operators.borrow_mut().pop(); // Remove the dot operator from the stack.
+            let dot_exp = Expression::create_dot_expr(object, property);
+            Ok(self.reparse(dot_exp)?)
+        }
+    }
+    /// Parses a namespace expression.
+    fn namespace_expression(
+        &'a self,
+        namespace: Expression<'a>,
+        operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
+        if self.is_lower_precedence(operator) {
+            Ok(namespace)
+        } else {
+            self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(operator); // Push the namespace operator onto the stack.
+            let property = self.expression()?; // Parse the property of the object.
+            self.operators.borrow_mut().pop(); // Remove the namespace operator from the stack.
+            let dot_exp = Expression::create_namespace_expr(namespace, property);
+            Ok(self.reparse(dot_exp)?)
         }
     }
     /// Parses a binary expression.
@@ -222,6 +259,7 @@ impl<'a> Parser<'a> {
             Ok(callee)
         } else {
             self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(&Operator::Temp);
             let mut arguments = vec![];
             let right_bracket = BracketKind::RightParenthesis;
             while !(self.end() || self.token().is_bracket(&right_bracket)) {
@@ -236,6 +274,7 @@ impl<'a> Parser<'a> {
                     ));
                 }
             }
+            self.operators.borrow_mut().pop();
             if self.end() {
                 Err((
                     "Unexpected end of text. Expected a ).",
@@ -248,6 +287,25 @@ impl<'a> Parser<'a> {
 
                 Ok(self.reparse(callexp)?)
             }
+        }
+    }
+    /// Parses an index expression.
+    fn index_expression(&'a self, accessor: Expression<'a>) -> NodeOrError<Expression<'a>> {
+        let index_op = Operator::Index;
+        if self.is_lower_precedence(&index_op) {
+            Ok(accessor)
+        } else {
+            self.advance(); // Move past [
+            self.operators.borrow_mut().push(&Operator::Temp);
+            let property = self.expression()?; // Parse property.
+            self.operators.borrow_mut().pop();
+            if !self.token().is_bracket(&BracketKind::RightSquare) {
+                return Err(("Expected a ].", self.token().span.clone()));
+            }
+            let end = self.token().span.clone()[1];
+            self.advance(); // Move past ]
+            let index_exp = Expression::create_index_expr(accessor, property, end);
+            Ok(self.reparse(index_exp)?)
         }
     }
     /// Parses an assignment expression.

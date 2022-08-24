@@ -48,19 +48,24 @@ pub enum Expression<'a> {
     },
     /// An array of expression. e.g. `[a, b, c]`
     ArrayExpr {
-        elements: Vec<&'a Self>,
+        elements: Vec<Self>,
         span: TextSpan,
     },
     /// An expression that access an index of an array. e.g `a[b]`.
-    AccessExpr {
-        accessor: &'a Self,
-        property: &'a Self,
+    IndexExpr {
+        accessor: Box<Self>,
+        property: Box<Self>,
         span: TextSpan,
     },
     /// A member or dot access of a class. e.g. `a.b`
     DotExpr {
-        class: &'a Self,
-        property: &'a Self,
+        object: Box<Self>,
+        property: Box<Self>,
+        span: TextSpan,
+    },
+    NamespaceExpr {
+        object: Box<Self>,
+        property: Box<Self>,
         span: TextSpan,
     },
     /// An expression that expresses a numeric or alphabetic range. e.g. `a..b`
@@ -95,6 +100,24 @@ impl<'a> Expression<'a> {
     pub fn create_char_expr(value: &'a str, span: TextSpan) -> Self {
         Expression::CharacterExpr { value, span }
     }
+    /// Creates a dot expression.
+    pub fn create_dot_expr(object: Self, property: Self) -> Self {
+        let span = [object.get_range()[0], property.get_range()[1]];
+        Expression::DotExpr {
+            object: Box::new(object),
+            property: Box::new(property),
+            span,
+        }
+    }
+    /// Creates a namespace expression.
+    pub fn create_namespace_expr(object: Self, property: Self) -> Self {
+        let span = [object.get_range()[0], property.get_range()[1]];
+        Expression::NamespaceExpr {
+            object: Box::new(object),
+            property: Box::new(property),
+            span,
+        }
+    }
     /// Creates a binary expression.
     pub fn create_bin_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
         let span = [left.get_range()[0], right.get_range()[1]];
@@ -106,16 +129,21 @@ impl<'a> Expression<'a> {
         }
     }
     /// Creates a call expression.
-    pub fn create_call_expr(
-        callee: Expression<'a>,
-        arguments: Vec<Expression<'a>>,
-        end: [u64; 2],
-    ) -> Self {
+    pub fn create_call_expr(callee: Self, arguments: Vec<Self>, end: [u64; 2]) -> Self {
         let start = callee.get_range()[0];
         Expression::CallExpr {
             callee: Box::new(callee),
             arguments,
             span: [start, end],
+        }
+    }
+    /// Creates a index expression.
+    pub fn create_index_expr(accessor: Self, property: Self, end: [u64; 2]) -> Self {
+        let span = [accessor.get_range()[0], end];
+        Expression::IndexExpr {
+            accessor: Box::new(accessor),
+            property: Box::new(property),
+            span,
         }
     }
 }
@@ -132,8 +160,9 @@ impl Location for Expression<'_> {
             | Self::UnaryExpr { span, .. }
             | Self::CallExpr { span, .. }
             | Self::ArrayExpr { span, .. }
-            | Self::AccessExpr { span, .. }
+            | Self::IndexExpr { span, .. }
             | Self::DotExpr { span, .. }
+            | Self::NamespaceExpr { span, .. }
             | Self::RangeExpr { span, .. } => *span,
         }
     }

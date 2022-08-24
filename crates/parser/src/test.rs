@@ -388,7 +388,7 @@ fn it_parses_numeric_literal() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_num_expr("2", [[1, 1], [1, 2]]))
+        Statement::create_expr_stmnt(Expression::create_num_expr("2", [[1, 1], [1, 2]]))
     )
 }
 
@@ -402,10 +402,7 @@ fn it_parses_boolean_literal() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_bool_expr(
-            "true",
-            [[1, 1], [1, 5]]
-        ))
+        Statement::create_expr_stmnt(Expression::create_bool_expr("true", [[1, 1], [1, 5]]))
     )
 }
 
@@ -419,7 +416,7 @@ fn it_parses_string_literal() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_str_expr(
+        Statement::create_expr_stmnt(Expression::create_str_expr(
             "This is a string.",
             [[1, 1], [1, 19]]
         ))
@@ -436,7 +433,7 @@ fn it_parses_binary_expression() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_bin_expr(
+        Statement::create_expr_stmnt(Expression::create_bin_expr(
             Expression::create_num_expr("2", [[1, 1], [1, 2]]),
             &Operator::Add,
             Expression::create_num_expr("2", [[1, 3], [1, 4]])
@@ -454,7 +451,7 @@ fn it_parses_continuous_binary_expression() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_bin_expr(
+        Statement::create_expr_stmnt(Expression::create_bin_expr(
             Expression::create_bin_expr(
                 Expression::create_num_expr("2", [[1, 1], [1, 2]]),
                 &Operator::Add,
@@ -476,7 +473,7 @@ fn it_parses_binary_expression_with_multiple_operands() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_bin_expr(
+        Statement::create_expr_stmnt(Expression::create_bin_expr(
             Expression::create_num_expr("2", [[1, 1], [1, 2]]),
             &Operator::Add,
             Expression::create_bin_expr(
@@ -498,7 +495,7 @@ fn it_parses_identifier() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_ident_expr(
+        Statement::create_expr_stmnt(Expression::create_ident_expr(
             "identifier_1",
             [[1, 1], [1, 13]]
         ))
@@ -515,7 +512,7 @@ fn it_parses_call_expression() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_call_expr(
+        Statement::create_expr_stmnt(Expression::create_call_expr(
             Expression::create_ident_expr("doStuff", [[1, 1], [1, 8]]),
             vec![],
             [1, 10]
@@ -533,13 +530,65 @@ fn it_parses_call_expression_with_arguments() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expression_statement(Expression::create_call_expr(
+        Statement::create_expr_stmnt(Expression::create_call_expr(
             Expression::create_ident_expr("doStuff", [[1, 1], [1, 8]]),
             vec![
                 Expression::create_ident_expr("argument1", [[1, 9], [1, 18]]),
                 Expression::create_ident_expr("argument2", [[1, 20], [1, 29]])
             ],
             [1, 30]
+        ))
+    )
+}
+
+#[test]
+fn it_parses_dot_expression() {
+    let mut scanner = Scanner::new("object.property;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_dot_expr(
+            Expression::create_ident_expr("object", [[1, 1], [1, 7]]),
+            Expression::create_ident_expr("property", [[1, 8], [1, 16]])
+        ))
+    )
+}
+
+#[test]
+fn it_parses_namespace_expression() {
+    let mut scanner = Scanner::new("object::property;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_namespace_expr(
+            Expression::create_ident_expr("object", [[1, 1], [1, 7]]),
+            Expression::create_ident_expr("property", [[1, 9], [1, 17]])
+        ))
+    )
+}
+
+#[test]
+fn it_parses_index_expression() {
+    let mut scanner = Scanner::new("accessor[property];");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_index_expr(
+            Expression::create_ident_expr("accessor", [[1, 1], [1, 9]]),
+            Expression::create_ident_expr("property", [[1, 10], [1, 18]]),
+            [1, 19]
         ))
     )
 }

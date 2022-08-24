@@ -54,7 +54,7 @@ pub enum Statement<'a> {
 }
 
 impl<'a> Statement<'a> {
-    pub fn create_expression_statement(expression: Expression<'a>) -> Self {
+    pub fn create_expr_stmnt(expression: Expression<'a>) -> Self {
         let span = expression.get_range();
         Statement::ExprStmnt { expression, span }
     }

@@ -40,6 +40,7 @@ pub enum Operator {
     Decrement,           // a--
     Call,                // a(b)
     Index,               // a[b]
+    Temp,                // A pseudo operator.
 }
 
 // The operator representations. This array is sorted in descending order by the length of the operators.
@@ -51,7 +52,8 @@ pub const OPERATORS: &'static [&'static str; 34] = &[
 
 pub fn precedence_of(operator: &Operator) -> i32 {
     match operator {
-        Operator::Dot => 14,
+        Operator::Dot => 15,
+        Operator::Namespace => 14,
         Operator::Index => 13,
         Operator::Call => 12,
         Operator::PowerOf => 11,
@@ -61,6 +63,7 @@ pub fn precedence_of(operator: &Operator) -> i32 {
         Operator::Add => 9,
         Operator::Subtract => 9,
         Operator::Assign => 8,
+        Operator::Temp => 0,
         _ => todo!(),
     }
 }
