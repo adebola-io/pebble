@@ -34,6 +34,7 @@ pub enum Expression<'a> {
         right: Box<Self>,
         span: TextSpan,
     },
+    /// An operation expressiong a logical operation, e.g. `a || b`
     LogicalExpr {
         operator: &'a Operator,
         left: Box<Self>,
@@ -78,6 +79,12 @@ pub enum Expression<'a> {
     RangeExpr {
         top: Box<Self>,
         bottom: Box<Self>,
+        span: TextSpan,
+    },
+    TernaryExpr {
+        test: Box<Self>,
+        consequent: Box<Self>,
+        alternate: Box<Self>,
         span: TextSpan,
     },
 }
@@ -181,6 +188,16 @@ impl<'a> Expression<'a> {
             span,
         }
     }
+    // Creates a ternary expression.
+    pub fn create_ternary_expr(test: Self, consequent: Self, alternate: Self) -> Self {
+        let span = [test.get_range()[0], alternate.get_range()[1]];
+        Expression::TernaryExpr {
+            test: Box::new(test),
+            consequent: Box::new(consequent),
+            alternate: Box::new(alternate),
+            span,
+        }
+    }
 }
 
 impl Location for Expression<'_> {
@@ -199,7 +216,8 @@ impl Location for Expression<'_> {
             | Self::IndexExpr { span, .. }
             | Self::DotExpr { span, .. }
             | Self::NamespaceExpr { span, .. }
-            | Self::RangeExpr { span, .. } => *span,
+            | Self::RangeExpr { span, .. }
+            | Self::TernaryExpr { span, .. } => *span,
         }
     }
 }

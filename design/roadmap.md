@@ -37,7 +37,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse unary expression
 -   [x] Parse range expression
 -   [x] Parse logical expression
--   [ ] Parse conditional expression
+-   [x] Parse ternary expression
 -   [ ] Parse assignment expression
 -   [ ] Parse type labels
 -   [ ] Parse generic type

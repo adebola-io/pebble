@@ -172,6 +172,7 @@ impl<'a> Parser<'a> {
                 Operator::LogicalAnd | Operator::LogicalOr => {
                     self.logical_expression(node, operator)
                 }
+                Operator::Confirm => self.ternary_expression(node, operator),
                 Operator::Add
                 | Operator::Multiply
                 | Operator::Divide
@@ -366,6 +367,30 @@ impl<'a> Parser<'a> {
             self.operators.borrow_mut().pop();
             let log_exp = Expression::create_logical_expr(left, operator, right);
             Ok(self.reparse(log_exp)?)
+        }
+    }
+    /// Parses a ternary expression.
+    fn ternary_expression(
+        &'a self,
+        test: Expression<'a>,
+        operator: &'a Operator,
+    ) -> NodeOrError<Expression<'a>> {
+        if self.is_lower_precedence(operator) {
+            Ok(test)
+        } else {
+            self.advance(); // Move past operator.
+            self.operators.borrow_mut().push(operator);
+            let consequent = self.expression()?;
+            self.operators.borrow_mut().pop();
+            if !self.token().is_colon() {
+                return Err(("Expected a colon.", self.token().span.clone()));
+            }
+            self.advance();
+            self.operators.borrow_mut().push(&Operator::Colon);
+            let alternate = self.expression()?;
+            self.operators.borrow_mut().pop();
+            let tern_exp = Expression::create_ternary_expr(test, consequent, alternate);
+            Ok(self.reparse(tern_exp)?)
         }
     }
     /// Parses an assignment expression.

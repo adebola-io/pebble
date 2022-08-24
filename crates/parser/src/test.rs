@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+use std::vec;
+
 use crate::{
     parser::{Parser, Provider},
     scanner::Scanner,
@@ -687,6 +689,86 @@ fn it_parses_logical_expression() {
             Expression::create_ident_expr("is_false", [[1, 1], [1, 9]]),
             &Operator::LogicalOr,
             Expression::create_ident_expr("is_true", [[1, 13], [1, 20]])
+        ))
+    )
+}
+
+#[test]
+fn it_parses_ternary_expression() {
+    let mut scanner = Scanner::new("is_true ? doStuff() : doOtherStuff();");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_ternary_expr(
+            Expression::create_ident_expr("is_true", [[1, 1], [1, 8]]),
+            Expression::create_call_expr(
+                Expression::create_ident_expr("doStuff", [[1, 11], [1, 18]]),
+                vec![],
+                [1, 20]
+            ),
+            Expression::create_call_expr(
+                Expression::create_ident_expr("doOtherStuff", [[1, 23], [1, 35]]),
+                vec![],
+                [1, 37]
+            )
+        ))
+    )
+}
+
+#[test]
+fn it_parses_nested_ternary_expression() {
+    let mut scanner = Scanner::new(
+        "age >= 21 ? serveDrink() : age > 18 ? collectBribe().then(serveDrink) : reject();",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_ternary_expr(
+            Expression::create_bin_expr(
+                Expression::create_ident_expr("age", [[1, 1], [1, 4]]),
+                &Operator::GreaterThanOrEquals,
+                Expression::create_num_expr("21", [[1, 8], [1, 10]])
+            ),
+            Expression::create_call_expr(
+                Expression::create_ident_expr("serveDrink", [[1, 13], [1, 23]]),
+                vec![],
+                [1, 25]
+            ),
+            Expression::create_ternary_expr(
+                Expression::create_bin_expr(
+                    Expression::create_ident_expr("age", [[1, 28], [1, 31]]),
+                    &Operator::GreaterThan,
+                    Expression::create_num_expr("18", [[1, 34], [1, 36]])
+                ),
+                Expression::create_call_expr(
+                    Expression::create_dot_expr(
+                        Expression::create_call_expr(
+                            Expression::create_ident_expr("collectBribe", [[1, 39], [1, 51]]),
+                            vec![],
+                            [1, 53]
+                        ),
+                        Expression::create_ident_expr("then", [[1, 54], [1, 58]])
+                    ),
+                    vec![Expression::create_ident_expr(
+                        "serveDrink",
+                        [[1, 59], [1, 69]]
+                    )],
+                    [1, 70]
+                ),
+                Expression::create_call_expr(
+                    Expression::create_ident_expr("reject", [[1, 73], [1, 79]]),
+                    vec![],
+                    [1, 81]
+                )
+            )
         ))
     )
 }

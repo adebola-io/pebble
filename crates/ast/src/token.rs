@@ -78,6 +78,15 @@ impl Token {
             }
         )
     }
+    pub fn is_colon(&self) -> bool {
+        matches!(
+            self,
+            Token {
+                kind: TokenKind::Operator(Operator::Colon),
+                ..
+            }
+        )
+    }
     pub fn is_bracket(&self, bracket_kind: &BracketKind) -> bool {
         if let Token {
             kind: TokenKind::Punctuation(Punctuation::Bracket(b)),

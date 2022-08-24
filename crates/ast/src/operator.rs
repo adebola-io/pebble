@@ -44,10 +44,10 @@ pub enum Operator {
 }
 
 // The operator representations. This array is sorted in descending order by the length of the operators.
-pub const OPERATORS: &'static [&'static str; 34] = &[
+pub const OPERATORS: &'static [&'static str; 36] = &[
     "...", "&&=", "||=", "*=", "/=", "+=", "-=", "==", ">=", "<=", "=>", "->", "++", "--", "..",
     "::", "||", "&&", ">>", "<<", "**", "*", "/", "+", "-", "%", "&", "|", "!", "~", ".", "?", ":",
-    "=",
+    ">", "<", "=",
 ];
 
 pub fn precedence_of(operator: &Operator) -> i32 {
@@ -71,13 +71,15 @@ pub fn precedence_of(operator: &Operator) -> i32 {
         Operator::BitwiseOr => 9,
         Operator::LogicalAnd => 8,
         Operator::LogicalOr => 7,
+        Operator::Confirm => 6,
+        Operator::Colon => 5,
         Operator::Assign
         | Operator::AddAssign
         | Operator::DivideAssign
         | Operator::MultiplyAssign
         | Operator::SubtractAssign
         | Operator::LogicalOrAssign
-        | Operator::LogicalAndAssign => 7,
+        | Operator::LogicalAndAssign => 4,
         Operator::Temp => 0,
         _ => todo!(),
     }
