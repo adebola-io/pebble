@@ -396,9 +396,16 @@ impl<'a> Parser<'a> {
     /// Parses an assignment expression.
     fn assign_expression(
         &'a self,
-        _left: Expression<'a>,
-        _operator: &'a Operator,
+        left: Expression<'a>,
+        operator: &'a Operator,
     ) -> NodeOrError<Expression<'a>> {
-        todo!()
+        if self.is_lower_precedence(operator) {
+            Ok(left)
+        } else {
+            self.advance(); // Move past operator.
+            let right = self.expression()?;
+            let assign_exp = Expression::create_assign_expr(left, operator, right);
+            Ok(self.reparse(assign_exp)?)
+        }
     }
 }

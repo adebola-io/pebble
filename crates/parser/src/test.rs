@@ -772,3 +772,43 @@ fn it_parses_nested_ternary_expression() {
         ))
     )
 }
+
+#[test]
+fn it_parses_assignment_expression() {
+    let mut scanner = Scanner::new("name = \"sefunmi\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_assign_expr(
+            Expression::create_ident_expr("name", [[1, 1], [1, 5]]),
+            &Operator::Assign,
+            Expression::create_str_expr("sefunmi", [[1, 8], [1, 16]])
+        ))
+    );
+}
+
+#[test]
+fn it_parses_nested_assignment_expression() {
+    let mut scanner = Scanner::new("variable += value = value2;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_assign_expr(
+            Expression::create_ident_expr("variable", [[1, 1], [1, 9]]),
+            &Operator::AddAssign,
+            Expression::create_assign_expr(
+                Expression::create_ident_expr("value", [[1, 13], [1, 18]]),
+                &Operator::Assign,
+                Expression::create_ident_expr("value2", [[1, 21], [1, 27]])
+            )
+        ))
+    )
+}

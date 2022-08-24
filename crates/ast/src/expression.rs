@@ -87,6 +87,12 @@ pub enum Expression<'a> {
         alternate: Box<Self>,
         span: TextSpan,
     },
+    AssignmentExpr {
+        left: Box<Self>,
+        right: Box<Self>,
+        operator: &'a Operator,
+        span: TextSpan,
+    },
 }
 
 impl<'a> Expression<'a> {
@@ -198,6 +204,16 @@ impl<'a> Expression<'a> {
             span,
         }
     }
+    /// Creates an assignment expression.
+    pub fn create_assign_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
+        let span = [left.get_range()[0], right.get_range()[1]];
+        Expression::AssignmentExpr {
+            operator,
+            left: Box::new(left),
+            right: Box::new(right),
+            span,
+        }
+    }
 }
 
 impl Location for Expression<'_> {
@@ -217,7 +233,8 @@ impl Location for Expression<'_> {
             | Self::DotExpr { span, .. }
             | Self::NamespaceExpr { span, .. }
             | Self::RangeExpr { span, .. }
-            | Self::TernaryExpr { span, .. } => *span,
+            | Self::TernaryExpr { span, .. }
+            | Self::AssignmentExpr { span, .. } => *span,
         }
     }
 }
