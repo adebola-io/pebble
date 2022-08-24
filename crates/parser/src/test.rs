@@ -812,3 +812,25 @@ fn it_parses_nested_assignment_expression() {
         ))
     )
 }
+
+#[test]
+fn it_parses_grouped_expression() {
+    let mut scanner = Scanner::new("( 2 + 2 ) * 8;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_bin_expr(
+            Expression::create_bin_expr(
+                Expression::create_num_expr("2", [[1, 3], [1, 4]]),
+                &Operator::Add,
+                Expression::create_num_expr("2", [[1, 7], [1, 8]])
+            ),
+            &Operator::Multiply,
+            Expression::create_num_expr("8", [[1, 13], [1, 14]])
+        ))
+    )
+}

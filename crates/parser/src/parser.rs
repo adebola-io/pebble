@@ -2,8 +2,8 @@ use std::cell::RefCell;
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, BracketKind, Expression, Identifier, LiteralKind, Operator, Punctuation,
-    Statement, TextSpan, Token, TokenKind,
+    precedence_of, BracketKind, Expression, Identifier, Keyword, LiteralKind, Operator,
+    Punctuation, Statement, TextSpan, Token, TokenKind,
 };
 use utils::Stack;
 
@@ -98,7 +98,8 @@ impl<'a> Parser<'a> {
     }
     /// Parse a single statement.
     fn statement(&'a self) -> NodeOrError<Statement<'a>> {
-        match self.token().kind {
+        match &self.token().kind {
+            TokenKind::Keyword(keyword) => self.control_statement(keyword),
             _ => self.expression_statement(),
         }
     }
@@ -122,6 +123,9 @@ impl<'a> Parser<'a> {
             TokenKind::Literal(_) => self.literal(),
             TokenKind::Identifier(_) => self.identifier(),
             TokenKind::Operator(operator) => self.unary_expression(operator),
+            TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis)) => {
+                self.grouped_expression()
+            }
             _ => todo!(),
         }
     }
@@ -205,6 +209,14 @@ impl<'a> Parser<'a> {
             },
             _ => Ok(node),
         }
+    }
+    fn grouped_expression(&'a self) -> NodeOrError<Expression<'a>> {
+        self.advance();
+        self.operators.borrow_mut().push(&Operator::Temp);
+        let expression = self.expression()?;
+        self.operators.borrow_mut().pop();
+        self.advance();
+        Ok(self.reparse(expression)?)
     }
     /// Parses a dot or member expression.
     fn dot_expression(
@@ -407,5 +419,19 @@ impl<'a> Parser<'a> {
             let assign_exp = Expression::create_assign_expr(left, operator, right);
             Ok(self.reparse(assign_exp)?)
         }
+    }
+}
+
+impl<'a> Parser<'a> {
+    fn control_statement(&'a self, keyword: &Keyword) -> NodeOrError<Statement<'a>> {
+        match keyword {
+            Keyword::If => self.if_statememt(),
+            _ => todo!(),
+        }
+    }
+    fn if_statememt(&'a self) -> NodeOrError<Statement<'a>> {
+        let _start = self.token().span.clone();
+        self.advance(); // Move past the if.
+        todo!()
     }
 }
