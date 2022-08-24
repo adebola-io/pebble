@@ -592,3 +592,39 @@ fn it_parses_index_expression() {
         ))
     )
 }
+
+#[test]
+fn it_parses_complex_expression_1() {
+    let mut scanner = Scanner::new("doStuff(arg1 + arg2).with().anArray[index];");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::create_index_expr(
+            Expression::create_dot_expr(
+                Expression::create_call_expr(
+                    Expression::create_dot_expr(
+                        Expression::create_call_expr(
+                            Expression::create_ident_expr("doStuff", [[1, 1], [1, 8]]),
+                            vec![Expression::create_bin_expr(
+                                Expression::create_ident_expr("arg1", [[1, 9], [1, 13]]),
+                                &Operator::Add,
+                                Expression::create_ident_expr("arg2", [[1, 16], [1, 20]])
+                            )],
+                            [1, 21]
+                        ),
+                        Expression::create_ident_expr("with", [[1, 22], [1, 26]])
+                    ),
+                    vec![],
+                    [1, 28]
+                ),
+                Expression::create_ident_expr("anArray", [[1, 29], [1, 36]])
+            ),
+            Expression::create_ident_expr("index", [[1, 37], [1, 42]]),
+            [1, 43]
+        ))
+    )
+}
