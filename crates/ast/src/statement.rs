@@ -1,4 +1,4 @@
-use crate::{Expression, Location, TextSpan};
+use crate::{Expression, Location, TextSpan, Type};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement<'a> {
@@ -10,7 +10,7 @@ pub enum Statement<'a> {
     ///     doOtherStuff();
     /// }
     /// ```
-    /// As with javascript, the blocks can be replaced with a single statement, and the else is optional.
+    /// As with Javascript, the blocks can be replaced with a single statement, and the else is optional.
     IfStmnt {
         test: Expression<'a>,
         body: Box<Self>,
@@ -25,17 +25,44 @@ pub enum Statement<'a> {
         argument: Expression<'a>,
         span: TextSpan,
     },
+    /// A statement that concatenates the content of another file to the top of a file. e.g.
+    /// ```pebble
+    /// @prepend "./otherfile.peb";
+    /// ```
+    PrependStmnt {
+        source: Expression<'a>,
+        span: TextSpan,
+    },
+    /// A variable declaration.
+    /// ```pebble
+    /// @let name: String = "johnny";
+    /// ```
+    LetStmnt {
+        identifier: Expression<'a>,
+        initializer: Option<Expression<'a>>,
+        type_label: Option<Type>,
+        span: TextSpan,
+    },
+    /// A testing block, i.e. a group of functions for testing code functionality. e.g.
+    /// ```pebble
+    /// @tests {
+    ///     @function it_adds() {
+    ///         core.assert(2 + 2, 4);
+    ///     }
+    /// }
+    /// ```
+    TestBlock { body: Box<Self>, span: TextSpan },
     /// A loop statement, with the form:
     /// ```pebble
     /// loop (10) {
     ///     doStuff();
     /// }
     /// ```
-    /// The above loop runs the function `doStuff()` 10 times.<br>
+    /// The above loop runs the function `doStuff()` 10 times.
     /// To create an infinite loop the constraint can be omitted.
     LoopStmnt {
-        constraint: Expression<'a>,
-        body: &'a Statement<'a>,
+        constraint: Option<Expression<'a>>,
+        body: Box<Self>,
         span: TextSpan,
     },
     /// A while statement, with the form:
@@ -46,7 +73,7 @@ pub enum Statement<'a> {
     /// ```
     WhileStmnt {
         test: Expression<'a>,
-        body: &'a Statement<'a>,
+        body: Box<Self>,
         span: TextSpan,
     },
     /// Any expression statement.
@@ -61,7 +88,15 @@ pub enum Statement<'a> {
     /// }
     /// ```
     BlockStmnt {
-        statements: Vec<Statement<'a>>,
+        statements: Vec<Self>,
+        span: TextSpan,
+    },
+    /// A return statement.
+    /// ```pebble
+    /// return x;
+    /// ```
+    ReturnStmnt {
+        argument: Option<Expression<'a>>,
         span: TextSpan,
     },
 }
@@ -76,12 +111,16 @@ impl<'a> Statement<'a> {
 impl<'a> Location for Statement<'a> {
     fn get_range(&self) -> TextSpan {
         match self {
-            Statement::IfStmnt { span, .. }
-            | Statement::WhileStmnt { span, .. }
-            | Statement::LoopStmnt { span, .. }
-            | Statement::PrintLnStmnt { span, .. }
-            | Statement::ExprStmnt { span, .. }
-            | Statement::BlockStmnt { span, .. } => *span,
+            Self::IfStmnt { span, .. }
+            | Self::WhileStmnt { span, .. }
+            | Self::LoopStmnt { span, .. }
+            | Self::PrependStmnt { span, .. }
+            | Self::PrintLnStmnt { span, .. }
+            | Self::ExprStmnt { span, .. }
+            | Self::LetStmnt { span, .. }
+            | Self::TestBlock { span, .. }
+            | Self::BlockStmnt { span, .. }
+            | Self::ReturnStmnt { span, .. } => *span,
         }
     }
 }

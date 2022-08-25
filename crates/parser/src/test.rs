@@ -943,3 +943,99 @@ fn it_parses_print_statement() {
         }
     )
 }
+
+#[test]
+fn it_parses_prepend_statement() {
+    let mut scanner = Scanner::new("@prepend \"./example.peb\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::PrependStmnt {
+            source: Expression::create_str_expr("./example.peb", [[1, 10], [1, 24]]),
+            span: [[1, 1], [1, 25]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_test_block() {
+    let mut scanner = Scanner::new("@tests {}");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::TestBlock {
+            body: Box::new(Statement::BlockStmnt {
+                statements: vec![],
+                span: [[1, 8], [1, 9]]
+            }),
+            span: [[1, 1], [1, 9]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_while_statement() {
+    let mut scanner = Scanner::new("while (is_true) doStuff();");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::WhileStmnt {
+            test: Expression::create_ident_expr("is_true", [[1, 8], [1, 15]]),
+            body: Box::new(Statement::create_expr_stmnt(Expression::create_call_expr(
+                Expression::create_ident_expr("doStuff", [[1, 17], [1, 24]]),
+                vec![],
+                [1, 26]
+            ))),
+            span: [[1, 1], [1, 26]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_return_statement() {
+    let mut scanner = Scanner::new("return \"Hello, world!\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::ReturnStmnt {
+            argument: Some(Expression::create_str_expr(
+                "Hello, world!",
+                [[1, 8], [1, 22]]
+            )),
+            span: [[1, 1], [1, 23]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_return_statement_without_argument() {
+    let mut scanner = Scanner::new("return;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::ReturnStmnt {
+            argument: None,
+            span: [[1, 1], [1, 7]]
+        }
+    )
+}

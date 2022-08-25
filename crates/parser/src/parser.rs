@@ -2,8 +2,8 @@ use std::cell::RefCell;
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, BracketKind, Expression, Identifier, Keyword, LiteralKind, Operator,
-    Punctuation, Statement, TextSpan, Token, TokenKind,
+    precedence_of, BracketKind, Expression, Identifier, Injunction, Keyword, LiteralKind, Location,
+    Operator, Punctuation, Statement, TextSpan, Token, TokenKind,
 };
 use utils::Stack;
 
@@ -99,8 +99,11 @@ impl<'a> Parser<'a> {
     /// Parse a single statement.
     fn statement(&'a self) -> NodeOrError<Statement<'a>> {
         match &self.token().kind {
-            TokenKind::Keyword(Keyword::Injunction(_)) => self.injunction(),
+            TokenKind::Keyword(Keyword::Injunction(injunction)) => self.injunction(injunction),
             TokenKind::Keyword(keyword) => self.control_statement(keyword),
+            TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftCurly)) => {
+                self.block_statement()
+            }
             _ => self.expression_statement(),
         }
     }
@@ -127,7 +130,10 @@ impl<'a> Parser<'a> {
             TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis)) => {
                 self.grouped_expression()
             }
-            _ => todo!(),
+            _ => {
+                println!("{:?}", self.token());
+                todo!()
+            }
         }
     }
     /// Parses a literal token into its respective expression node.
@@ -425,8 +431,55 @@ impl<'a> Parser<'a> {
 
 /// Injunctions
 impl<'a> Parser<'a> {
-    fn injunction(&'a self) -> NodeOrError<Statement<'a>> {
-        todo!()
+    fn injunction(&'a self, injunction: &Injunction) -> NodeOrError<Statement<'a>> {
+        match injunction {
+            Injunction::Function => todo!(),
+            Injunction::Type => todo!(),
+            Injunction::Class => todo!(),
+            Injunction::Record => todo!(),
+            Injunction::Const => todo!(),
+            Injunction::Let => todo!(),
+            Injunction::Use => todo!(),
+            Injunction::Prepend => self.prepend_statement(),
+            Injunction::Test => self.test_block(),
+            Injunction::Enum => todo!(),
+            Injunction::Interface => todo!(),
+            Injunction::Implement => todo!(),
+            Injunction::Specify => todo!(),
+            Injunction::Public => todo!(),
+            Injunction::Unknown(_) => self.unknown_injunction(),
+        }
+    }
+    /// Parses a prepend statement.
+    fn prepend_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past @prepend
+        let source = self.expression()?;
+        if !self.token().is_semi_colon() {
+            Err(("Expected a semicolon.", self.token().span.clone()))
+        } else {
+            let end = self.token().span.clone()[1];
+            self.advance();
+            let prep_stat = Statement::PrependStmnt {
+                source,
+                span: [start, end],
+            };
+            Ok(prep_stat)
+        }
+    }
+    fn test_block(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past @test.
+        let body = self.block_statement()?;
+        let end = body.get_range()[1];
+        let test_block = Statement::TestBlock {
+            body: Box::new(body),
+            span: [start, end],
+        };
+        Ok(test_block)
+    }
+    fn unknown_injunction(&'a self) -> NodeOrError<Statement<'a>> {
+        Err(("Unknown injunction.", self.token().span.clone()))
     }
 }
 
@@ -437,6 +490,8 @@ impl<'a> Parser<'a> {
         match keyword {
             Keyword::If => self.if_statememt(),
             Keyword::Println => self.print_statement(),
+            Keyword::While => self.while_statement(),
+            Keyword::Return => self.return_statement(),
             _ => todo!(),
         }
     }
@@ -521,6 +576,19 @@ impl<'a> Parser<'a> {
         }
         Ok(if_stat)
     }
+    fn while_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past while.
+        let test = self.condition()?;
+        let body = self.consequent()?;
+        let end = body.get_range()[1];
+        let while_stat = Statement::WhileStmnt {
+            test,
+            body: Box::new(body),
+            span: [start, end],
+        };
+        Ok(while_stat)
+    }
     /// Parses a print statement.
     fn print_statement(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span.clone()[0];
@@ -537,5 +605,29 @@ impl<'a> Parser<'a> {
             };
             Ok(print_stat)
         }
+    }
+    fn return_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past return.
+        let argument;
+        let end;
+        if self.token().is_semi_colon() {
+            end = self.token().span.clone()[1];
+            self.advance();
+            argument = None;
+        } else {
+            argument = Some(self.expression()?);
+            if !self.token().is_semi_colon() {
+                return Err(("Expected a semicolon.", self.token().span.clone()));
+            } else {
+                end = self.token().span.clone()[1];
+                self.advance(); // Move past ;
+            }
+        }
+        let ret_stat = Statement::ReturnStmnt {
+            argument,
+            span: [start, end],
+        };
+        Ok(ret_stat)
     }
 }

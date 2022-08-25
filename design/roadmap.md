@@ -43,14 +43,14 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse generic type
 -   [ ] Parse call expression with type argument
 -   [ ] Parse functional expression
--   [ ] Parse if statement
--   [ ] Parse else block
--   [ ] Parse while statement
+-   [x] Parse if statement
+-   [x] Parse else block
+-   [x] Parse while statement
 -   [ ] Parse do-while statement
 -   [ ] Parse loop statement
--   [ ] Parse println statement
+-   [x] Parse println statement
 -   [ ] Parse break statement
--   [ ] Parse return statement
+-   [x] Parse return statement
 -   [ ] Parse crash statement
 -   [ ] Parse try statement
 -   [ ] Parse restore statement
@@ -69,9 +69,9 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse enum declaration
 -   [ ] Parse specifier block
 -   [ ] Parse use statement
--   [ ] Parse prepend statement
+-   [x] Parse prepend statement
 -   [ ] Parse public declaration
--   [ ] Parse test block
+-   [x] Parse test block
 
 ## Semantic Analysis
 

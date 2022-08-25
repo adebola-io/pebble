@@ -9,6 +9,7 @@ mod punctuation;
 mod statement;
 mod textrange;
 mod token;
+mod types;
 
 pub use comment::*;
 pub use expression::*;
@@ -19,3 +20,4 @@ pub use punctuation::*;
 pub use statement::*;
 pub use textrange::*;
 pub use token::*;
+pub use types::*;
