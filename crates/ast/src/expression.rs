@@ -216,6 +216,21 @@ impl<'a> Expression<'a> {
     }
 }
 
+impl<'a> Expression<'a> {
+    /// Checks if node is a string.
+    fn is_string(&'a self) -> bool {
+        matches!(self, Self::StringExpr { .. })
+    }
+    /// Checks if node is a number.
+    fn is_number(&'a self) -> bool {
+        matches!(self, Self::NumericExpr { .. })
+    }
+    /// Checks if a node is a boolean.
+    fn is_boolean(&'a self) -> bool {
+        matches!(self, Self::BooleanExpr { .. })
+    }
+}
+
 impl Location for Expression<'_> {
     fn get_range(&self) -> TextSpan {
         match self {

@@ -7,8 +7,8 @@ mod keyword;
 mod operator;
 mod punctuation;
 mod statement;
-mod textrange;
 mod token;
+mod traits;
 mod types;
 
 pub use comment::*;
@@ -18,6 +18,6 @@ pub use keyword::*;
 pub use operator::*;
 pub use punctuation::*;
 pub use statement::*;
-pub use textrange::*;
 pub use token::*;
+pub use traits::*;
 pub use types::*;

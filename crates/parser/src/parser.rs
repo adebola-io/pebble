@@ -12,8 +12,8 @@ type NodeOrError<T> = Result<T, ParserError>;
 
 /// The provider is a pseudo iterator that supplies tokens to the parser.
 pub struct Provider {
-    pub(crate) scanner: Scanner,
-    pub(crate) index: usize,
+    pub scanner: Scanner,
+    pub index: usize,
 }
 impl Provider {
     pub fn current(&self) -> &Token {
@@ -28,8 +28,8 @@ impl Provider {
 pub struct Parser<'a> {
     provider: RefCell<Provider>,
     operators: RefCell<Stack<&'a Operator>>,
-    diagnostics: RefCell<Vec<ParserError>>,
-    pub(crate) statements: RefCell<Vec<Statement<'a>>>,
+    pub diagnostics: RefCell<Vec<ParserError>>,
+    pub statements: RefCell<Vec<Statement<'a>>>,
 }
 
 impl<'a> Parser<'a> {

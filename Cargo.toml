@@ -7,4 +7,5 @@ members = [
    "crates/errors",
    "crates/prepiler",
    "crates/repl",
+   "crates/analyser",
 ]

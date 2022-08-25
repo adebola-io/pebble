@@ -112,7 +112,7 @@ impl Scanner {
         self.char = *self.text.get(0).unwrap_or_else(|| &'\0');
         if self.char != '\0' {
             loop {
-                while self.char.is_whitespace() {
+                while self.char.is_whitespace() || self.char == '\r' {
                     self.next()
                 }
                 let token = self.scan_next();
