@@ -834,3 +834,112 @@ fn it_parses_grouped_expression() {
         ))
     )
 }
+
+#[test]
+fn it_parses_if_statement() {
+    let mut scanner = Scanner::new(
+        "
+    if (condition) { 
+        doStuff();
+    } else {
+        doOtherStuff();
+    }",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::IfStmnt {
+            test: Expression::create_ident_expr("condition", [[1, 10], [1, 19]]),
+            body: Box::new(Statement::BlockStmnt {
+                statements: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
+                    Expression::create_ident_expr("doStuff", [[2, 9], [2, 16]]),
+                    vec![],
+                    [2, 18]
+                ))],
+                span: [[1, 21], [3, 6]]
+            }),
+            alternate: Some(Box::new(Statement::BlockStmnt {
+                statements: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
+                    Expression::create_ident_expr("doOtherStuff", [[4, 9], [4, 21]]),
+                    vec![],
+                    [4, 23]
+                ))],
+                span: [[3, 12], [5, 5]]
+            })),
+            span: [[1, 6], [5, 5]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_if_statement_without_block() {
+    let mut scanner = Scanner::new("if (condition) doStuff(); else doOtherStuff();");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::IfStmnt {
+            test: Expression::create_ident_expr("condition", [[1, 5], [1, 14]]),
+            body: Box::new(Statement::create_expr_stmnt(Expression::create_call_expr(
+                Expression::create_ident_expr("doStuff", [[1, 16], [1, 23]]),
+                vec![],
+                [1, 25]
+            ))),
+            alternate: Some(Box::new(Statement::create_expr_stmnt(
+                Expression::create_call_expr(
+                    Expression::create_ident_expr("doOtherStuff", [[1, 32], [1, 44]]),
+                    vec![],
+                    [1, 46]
+                )
+            ))),
+            span: [[1, 1], [1, 46]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_if_statement_without_else() {
+    let mut scanner = Scanner::new("if (condition) doStuff();");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::IfStmnt {
+            test: Expression::create_ident_expr("condition", [[1, 5], [1, 14]]),
+            body: Box::new(Statement::create_expr_stmnt(Expression::create_call_expr(
+                Expression::create_ident_expr("doStuff", [[1, 16], [1, 23]]),
+                vec![],
+                [1, 25]
+            ))),
+            alternate: None,
+            span: [[1, 1], [1, 25]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_print_statement() {
+    let mut scanner = Scanner::new("println \"Hello, world!\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::PrintLnStmnt {
+            argument: Expression::create_str_expr("Hello, world!", [[1, 9], [1, 23]]),
+            span: [[1, 1], [1, 24]]
+        }
+    )
+}

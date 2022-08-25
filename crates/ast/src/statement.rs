@@ -13,8 +13,16 @@ pub enum Statement<'a> {
     /// As with javascript, the blocks can be replaced with a single statement, and the else is optional.
     IfStmnt {
         test: Expression<'a>,
-        body: &'a Statement<'a>,
-        alternate: Option<Vec<Statement<'a>>>,
+        body: Box<Self>,
+        alternate: Option<Box<Self>>,
+        span: TextSpan,
+    },
+    /// A statement that prints to the standard output. e.g.
+    /// ```pebble
+    /// println "Hello, world!";
+    /// ```
+    PrintLnStmnt {
+        argument: Expression<'a>,
         span: TextSpan,
     },
     /// A loop statement, with the form:
@@ -46,7 +54,12 @@ pub enum Statement<'a> {
         expression: Expression<'a>,
         span: TextSpan,
     },
-    /// A block statement.
+    /// A block statement. e.g.
+    /// ```pebble
+    /// {
+    ///     print "This is a block statement.";
+    /// }
+    /// ```
     BlockStmnt {
         statements: Vec<Statement<'a>>,
         span: TextSpan,
@@ -66,6 +79,7 @@ impl<'a> Location for Statement<'a> {
             Statement::IfStmnt { span, .. }
             | Statement::WhileStmnt { span, .. }
             | Statement::LoopStmnt { span, .. }
+            | Statement::PrintLnStmnt { span, .. }
             | Statement::ExprStmnt { span, .. }
             | Statement::BlockStmnt { span, .. } => *span,
         }

@@ -99,6 +99,7 @@ impl<'a> Parser<'a> {
     /// Parse a single statement.
     fn statement(&'a self) -> NodeOrError<Statement<'a>> {
         match &self.token().kind {
+            TokenKind::Keyword(Keyword::Injunction(_)) => self.injunction(),
             TokenKind::Keyword(keyword) => self.control_statement(keyword),
             _ => self.expression_statement(),
         }
@@ -422,16 +423,119 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Injunctions
 impl<'a> Parser<'a> {
+    fn injunction(&'a self) -> NodeOrError<Statement<'a>> {
+        todo!()
+    }
+}
+
+/// Control statements
+impl<'a> Parser<'a> {
+    /// Parse a control statement.
     fn control_statement(&'a self, keyword: &Keyword) -> NodeOrError<Statement<'a>> {
         match keyword {
             Keyword::If => self.if_statememt(),
+            Keyword::Println => self.print_statement(),
             _ => todo!(),
         }
     }
+    /// Parse the condition of a while loop or an if statement.
+    fn condition(&'a self) -> NodeOrError<Expression<'a>> {
+        if !self.token().is_bracket(&BracketKind::LeftParenthesis) {
+            return Err(("Expected a (", self.token().span.clone()));
+        }
+        self.advance();
+        self.operators.borrow_mut().push(&Operator::Temp);
+        let expression = self.expression()?;
+        self.operators.borrow_mut().pop();
+        if !self.token().is_bracket(&BracketKind::RightParenthesis) {
+            return Err(("Expected a )", self.token().span.clone()));
+        }
+        self.advance();
+        Ok(expression)
+    }
+    /// Parse the consequent of a while loop or an if statement.
+    fn consequent(&'a self) -> NodeOrError<Statement<'a>> {
+        if self.token().is_bracket(&BracketKind::LeftCurly) {
+            self.block_statement()
+        } else {
+            self.statement()
+        }
+    }
+    /// Parse a block statement.
+    fn block_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past {
+        let close = BracketKind::RightCurly;
+        let mut statements = vec![];
+        while !(self.end() || self.token().is_bracket(&close)) {
+            let statement = self.statement()?;
+            statements.push(statement);
+        }
+        if self.end() {
+            return Err(("Expected a }", self.token().span.clone()));
+        }
+        let end = self.token().span.clone()[1];
+        self.advance(); // Move past }
+        let block = Statement::BlockStmnt {
+            statements,
+            span: [start, end],
+        };
+        Ok(block)
+    }
+    /// Parse an if statement.
     fn if_statememt(&'a self) -> NodeOrError<Statement<'a>> {
-        let _start = self.token().span.clone();
+        let start = self.token().span.clone()[0];
         self.advance(); // Move past the if.
-        todo!()
+        let test = self.condition()?;
+        let body = self.consequent()?;
+        let if_stat;
+        let end;
+        let alternate;
+        if let Token {
+            kind: TokenKind::Keyword(Keyword::Else),
+            ..
+        } = self.token()
+        {
+            self.advance();
+            alternate = self.consequent()?;
+            end = self.token().span.clone()[0];
+            if_stat = Statement::IfStmnt {
+                test,
+                body: Box::new(body),
+                alternate: Some(Box::new(alternate)),
+                span: [start, end],
+            };
+        } else {
+            end = self.token().span.clone()[0];
+            if_stat = Statement::IfStmnt {
+                test,
+                body: Box::new(body),
+                alternate: None,
+                span: [start, end],
+            };
+        }
+        if self.token().is_semi_colon() {
+            self.advance();
+        }
+        Ok(if_stat)
+    }
+    /// Parses a print statement.
+    fn print_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past print.
+        let argument = self.expression()?;
+        if !self.token().is_semi_colon() {
+            Err(("Expected a semicolon.", self.token().span.clone()))
+        } else {
+            let end = self.token().span.clone()[1];
+            self.advance(); // Move past ;
+            let print_stat = Statement::PrintLnStmnt {
+                argument,
+                span: [start, end],
+            };
+            Ok(print_stat)
+        }
     }
 }
