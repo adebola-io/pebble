@@ -1039,3 +1039,44 @@ fn it_parses_return_statement_without_argument() {
         }
     )
 }
+
+#[test]
+fn it_parses_loop_statement() {
+    let mut scanner = Scanner::new("loop (3) { doStuff(); }");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::LoopStmnt {
+            constraint: Some(Expression::create_num_expr("3", [[1, 7], [1, 8]])),
+            body: Box::new(Statement::BlockStmnt {
+                statements: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
+                    Expression::create_ident_expr("doStuff", [[1, 12], [1, 19]]),
+                    vec![],
+                    [1, 21]
+                ))],
+                span: [[1, 10], [1, 23]]
+            }),
+            span: [[1, 1], [1, 23]]
+        }
+    )
+}
+
+#[test]
+fn it_parses_break_statement() {
+    let mut scanner = Scanner::new("break;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::BreakStmnt {
+            span: [[1, 1], [1, 6]]
+        }
+    )
+}

@@ -47,9 +47,9 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse else block
 -   [x] Parse while statement
 -   [ ] Parse do-while statement
--   [ ] Parse loop statement
+-   [x] Parse loop statement
 -   [x] Parse println statement
--   [ ] Parse break statement
+-   [x] Parse break statement
 -   [x] Parse return statement
 -   [ ] Parse crash statement
 -   [ ] Parse try statement

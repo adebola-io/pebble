@@ -492,6 +492,8 @@ impl<'a> Parser<'a> {
             Keyword::Println => self.print_statement(),
             Keyword::While => self.while_statement(),
             Keyword::Return => self.return_statement(),
+            Keyword::Loop => self.loop_statement(),
+            Keyword::Break => self.break_statement(),
             _ => todo!(),
         }
     }
@@ -606,6 +608,7 @@ impl<'a> Parser<'a> {
             Ok(print_stat)
         }
     }
+    /// Parses a return statement.
     fn return_statement(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span.clone()[0];
         self.advance(); // Move past return.
@@ -629,5 +632,39 @@ impl<'a> Parser<'a> {
             span: [start, end],
         };
         Ok(ret_stat)
+    }
+    /// Parses a loop statement.
+    fn loop_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past loop.
+        let constraint;
+        if self.token().is_bracket(&BracketKind::LeftParenthesis) {
+            constraint = Some(self.condition()?);
+        } else {
+            constraint = None;
+        }
+        let body = self.block_statement()?;
+        let end = body.get_range()[1];
+        if self.token().is_semi_colon() {
+            self.advance();
+        }
+        let loop_stat = Statement::LoopStmnt {
+            constraint,
+            body: Box::new(body),
+            span: [start, end],
+        };
+        Ok(loop_stat)
+    }
+    /// Parses a break statement.
+    fn break_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance();
+        if !self.token().is_semi_colon() {
+            return Err(("Expected a semicolon ", self.token().span.clone()));
+        }
+        let end = self.token().span.clone()[1];
+        self.advance();
+        let break_stat = Statement::BreakStmnt { span: [start, end] };
+        Ok(break_stat)
     }
 }

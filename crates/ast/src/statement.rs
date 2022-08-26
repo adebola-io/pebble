@@ -43,6 +43,8 @@ pub enum Statement<'a> {
         type_label: Option<Type>,
         span: TextSpan,
     },
+    /// A break statement that halts a loop.
+    BreakStmnt { span: TextSpan },
     /// A testing block, i.e. a group of functions for testing code functionality. e.g.
     /// ```pebble
     /// @tests {
@@ -118,6 +120,7 @@ impl<'a> Location for Statement<'a> {
             | Self::PrintLnStmnt { span, .. }
             | Self::ExprStmnt { span, .. }
             | Self::LetStmnt { span, .. }
+            | Self::BreakStmnt { span, .. }
             | Self::TestBlock { span, .. }
             | Self::BlockStmnt { span, .. }
             | Self::ReturnStmnt { span, .. } => *span,
