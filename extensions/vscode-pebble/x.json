@@ -1,9 +1,0 @@
-{
-   "activationEvents": [
-      "onLanguage:peb",
-      "workspaceContains:*.peb",
-      "workspaceContains:*/*.peb",
-      "workspaceContains:*/*/*.peb"
-   ],
-   "main": "./dist/extension.js"
-}

@@ -101,6 +101,23 @@ pub enum Statement<'a> {
         argument: Option<Expression<'a>>,
         span: TextSpan,
     },
+    /// A statement that halts execution of the current code context and rolls back the stack trace to the last try block.
+    /// It is useful for error handleing in debugging, or preventing program crashes in production.
+    /// ```pebble
+    /// try {
+    ///     if (isValid()) {
+    ///         doStuff();
+    ///     } else {
+    ///         crash Error("This is an invalid procedure!");
+    ///     }
+    /// } recover(error) {
+    ///     core.std.stderr(error.message)
+    /// }
+    /// ```
+    CrashStmnt {
+        argument: Expression<'a>,
+        span: TextSpan,
+    }
 }
 
 impl<'a> Statement<'a> {
@@ -123,7 +140,8 @@ impl<'a> Location for Statement<'a> {
             | Self::BreakStmnt { span, .. }
             | Self::TestBlock { span, .. }
             | Self::BlockStmnt { span, .. }
-            | Self::ReturnStmnt { span, .. } => *span,
+            | Self::ReturnStmnt { span, .. }
+            | Self::CrashStmnt{span, ..} => *span,
         }
     }
 }

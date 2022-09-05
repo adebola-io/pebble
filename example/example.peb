@@ -1,3 +1,11 @@
-@function sayHello() {
-   println "Hello, world!";
+@function doStuff() {
+   println "Doing stuff...";
+}
+
+@let a = [1, 2, 3, 4];
+
+try {
+    println a[6];
+} recover(e) {
+
 }

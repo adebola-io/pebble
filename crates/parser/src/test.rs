@@ -1080,3 +1080,27 @@ fn it_parses_break_statement() {
         }
     )
 }
+
+#[test]
+fn it_parses_crash_statement() {
+    let mut scanner = Scanner::new("crash Error(\"This is an error.\");");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::CrashStmnt {
+            argument: Expression::create_call_expr(
+                Expression::create_ident_expr("Error", [[1, 7], [1, 12]]),
+                vec![Expression::create_str_expr(
+                    "This is an error.",
+                    [[1, 13], [1, 31]]
+                )],
+                [1, 33]
+            ),
+            span: [[1, 1], [1, 33]]
+        }
+    )
+}

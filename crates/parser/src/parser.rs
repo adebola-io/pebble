@@ -492,6 +492,7 @@ impl<'a> Parser<'a> {
             Keyword::Println => self.print_statement(),
             Keyword::While => self.while_statement(),
             Keyword::Return => self.return_statement(),
+            Keyword::Crash => self.crash_statement(),
             Keyword::Loop => self.loop_statement(),
             Keyword::Break => self.break_statement(),
             _ => todo!(),
@@ -666,5 +667,21 @@ impl<'a> Parser<'a> {
         self.advance();
         let break_stat = Statement::BreakStmnt { span: [start, end] };
         Ok(break_stat)
+    }
+    /// Parses a crash statemnet.
+    fn crash_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past crash.
+        let expression = self.expression()?;
+        if !self.token().is_semi_colon() {
+            return Err(("Expected a semicolon", self.token().span.clone()));
+        }
+        let end = self.token().span.clone()[1];
+        self.advance();
+        let crash_stat = Statement::CrashStmnt {
+            argument: expression,
+            span: [start, end]
+        };
+        Ok(crash_stat)
     }
 }

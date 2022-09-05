@@ -1,8 +1,8 @@
 {
     // "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
-    "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
-    // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "Default Dark+",
+    // "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
+    "editor.fontFamily": "'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "Slack Theme Dark Mode",
     "workbench.iconTheme": "material-icon-theme",
     "workbench.colorCustomizations": {
         "editorInlayHint.background": "#00000000",

@@ -51,7 +51,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse println statement
 -   [x] Parse break statement
 -   [x] Parse return statement
--   [ ] Parse crash statement
+-   [x] Parse crash statement
 -   [ ] Parse try statement
 -   [ ] Parse restore statement
 -   [ ] Parse empty statement
