@@ -53,7 +53,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse crash statement
 -   [x] Parse try statement
 -   [x] Parse recover statement
--   [ ] Parse empty statement
+-   [x] Parse empty statement
 -   [ ] Parse variable declaration
 -   [ ] Parse constant declaration
 -   [ ] Parse record declaration
@@ -64,7 +64,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse implement statement
 -   [ ] Parse interface declaration
 -   [ ] Parse enum declaration
--   [ ] Parse use statement
+-   [x] Parse use statement
 -   [x] Parse prepend statement
 -   [x] Parse public declaration
 -   [x] Parse test block

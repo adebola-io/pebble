@@ -1,6 +1,6 @@
 use macros::Location;
 
-use crate::{Block, Expression, Identifier, Location, Statement, TextSpan, Type};
+use crate::{Block, Expression, Identifier, Location, Statement, TextSpan, TextString, Type};
 
 /// A function declaration. e.g.
 /// ```pebble
@@ -84,5 +84,26 @@ pub struct PublicModifier<'a> {
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct PrependStatement<'a> {
     pub source: Expression<'a>,
+    pub span: TextSpan,
+}
+
+/// A statement that retrieves a function, module, class, type or variable from another file, module or pile in the workspace.
+/// Only public items can be imported from other files.
+/// ```pebble
+/// @use { colors, timer } from "utils";
+/// ```
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct UseImport<'a> {
+    pub imports: Vec<Import<'a>>,
+    pub source: TextString<'a>,
+    pub span: TextSpan,
+}
+
+/// An import into a module or file.
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct Import<'a> {
+    pub imported_name: Identifier<'a>,
+    pub collapsed_import: bool,
+    pub local_name: Option<Identifier<'a>>,
     pub span: TextSpan,
 }

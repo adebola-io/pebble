@@ -98,6 +98,17 @@ impl Token {
             false
         }
     }
+    pub fn is_keyword(&self, keyword: &Keyword) -> bool {
+        if let Token {
+            kind: TokenKind::Keyword(keyword2),
+            ..
+        } = self
+        {
+            keyword2 == keyword
+        } else {
+            false
+        }
+    }
     pub fn is_identifier(&self) -> bool {
         matches!(
             self,
@@ -195,6 +206,7 @@ impl Token {
                 "else" => Keyword::Else,
                 "in" => Keyword::In,
                 "loop" => Keyword::Loop,
+                "from" => Keyword::From,
                 "break" => Keyword::Break,
                 "while" => Keyword::While,
                 "implements" => Keyword::Implements,

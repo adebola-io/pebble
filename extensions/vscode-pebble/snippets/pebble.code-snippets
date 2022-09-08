@@ -48,7 +48,7 @@
     "Module Declaration": {
         "prefix": "@mod",
         "description": "Autofill syntax for modules.",
-        "body": ["@module ${1:module_name} {", "   $2;", "}"]
+        "body": ["@module ${1:module_name} {", "   $2", "}"]
     },
     "Implementation": {
         "prefix": "@impl",

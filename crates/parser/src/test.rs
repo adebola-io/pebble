@@ -8,9 +8,9 @@ use crate::{
 };
 use ast::{
     Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, Identifier,
-    IfStatement, Injunction, Keyword, Literal, LiteralKind, Loop, Operator, Parameter,
+    IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop, Operator, Parameter,
     PrependStatement, PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement, Statement,
-    TestBlock, Token, TokenIdentifier, TokenKind, TryBlock, WhileStatement,
+    TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock, UseImport, WhileStatement,
 };
 
 #[test]
@@ -1139,6 +1139,61 @@ fn it_parses_try_recover_block() {
                 }
             }),
             span: [[1, 1], [1, 21]],
+        })
+    )
+}
+
+#[test]
+fn it_parses_use_import() {
+    let mut scanner = Scanner::new("@use {querySelector, createElement as createDocumentElement, * as document} from \"pile:document\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::UseImport(UseImport {
+            imports: vec![
+                Import {
+                    collapsed_import: false,
+                    imported_name: Identifier {
+                        value: "querySelector",
+                        span: [[1, 7], [1, 20]]
+                    },
+                    local_name: None,
+                    span: [[1, 7], [1, 20]]
+                },
+                Import {
+                    collapsed_import: false,
+                    imported_name: Identifier {
+                        value: "createElement",
+                        span: [[1, 22], [1, 35]]
+                    },
+                    local_name: Some(Identifier {
+                        value: "createDocumentElement",
+                        span: [[1, 39], [1, 60]]
+                    }),
+                    span: [[1, 22], [1, 60]]
+                },
+                Import {
+                    collapsed_import: true,
+                    imported_name: Identifier {
+                        value: "*",
+                        span: [[1, 62], [1, 63]]
+                    },
+                    local_name: Some(Identifier {
+                        value: "document",
+                        span: [[1, 67], [1, 75]]
+                    }),
+                    span: [[1, 62], [1, 75]]
+                }
+            ],
+            source: TextString {
+                value: "pile:document",
+                span: [[1, 82], [1, 96]]
+            },
+            span: [[1, 1], [1, 97]]
         })
     )
 }

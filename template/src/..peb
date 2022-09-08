@@ -1,1 +1,6 @@
-println "Hello, Earth-616!";
+@function main() {
+   println "Hello, world!";
+}
+
+main();
+

@@ -1,7 +1,7 @@
 use crate::{
     Block, Break, CrashStatement, Expression, ExpressionStatement, Function, IfStatement,
     LetDeclaration, Location, Loop, Module, PrependStatement, PrintLnStatement, PublicModifier,
-    ReturnStatement, TestBlock, TextSpan, TryBlock, WhileStatement,
+    ReturnStatement, TestBlock, TextSpan, TryBlock, UseImport, WhileStatement,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -17,8 +17,10 @@ pub enum Statement<'a> {
     PublicModifier(PublicModifier<'a>),
     ExpressionStatement(ExpressionStatement<'a>),
     BlockStatement(Block<'a>),
+    UseImport(UseImport<'a>),
     ReturnStatement(ReturnStatement<'a>),
     CrashStmnt(CrashStatement<'a>),
+    EmptyStatement(TextSpan),
     TryBlock(TryBlock<'a>),
     Function(Function<'a>),
     Module(Module<'a>),
@@ -40,6 +42,7 @@ impl<'a> Location for Statement<'a> {
             | Self::PrependStatement(PrependStatement { span, .. })
             | Self::PrintLnStatement(PrintLnStatement { span, .. })
             | Self::ExpressionStatement(ExpressionStatement { span, .. })
+            | Self::UseImport(UseImport { span, .. })
             | Self::LetDeclaration(LetDeclaration { span, .. })
             | Self::Break(Break { span, .. })
             | Self::TestBlock(TestBlock { span, .. })
@@ -49,7 +52,8 @@ impl<'a> Location for Statement<'a> {
             | Self::TryBlock(TryBlock { span, .. })
             | Self::PublicModifier(PublicModifier { span, .. })
             | Self::Function(Function { span, .. })
-            | Self::Module(Module { span, .. }) => *span,
+            | Self::Module(Module { span, .. })
+            | Self::EmptyStatement(span) => *span,
         }
     }
 }

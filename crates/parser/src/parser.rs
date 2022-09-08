@@ -3,10 +3,10 @@ use std::{cell::RefCell, marker::PhantomData};
 use crate::scanner::Scanner;
 use ast::{
     precedence_of, Block, BracketKind, Break, CrashStatement, Expression, Function,
-    FunctionalSignature, Identifier, IfStatement, Injunction, Keyword, LiteralKind, Location, Loop,
-    Operator, Parameter, PrependStatement, PrintLnStatement, PublicModifier, Punctuation,
-    RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan, Token, TokenIdentifier,
-    TokenKind, TryBlock, Type, WhileStatement,
+    FunctionalSignature, Identifier, IfStatement, Import, Injunction, Keyword, Literal,
+    LiteralKind, Location, Loop, Operator, Parameter, PrependStatement, PrintLnStatement,
+    PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan,
+    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, UseImport, WhileStatement,
 };
 use utils::Stack;
 
@@ -92,7 +92,11 @@ impl<'a> Parser<'a> {
                     // Errors are checked at the statement boundary.
                     // If an error is found while parsing, the parser stores it, skips over till it finds the next statement, then continues parsing from there.
                     self.store_error(e);
-                    while !(self.end() || self.token().is_semi_colon()) {
+                    while !(self.end()
+                        || self.token().is_semi_colon()
+                        || self.token().is_comment()
+                        || self.token().is_comma())
+                    {
                         self.advance();
                     }
                 }
@@ -105,11 +109,17 @@ impl<'a> Parser<'a> {
             TokenKind::Keyword(Keyword::Injunction(injunction)) => self.injunction(injunction),
             TokenKind::Keyword(Keyword::Fn) => self.expression_statement(),
             TokenKind::Keyword(keyword) => self.control_statement(keyword),
+            TokenKind::Punctuation(Punctuation::SemiColon) => self.empty_statement(),
             TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftCurly)) => {
                 self.block_statement()
             }
             _ => self.expression_statement(),
         }
+    }
+    fn empty_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let emp_stat = Statement::EmptyStatement(self.token().span.clone());
+        self.advance();
+        Ok(emp_stat)
     }
     fn expression_statement(&'a self) -> NodeOrError<Statement<'a>> {
         let parsed = self.expression();
@@ -465,7 +475,7 @@ impl<'a> Parser<'a> {
             Injunction::Record => todo!(),
             Injunction::Const => todo!(),
             Injunction::Let => todo!(),
-            Injunction::Use => todo!(),
+            Injunction::Use => self.use_import(),
             Injunction::Prepend => self.prepend_statement(),
             Injunction::Test => self.test_block(),
             Injunction::Enum => todo!(),
@@ -513,7 +523,128 @@ impl<'a> Parser<'a> {
     fn maybe_return_type(&'a self) -> NodeOrError<Option<Type>> {
         todo!()
     }
-    /// Parses a prepend statement.
+    /// Parses a @use import.
+    fn use_import(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past @use.
+        let imports = self.imports()?;
+        if let Token {
+            kind: TokenKind::Keyword(Keyword::From),
+            ..
+        } = self.token()
+        {
+            self.advance();
+            if let Token {
+                kind:
+                    TokenKind::Literal(Literal {
+                        kind: LiteralKind::StringLiteral,
+                        value,
+                    }),
+                span,
+            } = self.token()
+            {
+                let source = TextString { value, span: *span };
+                self.advance();
+                if !self.token().is_semi_colon() {
+                    return Err(("Expected a semi-colon", self.token().span.clone()));
+                }
+                let end = self.token().span.clone()[1];
+                self.advance();
+                let use_stat = Statement::UseImport(UseImport {
+                    imports,
+                    source,
+                    span: [start, end],
+                });
+                Ok(use_stat)
+            } else {
+                return Err(("Missing import source ", self.token().span.clone()));
+            }
+        } else {
+            return Err(("Expected \"from\"", self.token().span.clone()));
+        }
+    }
+    fn imports(&'a self) -> NodeOrError<Vec<Import<'a>>> {
+        if !self.token().is_bracket(&BracketKind::LeftCurly) {
+            return Err(("Expected a {", self.token().span.clone()));
+        }
+        self.advance(); // Move past {
+        let mut imports = vec![];
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightCurly)) {
+            let import = self.import()?;
+            imports.push(import);
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightCurly) {
+                return Err(("Expected a comma or a } ", self.token().span.clone()));
+            }
+        }
+        if self.end() {
+            return Err((
+                "Unclosed import space. Expected a }",
+                self.token().span.clone(),
+            ));
+        }
+        self.advance();
+        Ok(imports)
+    }
+    fn import(&'a self) -> NodeOrError<Import<'a>> {
+        let start = self.token().span.clone()[0];
+        let imported_name;
+        let local_name;
+        let collapsed_import;
+
+        let end;
+        if let Token {
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+            span,
+        } = self.token()
+        {
+            imported_name = Identifier { value, span: *span };
+            collapsed_import = false;
+        } else if let Token {
+            kind: TokenKind::Operator(Operator::Multiply),
+            span,
+        } = self.token()
+        {
+            imported_name = Identifier {
+                value: "*",
+                span: *span,
+            };
+            collapsed_import = true;
+        } else {
+            return Err(("Expected an import", self.token().span.clone()));
+        }
+        self.advance();
+
+        if self.token().is_keyword(&Keyword::As) {
+            self.advance();
+            if let Token {
+                kind: TokenKind::Identifier(TokenIdentifier { value }),
+                span,
+            } = self.token()
+            {
+                local_name = Some(Identifier { value, span: *span });
+                self.advance();
+                end = local_name.as_ref().unwrap().get_range()[1];
+            } else {
+                return Err(("Expected an identifier.", self.token().span.clone()));
+            }
+        } else {
+            if collapsed_import {
+                return Err(("Expected keyword \"as\"", self.token().span.clone()));
+            }
+            end = imported_name.get_range()[1];
+            local_name = None;
+        }
+        let import = Import {
+            collapsed_import,
+            imported_name,
+            local_name,
+            span: [start, end],
+        };
+        Ok(import)
+    }
+    /// Parses an @prepend statement.
     fn prepend_statement(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span.clone()[0];
         self.advance(); // Move past @prepend
@@ -530,10 +661,10 @@ impl<'a> Parser<'a> {
             Ok(prep_stat)
         }
     }
-    /// Parses a test block.
+    /// Parses an @tests block.
     fn test_block(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span.clone()[0];
-        self.advance(); // Move past @test.
+        self.advance(); // Move past @tests.
         let body = self.block()?;
         let end = body.get_range()[1];
         let test_block = Statement::TestBlock(TestBlock {

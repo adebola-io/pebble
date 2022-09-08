@@ -1,4 +1,6 @@
 @public @module assert {
+    @use { * as core } from "core";
+    
     @public @class AssertionError {}
     ## A test function that checks that two expressions are equal to one another.
     ## The function will initiate a crash if the two expressions are not equal.
@@ -28,4 +30,4 @@
         }
     }
 }
- 
+  
