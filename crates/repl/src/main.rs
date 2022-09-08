@@ -40,4 +40,4 @@ fn main() {
     }
 }
 
-fn interpret(parser: &Parser) {}
+fn interpret(_parser: &Parser) {}

@@ -106,25 +106,25 @@
         },
         "literal": {
             "name": "constant.language.literal",
-            "match": "\\b(?<![\\d$@])(true|false|self|nil|core|new|static|constructor|sleep)(?![$@])\\b"
+            "match": "\\b(?<![\\d$@])(true|false|self|Nil|core|static|constructor|sleep)(?![$@])\\b"
         },
         "custom_type": {
-            "begin": "(?<=(@(enum|class|specify|interface|type|implement))\\s+)",
+            "begin": "(?<=(@(enum|class|interface|type|implement))\\s+)",
             "patterns": [{ "include": "#type" }],
             "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
         },
         "constant": {
             "name": "constant.other.caps support.constant variable.other.constant",
-            "begin": "(?<=(@(record|const)|readonly)\\s+)",
+            "begin": "(?<=(@(record|const|module)|readonly)\\s+)",
             "end": "(?=(;|,|\\=|\\{|\\}|\\(|\\)|\\[|\\]|\\s))"
         },
         "injunction": {
             "name": "meta.injunction keyword.storage.injunction",
-            "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|class|specify|record|interface|implement|tests)(?![$@])\\b"
+            "match": "(?<![\\w$@])@(use|public|prepend|type|let|function|const|enum|class|record|interface|module|implement|tests)(?![$@])\\b"
         },
         "keyword": {
             "name": "keyword.control",
-            "match": "\\s*\\b(?<![$@\\.])(for|fn|in|do|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case|loop)(?![$@])\\b\\s*"
+            "match": "\\s*\\b(?<![$@\\.])(for|fn|in|while|break|continue|crash|try|recover|println|if|else|from|as|return|match|case|loop)(?![$@])\\b\\s*"
         },
         "function": {
             "begin": "((?<![\\d@])\\s*\\w+(?=\\s*\\()|(?<=@function\\s+)\\w+)",
@@ -178,7 +178,7 @@
         },
         "instantiator": {
             "name": "meta.class class entity.name.class",
-            "match": "(?<=(new|@implement)\\s+((\\w+\\.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
+            "match": "(?<=(@implement)\\s+((\\w+\\.)*)?)(?<![\\d@])\\w+(?<![\\d@])(?=\\s*\\()"
         },
         "identifier": {
             "name": "identifier meta.identifier variable.identifier",

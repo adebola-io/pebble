@@ -1,18 +1,13 @@
-use crate::{Location, Operator, TextSpan};
+use macros::Location;
+
+use crate::{FunctionalSignature, Location, Operator, TextSpan};
 
 /// The base node for an expression.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Expression<'a> {
-    /// An expression consisting of a single identifier.
-    IdentifierExpr {
-        value: &'a str,
-        span: TextSpan,
-    },
-    /// A string literal in Pebble. e.g. `"John Doe", "One does not simply walk into Mordor"`
-    StringExpr {
-        value: &'a str,
-        span: TextSpan,
-    },
+    IdentifierExpr(Identifier<'a>),
+
+    StringExpr(TextString<'a>),
     /// A number literal in Pebble. e.g. `1, 3.5, 4e9, 0x03, Ob22, 007`
     NumericExpr {
         value: &'a str,
@@ -93,16 +88,86 @@ pub enum Expression<'a> {
         operator: &'a Operator,
         span: TextSpan,
     },
+    /// A functional expression.
+    FnExpr {
+        signature: Box<FunctionalSignature<'a>>,
+        span: TextSpan,
+    },
+}
+
+/// An expression consisting of a single identifier.
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct Identifier<'a> {
+    pub value: &'a str,
+    pub span: TextSpan,
+}
+
+/// A string literal in Pebble. e.g. `"John Doe", "One does not simply walk into Mordor"`
+#[derive(Debug, Clone, PartialEq)]
+pub struct TextString<'a> {
+    pub value: &'a str,
+    pub span: TextSpan,
+}
+
+impl<'a> Expression<'a> {
+    /// Returns `true` if the expression is [`IdentifierExpr`].
+    ///
+    /// [`IdentifierExpr`]: Expression::IdentifierExpr
+    pub fn is_identifier_expr(&self) -> bool {
+        matches!(self, Self::IdentifierExpr(_))
+    }
+
+    /// Returns `true` if the expression is [`AssignmentExpr`].
+    ///
+    /// [`AssignmentExpr`]: Expression::AssignmentExpr
+    pub fn is_assignment_expr(&self) -> bool {
+        matches!(self, Self::AssignmentExpr { .. })
+    }
+
+    /// Returns `true` if the expression is [`TernaryExpr`].
+    ///
+    /// [`TernaryExpr`]: Expression::TernaryExpr
+    pub fn is_ternary_expr(&self) -> bool {
+        matches!(self, Self::TernaryExpr { .. })
+    }
+
+    /// Returns `true` if the expression is [`StringExpr`].
+    ///
+    /// [`StringExpr`]: Expression::StringExpr
+    pub fn is_string_expr(&self) -> bool {
+        matches!(self, Self::StringExpr { .. })
+    }
+
+    /// Returns `true` if the expression is [`NumericExpr`].
+    ///
+    /// [`NumericExpr`]: Expression::NumericExpr
+    pub fn is_numeric_expr(&self) -> bool {
+        matches!(self, Self::NumericExpr { .. })
+    }
+
+    /// Returns `true` if the expression is [`BooleanExpr`].
+    ///
+    /// [`BooleanExpr`]: Expression::BooleanExpr
+    pub fn is_boolean_expr(&self) -> bool {
+        matches!(self, Self::BooleanExpr { .. })
+    }
+
+    /// Returns `true` if the expression is [`CharacterExpr`].
+    ///
+    /// [`CharacterExpr`]: Expression::CharacterExpr
+    pub fn is_character_expr(&self) -> bool {
+        matches!(self, Self::CharacterExpr { .. })
+    }
 }
 
 impl<'a> Expression<'a> {
     /// Creates am identifier expression node.
     pub fn create_ident_expr(value: &'a str, span: TextSpan) -> Self {
-        Expression::IdentifierExpr { value, span }
+        Expression::IdentifierExpr(Identifier { value, span })
     }
     /// Creates a string expression node.
     pub fn create_str_expr(value: &'a str, span: TextSpan) -> Self {
-        Expression::StringExpr { value, span }
+        Expression::StringExpr(TextString { value, span })
     }
     /// Creates a numeric expression node.
     pub fn create_num_expr(value: &'a str, span: TextSpan) -> Self {
@@ -194,7 +259,7 @@ impl<'a> Expression<'a> {
             span,
         }
     }
-    // Creates a ternary expression.
+    /// Creates a ternary expression.
     pub fn create_ternary_expr(test: Self, consequent: Self, alternate: Self) -> Self {
         let span = [test.get_range()[0], alternate.get_range()[1]];
         Expression::TernaryExpr {
@@ -216,26 +281,11 @@ impl<'a> Expression<'a> {
     }
 }
 
-impl<'a> Expression<'a> {
-    /// Checks if node is a string.
-    fn is_string(&'a self) -> bool {
-        matches!(self, Self::StringExpr { .. })
-    }
-    /// Checks if node is a number.
-    fn is_number(&'a self) -> bool {
-        matches!(self, Self::NumericExpr { .. })
-    }
-    /// Checks if a node is a boolean.
-    fn is_boolean(&'a self) -> bool {
-        matches!(self, Self::BooleanExpr { .. })
-    }
-}
-
 impl Location for Expression<'_> {
     fn get_range(&self) -> TextSpan {
         match self {
-            Self::IdentifierExpr { span, .. }
-            | Self::StringExpr { span, .. }
+            Self::IdentifierExpr(Identifier { span, .. })
+            | Self::StringExpr(TextString { span, .. })
             | Self::NumericExpr { span, .. }
             | Self::BooleanExpr { span, .. }
             | Self::CharacterExpr { span, .. }
@@ -249,7 +299,8 @@ impl Location for Expression<'_> {
             | Self::NamespaceExpr { span, .. }
             | Self::RangeExpr { span, .. }
             | Self::TernaryExpr { span, .. }
-            | Self::AssignmentExpr { span, .. } => *span,
+            | Self::AssignmentExpr { span, .. }
+            | Self::FnExpr { span, .. } => *span,
         }
     }
 }

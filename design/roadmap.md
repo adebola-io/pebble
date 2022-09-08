@@ -46,17 +46,14 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse if statement
 -   [x] Parse else block
 -   [x] Parse while statement
--   [ ] Parse do-while statement
 -   [x] Parse loop statement
 -   [x] Parse println statement
 -   [x] Parse break statement
 -   [x] Parse return statement
 -   [x] Parse crash statement
--   [ ] Parse try statement
--   [ ] Parse restore statement
+-   [x] Parse try statement
+-   [x] Parse recover statement
 -   [ ] Parse empty statement
--   [ ] Parse match statement
--   [ ] Parse sleep statement
 -   [ ] Parse variable declaration
 -   [ ] Parse constant declaration
 -   [ ] Parse record declaration
@@ -67,10 +64,9 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse implement statement
 -   [ ] Parse interface declaration
 -   [ ] Parse enum declaration
--   [ ] Parse specifier block
 -   [ ] Parse use statement
 -   [x] Parse prepend statement
--   [ ] Parse public declaration
+-   [x] Parse public declaration
 -   [x] Parse test block
 
 ## Semantic Analysis

@@ -8,13 +8,15 @@ The four types of statements in Pebble are:
 
 ## Declarative Statements
 
-Declarative statements are statements that provide a new variable, type or function into the scope. A key feature of declarative statements in Pebble is that they start with an `injunction`, i.e. a special word beginning with an `@` symbol. As with [expressive statements](#expressive-statements), all declarative statements end with a semicolon.
+Declarative statements are statements that provide a new variable, type or function into the scope. A key feature of declarative statements in Pebble is that they start with an `injunction`, i.e. a special word beginning with an `@` symbol.
 
 There are six types of declarative statements in Pebble.
 
 ### Variable Declarations
 
-In Pebble, declaration of a new, changeable variable is done using the `@let` injunction. For example:
+In Pebble, declaration of a new, changeable variable is done using the `@let` injunction. As with [expressive statements](#expressive-statements), all variable declarations end with a semicolon.
+
+For example:
 
 ```pebble
 @let foo: String = "bar";
@@ -30,7 +32,7 @@ In the above snippet, the compiler can automatically infer that the `foo` is a s
 
 Variables can also be declared without an initial value. When variables do not have a value, they are known as `uninitialized variables.` The most important things to note about unintialized variables are:
 
-1. _Their type labels are mandatory_, like so:
+1. **Their type labels are mandatory**, like so:
 
 ```pebble
 @let foo; ❌
@@ -40,7 +42,7 @@ Variables can also be declared without an initial value. When variables do not h
 @let foo: String; ✔️
 ```
 
-1. _They cannot be used until they are given a value_, like so:
+2. **They cannot be used until they are given a value**, like so:
 
 ```pebble
 @let foo: String;
@@ -59,7 +61,7 @@ For more on types and variable in Pebble, go [here.](./variables_and_types.md)
 
 A constant declaration starts with the `@const` injunction, as opposed to `@let`. Constants behave the same way as variables, but with a few key differences:
 
-1. _Unlike variables, constants must be assigned values when they are declared._
+1. **Unlike variables, constants must be assigned values when they are declared.**
 
 ```pebble
 @const API_URL: String; ❌
@@ -69,7 +71,7 @@ A constant declaration starts with the `@const` injunction, as opposed to `@let`
 @const API_URL: String = "https://api.example.com"; ✔️
 ```
 
-1. _The values of a constant, once set, cannot be changed._
+2. **The values of a constant, once set, cannot be changed.**
 
 ```pebble
 @const API_URL: String = "https://api.example.com";
@@ -81,7 +83,7 @@ API_URL = "http://newaddress.com"; ❌
 @const API_URL_2: String = "http://newaddress.com"; ✔️
 ```
 
-1. _The type labels of constants are mandatory._
+3. **The type labels of constants are mandatory.**
 
 ```pebble
 @const API_URL = "https://api.example.com"; ❌
@@ -118,15 +120,15 @@ greet(); // Will print out "Hello, world!".
 
 A few things can be picked from the two functions in the code sample above:
 
-1. _A function can have any number of parameters_. Parameters are separated with a comma and any number of spaces.
+1. **A function can have any number of parameters**. The parameters of the function are the values defined in between the parenthesis that follows the function name. Parameters are separated with a comma and any number of spaces. A function can have no parameters.
 
-2. _All the parameters of a function must have type labels._ This tells the Pebble compiler how to treat the value within the code block.
+2. **All the parameters of a function must have type labels.** This tells the Pebble compiler how to treat the value within the code block.
 
-3. _If a function returns a value, the type of that value must be specified._ The `add` function returns `sum`, which is a value that is derived from the addition of numbers m and n. Since the addition of two numbers will also result in a number, when sum is returned, its type must match the return type specified for the function.
+3. **If a function returns a value, the type of that value must be specified.** The `add` function returns `sum`, which is a value that is derived from the addition of numbers m and n. Since the addition of two numbers will also result in a number, when sum is returned, its type must match the return type specified for the function.
 
-4. _The return type **can** be omitted from a function_, as we see in `greet`. When a function has no return type, the compiler infers that the function has no return value. i.e. It returns [`nil`](./nil.md).
+4. **The return type can be omitted from a function**, as we see in `greet`. When a function has no return type, the compiler infers that the function has no return value. i.e. It returns [`nil`](./nil.md).
 
-5. _Functions are called with parenthesis._ To call a function, all you have to do is write out its name followed by the arguments passed in parenthesis.
+5. **Functions are called with parenthesis.** To call a function, all you have to do is write out its name followed by the arguments passed in parenthesis.
 
 ```pebble
 function_name(parameter);
@@ -134,7 +136,7 @@ function_name(parameter);
 
 Other things that may not be noticed from the examples but are equally important, are:
 
-1. _The parameters of a function are treated as [constants.](#constant-declarations)_ When parameters are passed into a function, they cannot be changed within the scope of that function. Therefore, assigning new values to a function argument is not allowed. If those values must be changed, consider saving the mutation into another variable.
+1. **The parameters of a function are treated as [constants.](#constant-declarations)** When parameters are passed into a function, they cannot be changed within the scope of that function. Therefore, assigning new values to a function argument is not allowed. If those values must be changed, consider saving the mutation into another variable.
 
 ```pebble
     ## Subtracts from a number.
@@ -152,7 +154,7 @@ Other things that may not be noticed from the examples but are equally important
     }
 ```
 
-1. _Outer variables cannot be accessed from within a function_. A variable that is defined outside of a function cannot be used from within the its scopes. Therefore, the following code sample will fail to compile. **However**, outer constants can be referenced, because they are immutable and the function cannot change their values.
+2. **Outer variables cannot be accessed from within a function.** A variable that is defined outside of a function cannot be used from within the its scopes. Therefore, the following code sample will fail to compile. _However_, outer constants can be referenced, because they are immutable and the function cannot change their values.
 
 ```pebble
 @let name = "Sefunmi";

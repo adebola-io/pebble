@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Clone)]
-pub struct Identifier {
+pub struct TokenIdentifier {
     pub value: String,
 }
 

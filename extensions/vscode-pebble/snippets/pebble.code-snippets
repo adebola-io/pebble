@@ -36,18 +36,6 @@
         "description": "New prepend declaration.",
         "body": ["@prepend \"$1\";"]
     },
-    "Specifier": {
-        "prefix": "@spec",
-        "description": "Build a specifier block.",
-        "body": [
-            "@specify ${1:Class} {",
-            "   ${1:Class}() {",
-            "      $2",
-            "   }",
-            "   $3",
-            "}"
-        ]
-    },
     "Interface Declaration": {
         "prefix": "@int",
         "description": "Autofill syntax for interface.",
@@ -57,6 +45,11 @@
             "}"
         ]
     },
+    "Module Declaration": {
+        "prefix": "@mod",
+        "description": "Autofill syntax for modules.",
+        "body": ["@module ${1:module_name} {", "   $2;", "}"]
+    },
     "Implementation": {
         "prefix": "@impl",
         "description": "Implement a interface inside a class.",
@@ -65,7 +58,14 @@
     "Class": {
         "prefix": ["@cl", "@class"],
         "description": "Creates a new class.",
-        "body": ["@class ${1:Name} {", "   $2", "}"]
+        "body": [
+            "@class ${1:Name} {",
+            "   ${1:Name}() {",
+            "      $2",
+            "   }",
+            "   $3",
+            "}"
+        ]
     },
     "Enum": {
         "prefix": "@enum",
@@ -77,13 +77,49 @@
         "description": "Creates a new test block.",
         "body": ["@tests {", "   $1", "}"]
     },
+    "While Statement": {
+        "prefix": "while",
+        "body": ["while (${1:condition}) {", "\t$TM_SELECTED_TEXT$0", "}"],
+        "description": "While Statement"
+    },
+    "Try-Recover Statement": {
+        "prefix": "tryrec",
+        "body": [
+            "try {",
+            "\t$TM_SELECTED_TEXT$0",
+            "} recover (${1:error}) {",
+            "\t",
+            "}"
+        ],
+        "description": "Try-Recover Statement"
+    },
+    "If Statement": {
+        "prefix": "if",
+        "body": ["if (${1:condition}) {", "\t$TM_SELECTED_TEXT$0", "}"],
+        "description": "If Statement"
+    },
+    "If-Else Statement": {
+        "prefix": "ifelse",
+        "description": "If-Else Statement",
+        "body": [
+            "if (${1:condition}) {",
+            "\t$TM_SELECTED_TEXT$0",
+            "} else {",
+            "\t",
+            "}"
+        ]
+    },
     "For Loop": {
-        "prefix": "for",
+        "prefix": "forin",
         "description": "New for Loop.",
-        "body": ["for (${1:item} in ${2:iterator}) {", "   $3", "}"]
+        "body": [
+            "for (${1:item} in ${2:iterator}) {",
+            "   \t$TM_SELECTED_TEXT$0",
+            "}"
+        ]
     },
     "Println": {
-        "prefix": "pr",
+        "prefix": ["pr", "print"],
         "description": "Println statement",
         "body": "println $1;"
     }

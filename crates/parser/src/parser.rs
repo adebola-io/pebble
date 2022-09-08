@@ -1,9 +1,12 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, marker::PhantomData};
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, BracketKind, Expression, Identifier, Injunction, Keyword, LiteralKind, Location,
-    Operator, Punctuation, Statement, TextSpan, Token, TokenKind,
+    precedence_of, Block, BracketKind, Break, CrashStatement, Expression, Function,
+    FunctionalSignature, Identifier, IfStatement, Injunction, Keyword, LiteralKind, Location, Loop,
+    Operator, Parameter, PrependStatement, PrintLnStatement, PublicModifier, Punctuation,
+    RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan, Token, TokenIdentifier,
+    TokenKind, TryBlock, Type, WhileStatement,
 };
 use utils::Stack;
 
@@ -100,6 +103,7 @@ impl<'a> Parser<'a> {
     fn statement(&'a self) -> NodeOrError<Statement<'a>> {
         match &self.token().kind {
             TokenKind::Keyword(Keyword::Injunction(injunction)) => self.injunction(injunction),
+            TokenKind::Keyword(Keyword::Fn) => self.expression_statement(),
             TokenKind::Keyword(keyword) => self.control_statement(keyword),
             TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftCurly)) => {
                 self.block_statement()
@@ -127,6 +131,7 @@ impl<'a> Parser<'a> {
             TokenKind::Literal(_) => self.literal(),
             TokenKind::Identifier(_) => self.identifier(),
             TokenKind::Operator(operator) => self.unary_expression(operator),
+            TokenKind::Keyword(Keyword::Fn) => self.functional_expression(),
             TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis)) => {
                 self.grouped_expression()
             }
@@ -162,7 +167,7 @@ impl<'a> Parser<'a> {
         match self.token() {
             Token {
                 span,
-                kind: TokenKind::Identifier(Identifier { value }),
+                kind: TokenKind::Identifier(TokenIdentifier { value }),
             } => {
                 let node = Expression::create_ident_expr(value, *span);
                 self.advance();
@@ -427,13 +432,34 @@ impl<'a> Parser<'a> {
             Ok(self.reparse(assign_exp)?)
         }
     }
+    fn functional_expression(&'a self) -> NodeOrError<Expression<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past fn.
+        let signature = self.functional_signature()?;
+        if signature.name.is_some() {
+            return Err((
+                "A functional expression cannot be named.",
+                self.token().span.clone(),
+            ));
+        }
+        let end = signature.get_range()[1];
+        let fn_exp = Expression::FnExpr {
+            signature: Box::new(signature),
+            span: [start, end],
+        };
+        Ok(self.reparse(fn_exp)?)
+    }
+    /// Parses a functional signature.
+    fn functional_signature(&'a self) -> NodeOrError<FunctionalSignature<'a>> {
+        todo!()
+    }
 }
 
 /// Injunctions
 impl<'a> Parser<'a> {
     fn injunction(&'a self, injunction: &Injunction) -> NodeOrError<Statement<'a>> {
         match injunction {
-            Injunction::Function => todo!(),
+            Injunction::Function => self.function_declaration(),
             Injunction::Type => todo!(),
             Injunction::Class => todo!(),
             Injunction::Record => todo!(),
@@ -445,10 +471,47 @@ impl<'a> Parser<'a> {
             Injunction::Enum => todo!(),
             Injunction::Interface => todo!(),
             Injunction::Implement => todo!(),
-            Injunction::Specify => todo!(),
-            Injunction::Public => todo!(),
+            Injunction::Module => self.module(),
+            Injunction::Public => self.public_statement(),
             Injunction::Unknown(_) => self.unknown_injunction(),
         }
+    }
+    /// Parses a function decalaration.
+    fn function_declaration(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past @function
+        let name;
+        if let Token {
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+            span,
+        } = &self.token()
+        {
+            name = Identifier { value, span: *span };
+        } else {
+            return Err(("Expected a function name.", self.token().span.clone()));
+        }
+        let label = self.maybe_generic_label()?;
+        let parameters = self.parameters()?;
+        let return_type = self.maybe_return_type()?;
+        let body = self.block()?;
+        let end = self.token().span.clone()[1];
+        let decl = Statement::Function(Function {
+            name,
+            label,
+            parameters,
+            return_type,
+            body,
+            span: [start, end],
+        });
+        Ok(decl)
+    }
+    /// Parse a generic label that may or may not exist.
+    fn maybe_generic_label(&'a self) -> NodeOrError<Option<Type>> {
+        todo!()
+    }
+    /// Parse a return type that may or may not exist.
+    fn maybe_return_type(&'a self) -> NodeOrError<Option<Type>> {
+        todo!()
     }
     /// Parses a prepend statement.
     fn prepend_statement(&'a self) -> NodeOrError<Statement<'a>> {
@@ -460,26 +523,54 @@ impl<'a> Parser<'a> {
         } else {
             let end = self.token().span.clone()[1];
             self.advance();
-            let prep_stat = Statement::PrependStmnt {
+            let prep_stat = Statement::PrependStatement(PrependStatement {
                 source,
                 span: [start, end],
-            };
+            });
             Ok(prep_stat)
         }
     }
+    /// Parses a test block.
     fn test_block(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span.clone()[0];
         self.advance(); // Move past @test.
-        let body = self.block_statement()?;
+        let body = self.block()?;
         let end = body.get_range()[1];
-        let test_block = Statement::TestBlock {
-            body: Box::new(body),
+        let test_block = Statement::TestBlock(TestBlock {
+            body,
             span: [start, end],
-        };
+        });
         Ok(test_block)
     }
+    /// Parses a public statement.
+    fn public_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past @public.
+        let statement = self.statement()?;
+        let end = statement.get_range()[1];
+        let pub_stat = Statement::PublicModifier(PublicModifier {
+            statement: Box::new(statement),
+            span: [start, end],
+        });
+        Ok(pub_stat)
+    }
+    fn module(&'a self) -> NodeOrError<Statement<'a>> {
+        // let start = self.token().span.clone()[0];
+        // let name;
+        // self.advance(); // Move past @module.
+        // if let Token {
+        //     span,
+        //     kind: TokenKind::Identifier(TokenIdentifier { value }),
+        // } = self.token()
+        // {
+        //     name = Expression::create_ident_expr(value, *span)
+        // } else {
+        //     return Err(("Expected a module name.", self.token().span.clone()));
+        // }
+        todo!()
+    }
     fn unknown_injunction(&'a self) -> NodeOrError<Statement<'a>> {
-        Err(("Unknown injunction.", self.token().span.clone()))
+        Err(("Unknown injunction ", self.token().span.clone()))
     }
 }
 
@@ -495,6 +586,7 @@ impl<'a> Parser<'a> {
             Keyword::Crash => self.crash_statement(),
             Keyword::Loop => self.loop_statement(),
             Keyword::Break => self.break_statement(),
+            Keyword::Try => self.try_block(),
             _ => todo!(),
         }
     }
@@ -521,8 +613,10 @@ impl<'a> Parser<'a> {
             self.statement()
         }
     }
-    /// Parse a block statement.
     fn block_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        Ok(Statement::BlockStatement(self.block()?))
+    }
+    fn block(&'a self) -> NodeOrError<Block<'a>> {
         let start = self.token().span.clone()[0];
         self.advance(); // Move past {
         let close = BracketKind::RightCurly;
@@ -536,8 +630,8 @@ impl<'a> Parser<'a> {
         }
         let end = self.token().span.clone()[1];
         self.advance(); // Move past }
-        let block = Statement::BlockStmnt {
-            statements,
+        let block = Block {
+            body: statements,
             span: [start, end],
         };
         Ok(block)
@@ -559,20 +653,20 @@ impl<'a> Parser<'a> {
             self.advance();
             alternate = self.consequent()?;
             end = self.token().span.clone()[0];
-            if_stat = Statement::IfStmnt {
+            if_stat = Statement::IfStatement(IfStatement {
                 test,
                 body: Box::new(body),
                 alternate: Some(Box::new(alternate)),
                 span: [start, end],
-            };
+            });
         } else {
             end = self.token().span.clone()[0];
-            if_stat = Statement::IfStmnt {
+            if_stat = Statement::IfStatement(IfStatement {
                 test,
                 body: Box::new(body),
                 alternate: None,
                 span: [start, end],
-            };
+            });
         }
         if self.token().is_semi_colon() {
             self.advance();
@@ -585,11 +679,11 @@ impl<'a> Parser<'a> {
         let test = self.condition()?;
         let body = self.consequent()?;
         let end = body.get_range()[1];
-        let while_stat = Statement::WhileStmnt {
+        let while_stat = Statement::WhileStatement(WhileStatement {
             test,
             body: Box::new(body),
             span: [start, end],
-        };
+        });
         Ok(while_stat)
     }
     /// Parses a print statement.
@@ -602,10 +696,10 @@ impl<'a> Parser<'a> {
         } else {
             let end = self.token().span.clone()[1];
             self.advance(); // Move past ;
-            let print_stat = Statement::PrintLnStmnt {
+            let print_stat = Statement::PrintLnStatement(PrintLnStatement {
                 argument,
                 span: [start, end],
-            };
+            });
             Ok(print_stat)
         }
     }
@@ -628,10 +722,10 @@ impl<'a> Parser<'a> {
                 self.advance(); // Move past ;
             }
         }
-        let ret_stat = Statement::ReturnStmnt {
+        let ret_stat = Statement::ReturnStatement(ReturnStatement {
             argument,
             span: [start, end],
-        };
+        });
         Ok(ret_stat)
     }
     /// Parses a loop statement.
@@ -644,16 +738,16 @@ impl<'a> Parser<'a> {
         } else {
             constraint = None;
         }
-        let body = self.block_statement()?;
+        let body = self.block()?;
         let end = body.get_range()[1];
         if self.token().is_semi_colon() {
             self.advance();
         }
-        let loop_stat = Statement::LoopStmnt {
+        let loop_stat = Statement::LoopStmnt(Loop {
             constraint,
-            body: Box::new(body),
+            body,
             span: [start, end],
-        };
+        });
         Ok(loop_stat)
     }
     /// Parses a break statement.
@@ -665,23 +759,127 @@ impl<'a> Parser<'a> {
         }
         let end = self.token().span.clone()[1];
         self.advance();
-        let break_stat = Statement::BreakStmnt { span: [start, end] };
+        let break_stat = Statement::Break(Break {
+            span: [start, end],
+            phantom: PhantomData,
+        });
         Ok(break_stat)
     }
     /// Parses a crash statemnet.
     fn crash_statement(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span.clone()[0];
         self.advance(); // Move past crash.
-        let expression = self.expression()?;
+        let argument = self.expression()?;
         if !self.token().is_semi_colon() {
             return Err(("Expected a semicolon", self.token().span.clone()));
         }
         let end = self.token().span.clone()[1];
         self.advance();
-        let crash_stat = Statement::CrashStmnt {
-            argument: expression,
-            span: [start, end]
-        };
+        let crash_stat = Statement::CrashStmnt(CrashStatement {
+            argument,
+            span: [start, end],
+        });
         Ok(crash_stat)
+    }
+    /// Parses a try block.
+    fn try_block(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past try.
+        let body = self.block()?;
+        let recoverblock;
+        let end;
+        if let Token {
+            kind: TokenKind::Keyword(Keyword::Recover),
+            ..
+        } = self.token()
+        {
+            recoverblock = Some(self.recover_block()?);
+            end = recoverblock.as_ref().unwrap().get_range()[1];
+        } else {
+            recoverblock = None;
+            end = body.get_range()[1];
+        }
+        if self.token().is_semi_colon() {
+            self.advance();
+        }
+        println!("{:?}", self.token());
+        let try_bloc = Statement::TryBlock(TryBlock {
+            body,
+            recover: recoverblock,
+            span: [start, end],
+        });
+        Ok(try_bloc)
+    }
+    /// Parses a recover block.
+    fn recover_block(&'a self) -> NodeOrError<RecoverBlock<'a>> {
+        let start = self.token().span.clone()[0];
+        self.advance(); // Move past recover.
+        let params = self.parameters()?;
+        let body = self.block()?;
+        let end = body.get_range()[1];
+        let recover_block = RecoverBlock {
+            params,
+            body,
+            span: [start, end],
+        };
+        Ok(recover_block)
+    }
+}
+
+/// Functions and Types
+impl<'a> Parser<'a> {
+    fn parameters(&'a self) -> NodeOrError<Vec<Parameter<'a>>> {
+        if !self.token().is_bracket(&BracketKind::LeftParenthesis) {
+            return Err((("Expected an ("), self.token().span.clone()));
+        }
+        let mut parameters = vec![];
+        self.advance(); // Move past (
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightParenthesis)) {
+            let name;
+            let label;
+            if let Token {
+                kind: TokenKind::Identifier(t),
+                span,
+            } = self.token()
+            {
+                name = Identifier {
+                    value: &t.value,
+                    span: *span,
+                }
+            } else {
+                return Err(("Expected a paramter name", self.token().span.clone()));
+            }
+
+            if self.token().is_colon() {
+                self.advance(); // Move past :
+                label = Some(self.label()?);
+            } else {
+                label = None;
+            }
+            let start = name.get_range()[0];
+            let end;
+            if self.token().is_comma() {
+                end = self.token().span.clone()[1];
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightParenthesis) {
+                return Err(("Expected a )", self.token().span.clone()));
+            } else {
+                end = self.token().span.clone()[0];
+            }
+            let parameter = Parameter {
+                name,
+                label,
+                span: [start, end],
+            };
+            parameters.push(parameter);
+        }
+        if self.end() {
+            return Err(("Expected an )", self.token().span.clone()));
+        };
+        self.advance();
+        Ok(parameters)
+    }
+    fn label(&'a self) -> NodeOrError<Type> {
+        todo!()
     }
 }

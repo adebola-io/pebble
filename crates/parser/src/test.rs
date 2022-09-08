@@ -1,14 +1,16 @@
 #![cfg(test)]
 
-use std::vec;
+use std::{marker::PhantomData, vec};
 
 use crate::{
     parser::{Parser, Provider},
     scanner::Scanner,
 };
 use ast::{
-    BracketKind, Comment, CommentKind, Expression, Identifier, Injunction, Keyword, Literal,
-    LiteralKind, Operator, Punctuation, Statement, Token, TokenKind,
+    Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, Identifier,
+    IfStatement, Injunction, Keyword, Literal, LiteralKind, Loop, Operator, Parameter,
+    PrependStatement, PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement, Statement,
+    TestBlock, Token, TokenIdentifier, TokenKind, TryBlock, WhileStatement,
 };
 
 #[test]
@@ -264,7 +266,7 @@ fn it_scans_identifiers_and_keywords() {
         vec![
             Token {
                 span: [[1, 1], [1, 5]],
-                kind: TokenKind::Identifier(Identifier {
+                kind: TokenKind::Identifier(TokenIdentifier {
                     value: String::from("name")
                 })
             },
@@ -274,7 +276,7 @@ fn it_scans_identifiers_and_keywords() {
             },
             Token {
                 span: [[1, 9], [1, 12]],
-                kind: TokenKind::Identifier(Identifier {
+                kind: TokenKind::Identifier(TokenIdentifier {
                     value: String::from("word")
                 })
             },
@@ -295,7 +297,7 @@ fn it_scans_operators() {
         vec![
             Token {
                 span: [[1, 1], [1, 5]],
-                kind: TokenKind::Identifier(Identifier {
+                kind: TokenKind::Identifier(TokenIdentifier {
                     value: String::from("name")
                 })
             },
@@ -342,7 +344,7 @@ fn it_scans_operators_2() {
             },
             Token {
                 span: [[1, 6], [1, 12]],
-                kind: TokenKind::Identifier(Identifier {
+                kind: TokenKind::Identifier(TokenIdentifier {
                     value: String::from("Number")
                 })
             },
@@ -852,26 +854,26 @@ fn it_parses_if_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::IfStmnt {
+        Statement::IfStatement(IfStatement {
             test: Expression::create_ident_expr("condition", [[1, 10], [1, 19]]),
-            body: Box::new(Statement::BlockStmnt {
-                statements: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
+            body: Box::new(Statement::BlockStatement(Block {
+                body: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
                     Expression::create_ident_expr("doStuff", [[2, 9], [2, 16]]),
                     vec![],
                     [2, 18]
                 ))],
                 span: [[1, 21], [3, 6]]
-            }),
-            alternate: Some(Box::new(Statement::BlockStmnt {
-                statements: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
+            })),
+            alternate: Some(Box::new(Statement::BlockStatement(Block {
+                body: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
                     Expression::create_ident_expr("doOtherStuff", [[4, 9], [4, 21]]),
                     vec![],
                     [4, 23]
                 ))],
                 span: [[3, 12], [5, 5]]
-            })),
+            }))),
             span: [[1, 6], [5, 5]]
-        }
+        })
     )
 }
 
@@ -885,7 +887,7 @@ fn it_parses_if_statement_without_block() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::IfStmnt {
+        Statement::IfStatement(IfStatement {
             test: Expression::create_ident_expr("condition", [[1, 5], [1, 14]]),
             body: Box::new(Statement::create_expr_stmnt(Expression::create_call_expr(
                 Expression::create_ident_expr("doStuff", [[1, 16], [1, 23]]),
@@ -900,7 +902,7 @@ fn it_parses_if_statement_without_block() {
                 )
             ))),
             span: [[1, 1], [1, 46]]
-        }
+        })
     )
 }
 
@@ -914,7 +916,7 @@ fn it_parses_if_statement_without_else() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::IfStmnt {
+        Statement::IfStatement(IfStatement {
             test: Expression::create_ident_expr("condition", [[1, 5], [1, 14]]),
             body: Box::new(Statement::create_expr_stmnt(Expression::create_call_expr(
                 Expression::create_ident_expr("doStuff", [[1, 16], [1, 23]]),
@@ -923,7 +925,7 @@ fn it_parses_if_statement_without_else() {
             ))),
             alternate: None,
             span: [[1, 1], [1, 25]]
-        }
+        })
     )
 }
 
@@ -937,10 +939,10 @@ fn it_parses_print_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::PrintLnStmnt {
+        Statement::PrintLnStatement(PrintLnStatement {
             argument: Expression::create_str_expr("Hello, world!", [[1, 9], [1, 23]]),
             span: [[1, 1], [1, 24]]
-        }
+        })
     )
 }
 
@@ -954,10 +956,10 @@ fn it_parses_prepend_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::PrependStmnt {
+        Statement::PrependStatement(PrependStatement {
             source: Expression::create_str_expr("./example.peb", [[1, 10], [1, 24]]),
             span: [[1, 1], [1, 25]]
-        }
+        })
     )
 }
 
@@ -971,13 +973,13 @@ fn it_parses_test_block() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::TestBlock {
-            body: Box::new(Statement::BlockStmnt {
-                statements: vec![],
+        Statement::TestBlock(TestBlock {
+            body: Block {
+                body: vec![],
                 span: [[1, 8], [1, 9]]
-            }),
+            },
             span: [[1, 1], [1, 9]]
-        }
+        })
     )
 }
 
@@ -991,7 +993,7 @@ fn it_parses_while_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::WhileStmnt {
+        Statement::WhileStatement(WhileStatement {
             test: Expression::create_ident_expr("is_true", [[1, 8], [1, 15]]),
             body: Box::new(Statement::create_expr_stmnt(Expression::create_call_expr(
                 Expression::create_ident_expr("doStuff", [[1, 17], [1, 24]]),
@@ -999,7 +1001,7 @@ fn it_parses_while_statement() {
                 [1, 26]
             ))),
             span: [[1, 1], [1, 26]]
-        }
+        })
     )
 }
 
@@ -1013,13 +1015,13 @@ fn it_parses_return_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::ReturnStmnt {
+        Statement::ReturnStatement(ReturnStatement {
             argument: Some(Expression::create_str_expr(
                 "Hello, world!",
                 [[1, 8], [1, 22]]
             )),
             span: [[1, 1], [1, 23]]
-        }
+        })
     )
 }
 
@@ -1033,10 +1035,10 @@ fn it_parses_return_statement_without_argument() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::ReturnStmnt {
+        Statement::ReturnStatement(ReturnStatement {
             argument: None,
             span: [[1, 1], [1, 7]]
-        }
+        })
     )
 }
 
@@ -1050,18 +1052,18 @@ fn it_parses_loop_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::LoopStmnt {
+        Statement::LoopStmnt(Loop {
             constraint: Some(Expression::create_num_expr("3", [[1, 7], [1, 8]])),
-            body: Box::new(Statement::BlockStmnt {
-                statements: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
+            body: Block {
+                body: vec![Statement::create_expr_stmnt(Expression::create_call_expr(
                     Expression::create_ident_expr("doStuff", [[1, 12], [1, 19]]),
                     vec![],
                     [1, 21]
                 ))],
                 span: [[1, 10], [1, 23]]
-            }),
+            },
             span: [[1, 1], [1, 23]]
-        }
+        })
     )
 }
 
@@ -1075,9 +1077,10 @@ fn it_parses_break_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::BreakStmnt {
-            span: [[1, 1], [1, 6]]
-        }
+        Statement::Break(Break {
+            span: [[1, 1], [1, 6]],
+            phantom: PhantomData
+        })
     )
 }
 
@@ -1091,7 +1094,7 @@ fn it_parses_crash_statement() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::CrashStmnt {
+        Statement::CrashStmnt(CrashStatement {
             argument: Expression::create_call_expr(
                 Expression::create_ident_expr("Error", [[1, 7], [1, 12]]),
                 vec![Expression::create_str_expr(
@@ -1101,6 +1104,41 @@ fn it_parses_crash_statement() {
                 [1, 33]
             ),
             span: [[1, 1], [1, 33]]
-        }
+        })
+    )
+}
+
+#[test]
+fn it_parses_try_recover_block() {
+    let mut scanner = Scanner::new("try {} recover (e) {}");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::TryBlock(TryBlock {
+            body: Block {
+                body: vec![],
+                span: [[1, 5], [1, 7]]
+            },
+            recover: Some(RecoverBlock {
+                params: vec![Parameter {
+                    label: None,
+                    name: Identifier {
+                        value: "e",
+                        span: [[1, 17], [1, 18]]
+                    },
+                    span: [[1, 17], [1, 18]]
+                }],
+                span: [[1, 8], [1, 21]],
+                body: Block {
+                    body: vec![],
+                    span: [[1, 20], [1, 21]]
+                }
+            }),
+            span: [[1, 1], [1, 21]],
+        })
     )
 }

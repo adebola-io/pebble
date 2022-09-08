@@ -1,7 +1,7 @@
 use crate::{
     identifier::{Literal, LiteralKind},
-    BracketKind, Comment, CommentKind, Identifier, Injunction, Keyword, Operator, Punctuation,
-    TextSpan,
+    BracketKind, Comment, CommentKind, Injunction, Keyword, Operator, Punctuation, TextSpan,
+    TokenIdentifier,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -11,7 +11,7 @@ pub enum TokenKind {
     Keyword(Keyword),
     Comment(Comment),
     Literal(Literal),
-    Identifier(Identifier),
+    Identifier(TokenIdentifier),
     Invalid(String),
     EOF,
 }
@@ -98,6 +98,15 @@ impl Token {
             false
         }
     }
+    pub fn is_identifier(&self) -> bool {
+        matches!(
+            self,
+            Token {
+                kind: TokenKind::Identifier(_),
+                ..
+            }
+        )
+    }
     pub fn is_comma(&self) -> bool {
         matches!(
             self,
@@ -134,11 +143,11 @@ impl Token {
                 "const" => Injunction::Const,
                 "enum" => Injunction::Enum,
                 "record" => Injunction::Record,
-                "specify" => Injunction::Specify,
                 "interface" => Injunction::Interface,
                 "type" => Injunction::Type,
                 "implement" => Injunction::Implement,
                 "use" => Injunction::Use,
+                "module" => Injunction::Module,
                 "prepend" => Injunction::Prepend,
                 _ => Injunction::Unknown(value.to_string()),
             })),
@@ -173,7 +182,7 @@ impl Token {
     pub fn create_identifier(value: String, span: TextSpan) -> Self {
         Token {
             span,
-            kind: TokenKind::Identifier(Identifier { value }),
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
         }
     }
     pub fn create_keyword(value: String, span: TextSpan) -> Self {
@@ -184,21 +193,17 @@ impl Token {
                 "for" => Keyword::For,
                 "if" => Keyword::If,
                 "else" => Keyword::Else,
-                "match" => Keyword::Match,
                 "in" => Keyword::In,
                 "loop" => Keyword::Loop,
-                "case" => Keyword::Case,
                 "break" => Keyword::Break,
-                "do" => Keyword::Do,
                 "while" => Keyword::While,
+                "implements" => Keyword::Implements,
                 "continue" => Keyword::Continue,
                 "return" => Keyword::Return,
                 "crash" => Keyword::Crash,
                 "try" => Keyword::Try,
                 "recover" => Keyword::Recover,
                 "println" => Keyword::Println,
-                "sleep" => Keyword::Sleep,
-                "static" => Keyword::Static,
                 _ => unreachable!(),
             }),
         }
