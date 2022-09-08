@@ -802,7 +802,6 @@ impl<'a> Parser<'a> {
         if self.token().is_semi_colon() {
             self.advance();
         }
-        println!("{:?}", self.token());
         let try_bloc = Statement::TryBlock(TryBlock {
             body,
             recover: recoverblock,
@@ -836,26 +835,17 @@ impl<'a> Parser<'a> {
         self.advance(); // Move past (
         while !(self.end() || self.token().is_bracket(&BracketKind::RightParenthesis)) {
             let name;
-            let label;
             if let Token {
-                kind: TokenKind::Identifier(t),
+                kind: TokenKind::Identifier(TokenIdentifier { value }),
                 span,
             } = self.token()
             {
-                name = Identifier {
-                    value: &t.value,
-                    span: *span,
-                }
+                name = Identifier { value, span: *span };
+                self.advance();
             } else {
-                return Err(("Expected a paramter name", self.token().span.clone()));
+                return Err(("Expected a parameter name", self.token().span.clone()));
             }
-
-            if self.token().is_colon() {
-                self.advance(); // Move past :
-                label = Some(self.label()?);
-            } else {
-                label = None;
-            }
+            let label = self.maybe_type_label()?;
             let start = name.get_range()[0];
             let end;
             if self.token().is_comma() {
@@ -879,7 +869,11 @@ impl<'a> Parser<'a> {
         self.advance();
         Ok(parameters)
     }
-    fn label(&'a self) -> NodeOrError<Type> {
-        todo!()
+    fn maybe_type_label(&'a self) -> NodeOrError<Option<Type>> {
+        if self.token().is_colon() {
+            todo!()
+        } else {
+            Ok(None)
+        }
     }
 }
