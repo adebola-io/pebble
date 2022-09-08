@@ -110,6 +110,13 @@ pub struct Break<'a> {
     pub phantom: PhantomData<&'a i32>,
 }
 
+/// A continue statement that skips over the next iteration in the loop.
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct Continue<'a> {
+    pub span: TextSpan,
+    pub phantom: PhantomData<&'a i32>,
+}
+
 /// Any expression statement.
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct ExpressionStatement<'a> {

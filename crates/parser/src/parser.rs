@@ -2,7 +2,7 @@ use std::{cell::RefCell, marker::PhantomData};
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, Block, BracketKind, Break, CrashStatement, Expression, Function,
+    precedence_of, Block, BracketKind, Break, Continue, CrashStatement, Expression, Function,
     FunctionalSignature, Identifier, IfStatement, Import, Injunction, Keyword, Literal,
     LiteralKind, Location, Loop, Operator, Parameter, PrependStatement, PrintLnStatement,
     PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan,
@@ -25,6 +25,11 @@ impl Provider {
     pub fn next(&mut self) {
         self.index += 1
     }
+    pub fn previous(&mut self) {
+        if self.index > 0 {
+            self.index -= 1
+        }
+    }
 }
 
 /// The recursive descent parser that goes over the array of tokens scanned from the source text, and iteratively builds out the AST syntax tree.
@@ -43,6 +48,10 @@ impl<'a> Parser<'a> {
     /// Shift to the next token in the stream.
     fn advance(&self) {
         self.provider.borrow_mut().next()
+    }
+    /// Rewind to the previous token in the stream.
+    fn backtrack(&self) {
+        self.provider.borrow_mut().previous()
     }
     /// Check if the stream has ended.
     fn end(&'a self) -> bool {
@@ -205,16 +214,27 @@ impl<'a> Parser<'a> {
                 | Operator::Subtract
                 | Operator::Remainder
                 | Operator::LessThan
-                | Operator::GreaterThan
                 | Operator::GreaterThanOrEquals
                 | Operator::LessThanOrEquals
                 | Operator::BitwiseLeftShift
-                | Operator::BitwiseRightShift
                 | Operator::BitwiseOr
                 | Operator::BitwiseAnd
                 | Operator::Equals
                 | Operator::NotEquals
                 | Operator::PowerOf => self.binary_expression(node, operator),
+                Operator::GreaterThan => {
+                    self.advance();
+                    if let Token {
+                        kind: TokenKind::Operator(Operator::GreaterThan),
+                        ..
+                    } = self.token()
+                    {
+                        self.binary_expression(node, &Operator::BitwiseRightShift)
+                    } else {
+                        self.backtrack();
+                        self.binary_expression(node, &Operator::GreaterThan)
+                    }
+                }
                 Operator::Assign
                 | Operator::AddAssign
                 | Operator::DivideAssign
@@ -370,6 +390,7 @@ impl<'a> Parser<'a> {
             )),
         }
     }
+    /// Parses a range expression.
     fn range_expression(
         &'a self,
         top: Expression<'a>,
@@ -718,7 +739,13 @@ impl<'a> Parser<'a> {
             Keyword::Loop => self.loop_statement(),
             Keyword::Break => self.break_statement(),
             Keyword::Try => self.try_block(),
-            _ => todo!(),
+            Keyword::Continue => self.continue_statement(),
+            Keyword::Else => self.illegal("else"),
+            Keyword::Recover => self.illegal("recover"),
+            _ => Err((
+                "Unexpected keyword. Expected identifier or expression. ",
+                self.token().span.clone(),
+            )),
         }
     }
     /// Parse the condition of a while loop or an if statement.
@@ -744,6 +771,7 @@ impl<'a> Parser<'a> {
             self.statement()
         }
     }
+    /// Parses a block statement.
     fn block_statement(&'a self) -> NodeOrError<Statement<'a>> {
         Ok(Statement::BlockStatement(self.block()?))
     }
@@ -953,6 +981,29 @@ impl<'a> Parser<'a> {
             span: [start, end],
         };
         Ok(recover_block)
+    }
+    /// Parses a continue statement.
+    fn continue_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span.clone()[0];
+        if !self.token().is_semi_colon() {
+            return Err(("Expected a semi_colon", self.token().span.clone()));
+        }
+        let end = self.token().span.clone()[1];
+        self.advance();
+        let cont_stat = Statement::Continue(Continue {
+            span: [start, end],
+            phantom: PhantomData,
+        });
+        Ok(cont_stat)
+    }
+    /// Parses an illegal else statement.
+    fn illegal(&'a self, kind: &'a str) -> NodeOrError<Statement<'a>> {
+        let message = match kind {
+            "else" => "Illegal else statement",
+            "recover" => "A recover statement must succede a try block.",
+            _ => unreachable!(),
+        };
+        Err((message, self.token().span.clone()))
     }
 }
 

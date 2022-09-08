@@ -237,7 +237,6 @@ impl Token {
                 "&" => Operator::BitwiseAnd,
                 "~" => Operator::BitWiseNot,
                 "<<" => Operator::BitwiseLeftShift,
-                ">>" => Operator::BitwiseRightShift,
                 ".." => Operator::RangeBetween,
                 "=" => Operator::Assign,
                 "+=" => Operator::AddAssign,
