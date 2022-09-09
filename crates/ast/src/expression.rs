@@ -1,6 +1,6 @@
 use macros::Location;
 
-use crate::{Block, GenericLabel, Location, Operator, Parameter, TextSpan, Type};
+use crate::{Block, GenericArgument, Location, Operator, Parameter, TextSpan, Type};
 
 /// The base node for an expression.
 #[derive(Debug, Clone, PartialEq)]
@@ -111,7 +111,7 @@ pub struct Boolean<'a> {
 
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct FnExpression<'a> {
-    pub labels: Option<Vec<GenericLabel<'a>>>,
+    pub labels: Option<Vec<GenericArgument<'a>>>,
     pub parameters: Vec<Parameter<'a>>,
     pub return_type: Option<Type<'a>>,
     pub body: Option<Block<'a>>,

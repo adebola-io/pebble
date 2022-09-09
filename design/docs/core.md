@@ -17,11 +17,17 @@ The Pebble core library is a set of functions, interfaces and classes that are m
 
 ---
 
-### `assert.isUnequal: <T implements Equatable>(condtion: Boolean) -> Nil`
+### `assert.isNotEqual: <T implements Equatable>(condtion: Boolean) -> Nil`
 
 ---
 
 ### `assert.isGreater: <T implements Comparison>(left: T, right: T)`
+
+---
+
+### `assert.isLesser: <T implements Comparison>(left: T, right: T)`
+
+---
 
 ### `assert.calls: (f: Function, times: UnsignedInt) -> Nil`
 
@@ -203,6 +209,8 @@ The base class for dealing with the creation, utilization and formatting of text
 
 #### `String.isEmpty: Boolean`
 
+#### `String.clone: () -> String`
+
 #### `String.pushString: (str: String) -> Nil`
 
 #### `String.pushChar: (char: Char) -> Nil`
@@ -259,6 +267,8 @@ The base class for character data in Pebble.
 
 #### `Char.utf8: () -> Number`
 
+#### `Char.clone: () -> Char`
+
 ---
 
 ### `prelude.Number`
@@ -275,7 +285,13 @@ The base class for dealing with numeric values of any kind. It is a wrapper arou
 
 #### `Number.toInteger: () -> Integer`
 
+#### `Number.clone: () -> Number`
+
+---
+
 ### `prelude.UnsignedInt`
+
+The `UnsignedInt` class refers to a set of integer numbers with no signed bit. i.e. all positive whole numbers.
 
 ---
 

@@ -1219,7 +1219,7 @@ fn it_parses_plain_function() {
                 value: "add",
                 span: [[2, 15], [2, 18]]
             },
-            labels: None,
+            generic_arguments: None,
             parameters: vec![
                 Parameter {
                     name: Identifier {
@@ -1232,6 +1232,10 @@ fn it_parses_plain_function() {
                                 value: "Number",
                                 span: [[2, 23], [2, 29]]
                             },
+                            objects: vec![Identifier {
+                                value: "Number",
+                                span: [[2, 23], [2, 29]]
+                            }],
                             arguments: vec![]
                         },
                         span: [[2, 23], [2, 29]]
@@ -1249,6 +1253,10 @@ fn it_parses_plain_function() {
                                 value: "Number",
                                 span: [[2, 34], [2, 40]]
                             },
+                            objects: vec![Identifier {
+                                value: "Number",
+                                span: [[2, 34], [2, 40]]
+                            }],
                             arguments: vec![]
                         },
                         span: [[2, 34], [2, 40]]
@@ -1262,6 +1270,10 @@ fn it_parses_plain_function() {
                         value: "Number",
                         span: [[2, 45], [2, 51]]
                     },
+                    objects: vec![Identifier {
+                        value: "Number",
+                        span: [[2, 45], [2, 51]]
+                    }],
                     arguments: vec![]
                 },
                 span: [[2, 45], [2, 51]]
@@ -1344,6 +1356,10 @@ fn it_parses_let_statement() {
                         value: "String",
                         span: [[1, 12], [1, 18]]
                     },
+                    objects: vec![Identifier {
+                        value: "String",
+                        span: [[1, 12], [1, 18]]
+                    }],
                     arguments: vec![]
                 },
                 span: [[1, 12], [1, 18]]
@@ -1389,12 +1405,20 @@ fn it_parses_const_statement() {
                         value: "ArrayList",
                         span: [[1, 15], [1, 24]]
                     },
+                    objects: vec![Identifier {
+                        value: "ArrayList",
+                        span: [[1, 15], [1, 24]]
+                    },],
                     arguments: vec![Type {
                         kind: TypeKind::Concrete {
                             name: Identifier {
                                 value: "String",
                                 span: [[1, 25], [1, 31]]
                             },
+                            objects: vec![Identifier {
+                                value: "String",
+                                span: [[1, 25], [1, 31]]
+                            }],
                             arguments: vec![]
                         },
                         span: [[1, 25], [1, 31]]
@@ -1438,6 +1462,33 @@ fn misc_test_1() {
             crash AssertionError(3, \"Assertion failed because condition is false.\");
         }
     }");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics, RefCell::new(vec![]))
+}
+
+#[test]
+fn it_parses_type_alias() {
+    let mut scanner = Scanner::new("@type HashMap<T> = Global.HashMap<T, U>;");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics, RefCell::new(vec![]))
+}
+
+#[test]
+fn it_parses_interface() {
+    let mut scanner = Scanner::new(
+        "
+    @interface Display {
+        toString: () -> String,
+        @implement Regularity
+    }
+    ",
+    );
     scanner.run();
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);

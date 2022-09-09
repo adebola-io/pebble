@@ -3,11 +3,11 @@ use std::{cell::RefCell, marker::PhantomData};
 use crate::scanner::Scanner;
 use ast::{
     precedence_of, Block, BracketKind, Break, Continue, CrashStatement, Expression, FnExpression,
-    Function, GenericLabel, Identifier, IfStatement, Import, Injunction, Keyword, Literal,
-    LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement, PrintLnStatement,
-    PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan,
-    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind, UseImport, VarKind,
-    VariableDeclaration, WhileStatement,
+    Function, GenericArgument, Identifier, IfStatement, Import, Injunction, Interface, Keyword,
+    Literal, LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement,
+    PrintLnStatement, Property, PublicModifier, Punctuation, RecoverBlock, ReturnStatement,
+    Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type,
+    TypeAlias, TypeKind, UseImport, VarKind, VariableDeclaration, WhileStatement,
 };
 use utils::Stack;
 
@@ -41,6 +41,7 @@ pub struct Parser<'a> {
     pub statements: RefCell<Vec<Statement<'a>>>,
 }
 
+/// Utilities
 impl<'a> Parser<'a> {
     /// Return a reference to the current token.
     fn token(&self) -> &Token {
@@ -81,6 +82,7 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// API
 impl<'a> Parser<'a> {
     pub fn new(provider: Provider) -> Parser<'a> {
         Parser {
@@ -201,6 +203,7 @@ impl<'a> Parser<'a> {
     }
 }
 
+/// Expressions
 impl<'a> Parser<'a> {
     fn reparse(&'a self, node: Expression<'a>) -> NodeOrError<Expression<'a>> {
         match &self.token().kind {
@@ -495,7 +498,7 @@ impl<'a> Parser<'a> {
     fn functional_expression(&'a self) -> NodeOrError<Expression<'a>> {
         let start = self.token().span[0];
         self.advance(); // Move past fn.
-        let labels = self.maybe_generic_label()?;
+        let labels = self.maybe_generic_arguments()?;
         if self.token().is_identifier() {
             return Err((
                 "Function expressions cannot have function names",
@@ -533,7 +536,7 @@ impl<'a> Parser<'a> {
     fn injunction(&'a self, injunction: &Injunction) -> NodeOrError<Statement<'a>> {
         match injunction {
             Injunction::Function => self.function_declaration(),
-            Injunction::Type => todo!(),
+            Injunction::Type => self.type_alias(),
             Injunction::Class => todo!(),
             Injunction::Record => todo!(),
             Injunction::Const => self.variable_declaration("const"),
@@ -542,7 +545,7 @@ impl<'a> Parser<'a> {
             Injunction::Prepend => self.prepend_statement(),
             Injunction::Test => self.test_block(),
             Injunction::Enum => todo!(),
-            Injunction::Interface => todo!(),
+            Injunction::Interface => self.interface_declaration(),
             Injunction::Implement => todo!(),
             Injunction::Module => self.module(),
             Injunction::Public => self.public_statement(),
@@ -564,20 +567,42 @@ impl<'a> Parser<'a> {
         } else {
             return Err(("Expected a function name.", self.token().span));
         }
-        let labels = self.maybe_generic_label()?;
+        let labels = self.maybe_generic_arguments()?;
         let parameters = self.parameters()?;
         let return_type = self.maybe_return_type()?;
         let body = self.block()?;
         let end = self.token().span[1];
         let decl = Statement::Function(Function {
             name,
-            labels,
+            generic_arguments: labels,
             parameters,
             return_type,
             body,
             span: [start, end],
         });
         Ok(decl)
+    }
+    /// Parses a type alias.
+    fn type_alias(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past @type
+        let (name, labels) = self.type_name()?;
+        if !self.token().is_operator(&Operator::Assign) {
+            return Err(("Type aliases must be initialized ", self.token().span));
+        }
+        self.advance(); // Move past =
+        let value = self.type_label()?;
+        if !self.token().is_semi_colon() {
+            return Err(("Expected a semicolon ", self.token().span));
+        }
+        let end = self.token().span[1];
+        let type_alias = Statement::TypeAlias(TypeAlias {
+            name,
+            generic_arguments: labels,
+            value,
+            span: [start, end],
+        });
+        Ok(type_alias)
     }
     /// Parses a variable declaration, either const or let.
     fn variable_declaration(&'a self, var_type: &str) -> NodeOrError<Statement<'a>> {
@@ -777,6 +802,128 @@ impl<'a> Parser<'a> {
             span: [start, end],
         });
         Ok(test_block)
+    }
+    /// Parses an interface.
+    fn interface_declaration(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past @interface
+        let (name, generic_arguments) = self.type_name()?;
+        if !self.token().is_bracket(&BracketKind::LeftCurly) {
+            return Err(("Expected a {", self.token().span));
+        }
+        self.advance();
+        let mut properties = vec![];
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightCurly)) {
+            let property = self.property()?;
+            properties.push(property);
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightCurly) {
+                return Err(("Expected a } or , ", self.token().span));
+            }
+        }
+        if self.end() {
+            return Err(("Expected a }", self.token().span));
+        }
+        let end = self.token().span[1];
+        self.advance();
+        let interface = Statement::Interface(Interface {
+            name,
+            generic_arguments,
+            properties,
+            span: [start, end],
+        });
+        Ok(interface)
+    }
+    /// Parses either an attribute, an implement or method.
+    fn property(&'a self) -> NodeOrError<Property<'a>> {
+        let name;
+        if let Token {
+            span,
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+        } = self.token()
+        {
+            name = Identifier { value, span: *span };
+            self.advance(); // Move past property name.
+            if self.token().is_bracket(&BracketKind::LeftParenthesis)
+                || self.token().is_operator(&Operator::LessThan)
+            {
+                self.method(name)
+            } else {
+                self.attribute(name)
+            }
+        } else {
+            if let Token {
+                kind: TokenKind::Keyword(Keyword::Injunction(Injunction::Implement)),
+                ..
+            } = self.token()
+            {
+                self.implement()
+            } else {
+                Err(("Expected a property name.", self.token().span))
+            }
+        }
+    }
+    /// Parses a class method.
+    fn method(&'a self, name: Identifier<'a>) -> NodeOrError<Property<'a>> {
+        let start = name.get_range()[0];
+        let generic_arguments = self.maybe_generic_arguments()?;
+        let parameters = self.parameters()?;
+        let return_type = self.maybe_return_type()?;
+        let body = self.block()?;
+        let end = body.get_range()[1];
+        Ok(Property::Method {
+            name,
+            generic_arguments,
+            parameters,
+            return_type,
+            body,
+            span: [start, end],
+        })
+    }
+    /// Parses a class attribute.
+    fn attribute(&'a self, key: Identifier<'a>) -> NodeOrError<Property<'a>> {
+        let start = key.get_range()[0];
+        let type_label = self.maybe_type_label()?;
+        let value;
+        let end;
+        if self.token().is_operator(&Operator::Assign) {
+            self.advance();
+            value = Some(self.expression()?);
+            end = value.as_ref().unwrap().get_range()[1];
+        } else {
+            value = None;
+            end = match &type_label {
+                Some(s) => s.get_range()[0],
+                None => key.get_range()[1],
+            };
+        }
+        Ok(Property::Attribute {
+            key,
+            type_label,
+            value,
+            span: [start, end],
+        })
+    }
+    // Parses an implementation.
+    fn implement(&'a self) -> NodeOrError<Property<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past @implement
+        if let Token {
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+            span,
+        } = self.token()
+        {
+            let interface = Identifier { value, span: *span };
+            self.advance();
+            let end = span[1];
+            Ok(Property::Implement {
+                interface,
+                span: [start, end],
+            })
+        } else {
+            Err(("Expected interface name ", self.token().span))
+        }
     }
     /// Parses a public statement.
     fn public_statement(&'a self) -> NodeOrError<Statement<'a>> {
@@ -1148,12 +1295,27 @@ impl<'a> Parser<'a> {
 
 /// Types
 impl<'a> Parser<'a> {
+    fn type_name(&'a self) -> NodeOrError<(Identifier, Option<Vec<GenericArgument>>)> {
+        let name;
+        if let Token {
+            span,
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+        } = self.token()
+        {
+            name = Identifier { value, span: *span };
+            self.advance();
+        } else {
+            return Err(("Expected a type name ", self.token().span));
+        }
+        let labels = self.maybe_generic_arguments()?;
+        Ok((name, labels))
+    }
     /// Parse a generic label that may or may not exist.
-    fn maybe_generic_label(&'a self) -> NodeOrError<Option<Vec<GenericLabel>>> {
+    fn maybe_generic_arguments(&'a self) -> NodeOrError<Option<Vec<GenericArgument>>> {
         if !self.token().is_operator(&Operator::LessThan) {
             return Ok(None);
         }
-        Ok(Some(self.generic_labels()?))
+        Ok(Some(self.generic_arguments()?))
     }
     /// Parse a return type that may or may not exist.
     fn maybe_return_type(&'a self) -> NodeOrError<Option<Type>> {
@@ -1163,14 +1325,14 @@ impl<'a> Parser<'a> {
         Ok(Some(self.return_type()?))
     }
     /// Parses the generic labels of a function.
-    fn generic_labels(&'a self) -> NodeOrError<Vec<GenericLabel>> {
+    fn generic_arguments(&'a self) -> NodeOrError<Vec<GenericArgument>> {
         if !self.token().is_operator(&Operator::LessThan) {
             return Err(("Expected a < here ", self.token().span));
         }
         self.advance(); // Move past <
         let mut labels = vec![];
         while !(self.end() || self.token().is_operator(&Operator::GreaterThan)) {
-            let label = self.generic_label()?;
+            let label = self.generic_argument()?;
             labels.push(label);
             if self.token().is_comma() {
                 self.advance();
@@ -1185,7 +1347,7 @@ impl<'a> Parser<'a> {
         Ok(labels)
     }
     /// Parses a generic label.
-    fn generic_label(&'a self) -> NodeOrError<GenericLabel> {
+    fn generic_argument(&'a self) -> NodeOrError<GenericArgument> {
         let start;
         let name;
         let mut implements = vec![];
@@ -1234,7 +1396,7 @@ impl<'a> Parser<'a> {
         } else {
             return Err(("Expected a generic type name ", self.token().span));
         }
-        let label = GenericLabel {
+        let label = GenericArgument {
             name,
             implements: if implements.len() > 0 {
                 Some(implements)
@@ -1278,7 +1440,7 @@ impl<'a> Parser<'a> {
         if self.token().is_bracket(&BracketKind::LeftParenthesis) {
             labels = None;
         } else {
-            labels = Some(self.generic_labels()?);
+            labels = Some(self.generic_arguments()?);
         }
         let parameters = self.parameters()?;
         let return_type = Box::new(self.return_type()?);
@@ -1287,7 +1449,7 @@ impl<'a> Parser<'a> {
             kind: TypeKind::Functional {
                 parameters,
                 return_type,
-                labels,
+                generic_arguments: labels,
             },
             span: [start, end],
         };
@@ -1296,19 +1458,28 @@ impl<'a> Parser<'a> {
     fn concrete_type(&'a self) -> NodeOrError<Type> {
         let start;
         let name;
+        let mut objects = vec![];
         let end;
         let mut arguments = vec![];
-        if let Token {
-            kind: TokenKind::Identifier(TokenIdentifier { value }),
-            span,
-        } = self.token()
-        {
-            name = Identifier { value, span: *span };
-            start = span[0];
-            self.advance();
-        } else {
-            return Err(("Expected a type name ", self.token().span));
+        loop {
+            if let Token {
+                kind: TokenKind::Identifier(TokenIdentifier { value }),
+                span,
+            } = self.token()
+            {
+                objects.push(Identifier { value, span: *span });
+                self.advance();
+            } else {
+                return Err(("Expected a type name ", self.token().span));
+            }
+            if self.token().is_operator(&Operator::Dot) {
+                self.advance();
+            } else {
+                break;
+            }
         }
+        name = objects[0].clone();
+        start = name.get_range()[0];
         if self.token().is_operator(&Operator::LessThan) {
             self.advance(); // Move past <
             while !(self.end() || self.token().is_operator(&Operator::GreaterThan)) {
@@ -1329,7 +1500,11 @@ impl<'a> Parser<'a> {
             end = name.get_range()[1];
         }
         let conc_type = Type {
-            kind: TypeKind::Concrete { name, arguments },
+            kind: TypeKind::Concrete {
+                name,
+                arguments,
+                objects,
+            },
             span: [start, end],
         };
         Ok(conc_type)

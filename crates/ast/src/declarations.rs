@@ -11,7 +11,7 @@ use crate::{Block, Expression, Identifier, Location, Statement, TextSpan, TextSt
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct Function<'a> {
     pub name: Identifier<'a>,
-    pub labels: Option<Vec<GenericLabel<'a>>>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
     pub parameters: Vec<Parameter<'a>>,
     pub return_type: Option<Type<'a>>,
     pub body: Block<'a>,
@@ -19,7 +19,7 @@ pub struct Function<'a> {
 }
 
 #[derive(Location, Clone, Debug, PartialEq)]
-pub struct GenericLabel<'a> {
+pub struct GenericArgument<'a> {
     pub name: Identifier<'a>,
     pub implements: Option<Vec<Identifier<'a>>>,
     pub span: TextSpan,
@@ -30,6 +30,65 @@ pub struct Parameter<'a> {
     pub name: Identifier<'a>,
     pub label: Option<Type<'a>>,
     pub span: TextSpan,
+}
+
+/// Declaration of a type name that is an alias of another.
+/// ```pebble
+/// @type Meters = Number;
+/// ```
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct TypeAlias<'a> {
+    pub name: Identifier<'a>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
+    pub value: Type<'a>,
+    pub span: TextSpan,
+}
+
+/// An abstract structure that allows the enforcing of properties on classes and objects. e.g.
+/// ```pebble
+/// @interface Equatable {
+///     isGreater: (rhs: Self) -> Boolean,
+///     isLesser: (rhs: Self) -> Boolean,
+/// }
+/// ```
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct Interface<'a> {
+    pub name: Identifier<'a>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
+    pub properties: Vec<Property<'a>>,
+    pub span: TextSpan,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Property<'a> {
+    Method {
+        name: Identifier<'a>,
+        generic_arguments: Option<Vec<GenericArgument<'a>>>,
+        parameters: Vec<Parameter<'a>>,
+        return_type: Option<Type<'a>>,
+        body: Block<'a>,
+        span: TextSpan,
+    },
+    Attribute {
+        key: Identifier<'a>,
+        type_label: Option<Type<'a>>,
+        value: Option<Expression<'a>>,
+        span: TextSpan,
+    },
+    Implement {
+        interface: Identifier<'a>,
+        span: TextSpan,
+    },
+}
+
+impl<'a> Location for Property<'a> {
+    fn get_range(&self) -> TextSpan {
+        match self {
+            Self::Method { span, .. }
+            | Self::Attribute { span, .. }
+            | Self::Implement { span, .. } => *span,
+        }
+    }
 }
 
 /// A namespace of code that encloses related code. Every file is a module by default.

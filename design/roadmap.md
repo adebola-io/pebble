@@ -58,11 +58,11 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse constant declaration
 -   [ ] Parse record declaration
 -   [x] Parse function declaration
--   [ ] Parse type declaration
+-   [x] Parse type declaration
 -   [ ] Parse class declaration
 -   [ ] Parse class property
 -   [ ] Parse implement statement
--   [ ] Parse interface declaration
+-   [x] Parse interface declaration
 -   [ ] Parse enum declaration
 -   [x] Parse use statement
 -   [x] Parse prepend statement
@@ -78,6 +78,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Boolean conditions
 -   [ ] Unreachable code
 -   [ ] Control flow Analysis
+-   [ ] Data values in interface.
 -   [ ] Bundling and File Hashing
 -   [ ] Prepend conflict resolution.
 -   [ ] Type inference
