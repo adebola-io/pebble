@@ -115,14 +115,14 @@ impl Scanner {
                 while self.char.is_whitespace() || self.char == '\r' {
                     self.next()
                 }
+                if self.end {
+                    break;
+                }
                 let token = self.scan_next();
                 if token.is_comment() {
                     self.comments.push(token)
                 } else {
                     self.tokens.push(token);
-                }
-                if self.end {
-                    break;
                 }
             }
         }

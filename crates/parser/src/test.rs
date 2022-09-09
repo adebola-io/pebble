@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use std::{marker::PhantomData, vec};
+use std::{cell::RefCell, marker::PhantomData, vec};
 
 use crate::{
     parser::{Parser, Provider},
@@ -1405,4 +1405,42 @@ fn it_parses_const_statement() {
             span: [[1, 1], [1, 59]]
         })
     )
+}
+
+#[test]
+fn misc_test_1() {
+    let mut scanner =
+        Scanner::new("
+    ## A test function that checks that two expressions are equal to one another.
+    ## The function will initiate a crash if the two expressions are not equal.
+    @public @function isEqual<T implements Equatable + Display>(left: T, right: T) {
+        if (left != right) {
+            crash AssertionError(1, \"Right does not equal left.\");
+        }
+    }
+    ## A test function that asserts that two expressions are not equal to one another.
+    ## The function will initiate a crash if the two expressions are equal.
+    @public @function isNotEqual<T implements Equatable + Display>(left: T, right: T) {
+        if (left != right) {
+            crash AssertionError(2, \"Right equals left.\");
+        }
+    }
+    ## A test function that asserts than an expression is greather than another.
+    ## The function will initiate a crash if the left expression is not greater than the right.
+    @public @function isGreater<T>(left: T, right: T) {
+       if (left <= right) {
+            crash AssertionError(3, \"Left is not greater than right.\");
+       }
+    }
+    ## A test function that asserts that a condition is true and initiates an assertion error otherwise.
+    @public @function isTrue (condition: Boolean) {
+        if (condition) {
+            crash AssertionError(3, \"Assertion failed because condition is false.\");
+        }
+    }");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics, RefCell::new(vec![]))
 }
