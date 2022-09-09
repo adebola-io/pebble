@@ -1495,3 +1495,24 @@ fn it_parses_interface() {
     parser.parse();
     assert_eq!(parser.diagnostics, RefCell::new(vec![]))
 }
+
+#[test]
+fn it_parses_class() {
+    let mut scanner = Scanner::new(
+        "
+    @class Receiver {
+        Receiver(port: UnsignedInt) {
+            self.port = port;
+            self.messages = [];
+        },
+        port: UnsignedInt,
+        messages: Array<Messages>
+    }
+    ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics, RefCell::new(vec![]))
+}

@@ -2,12 +2,12 @@ use std::{cell::RefCell, marker::PhantomData};
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, Block, BracketKind, Break, Continue, CrashStatement, Expression, FnExpression,
-    Function, GenericArgument, Identifier, IfStatement, Import, Injunction, Interface, Keyword,
-    Literal, LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement,
-    PrintLnStatement, Property, PublicModifier, Punctuation, RecoverBlock, ReturnStatement,
-    Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type,
-    TypeAlias, TypeKind, UseImport, VarKind, VariableDeclaration, WhileStatement,
+    precedence_of, Block, BracketKind, Break, Class, Continue, CrashStatement, Expression,
+    FnExpression, Function, GenericArgument, Identifier, IfStatement, Import, Injunction,
+    Interface, Keyword, Literal, LiteralKind, Location, Loop, Module, Operator, Parameter,
+    PrependStatement, PrintLnStatement, Property, PublicModifier, Punctuation, RecoverBlock,
+    ReturnStatement, Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind,
+    TryBlock, Type, TypeAlias, TypeKind, UseImport, VarKind, VariableDeclaration, WhileStatement,
 };
 use utils::Stack;
 
@@ -537,7 +537,7 @@ impl<'a> Parser<'a> {
         match injunction {
             Injunction::Function => self.function_declaration(),
             Injunction::Type => self.type_alias(),
-            Injunction::Class => todo!(),
+            Injunction::Class => self.class_declaration(),
             Injunction::Record => todo!(),
             Injunction::Const => self.variable_declaration("const"),
             Injunction::Let => self.variable_declaration("let"),
@@ -546,7 +546,10 @@ impl<'a> Parser<'a> {
             Injunction::Test => self.test_block(),
             Injunction::Enum => todo!(),
             Injunction::Interface => self.interface_declaration(),
-            Injunction::Implement => todo!(),
+            Injunction::Implement => Err((
+                "Implement clauses can only be used in interfaces or classes ",
+                self.token().span,
+            )),
             Injunction::Module => self.module(),
             Injunction::Public => self.public_statement(),
             Injunction::Unknown(_) => self.unknown_injunction(),
@@ -581,6 +584,38 @@ impl<'a> Parser<'a> {
             span: [start, end],
         });
         Ok(decl)
+    }
+    /// Parses a class declaration.
+    fn class_declaration(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past @class
+        let (name, generic_arguments) = self.type_name()?;
+        if !self.token().is_bracket(&BracketKind::LeftCurly) {
+            return Err(("Expected a {", self.token().span));
+        }
+        self.advance();
+        let mut properties = vec![];
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightCurly)) {
+            let property = self.property()?;
+            properties.push(property);
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightCurly) {
+                return Err(("Expected a } or , ", self.token().span));
+            }
+        }
+        if self.end() {
+            return Err(("Expected a }", self.token().span));
+        }
+        let end = self.token().span[1];
+        self.advance();
+        let class = Statement::Class(Class {
+            name,
+            generic_arguments,
+            properties,
+            span: [start, end],
+        });
+        Ok(class)
     }
     /// Parses a type alias.
     fn type_alias(&'a self) -> NodeOrError<Statement<'a>> {

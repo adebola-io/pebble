@@ -1,8 +1,8 @@
 use crate::{
-    Block, Break, Continue, CrashStatement, Expression, ExpressionStatement, Function, IfStatement,
-    Interface, Location, Loop, Module, PrependStatement, PrintLnStatement, PublicModifier,
-    ReturnStatement, TestBlock, TextSpan, TryBlock, TypeAlias, UseImport, VariableDeclaration,
-    WhileStatement,
+    Block, Break, Class, Continue, CrashStatement, Expression, ExpressionStatement, Function,
+    IfStatement, Interface, Location, Loop, Module, PrependStatement, PrintLnStatement,
+    PublicModifier, ReturnStatement, TestBlock, TextSpan, TryBlock, TypeAlias, UseImport,
+    VariableDeclaration, WhileStatement,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -27,6 +27,7 @@ pub enum Statement<'a> {
     Function(Function<'a>),
     TypeAlias(TypeAlias<'a>),
     Interface(Interface<'a>),
+    Class(Class<'a>),
     Module(Module<'a>),
 }
 
@@ -60,7 +61,8 @@ impl<'a> Location for Statement<'a> {
             | Self::TypeAlias(TypeAlias { span, .. })
             | Self::Module(Module { span, .. })
             | Self::EmptyStatement(span)
-            | Self::Interface(Interface { span, .. }) => *span,
+            | Self::Interface(Interface { span, .. })
+            | Self::Class(Class { span, .. }) => *span,
         }
     }
 }

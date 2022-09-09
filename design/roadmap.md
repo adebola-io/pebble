@@ -59,9 +59,9 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse record declaration
 -   [x] Parse function declaration
 -   [x] Parse type declaration
--   [ ] Parse class declaration
--   [ ] Parse class property
--   [ ] Parse implement statement
+-   [x] Parse class declaration
+-   [x] Parse class property
+-   [x] Parse implement statement
 -   [x] Parse interface declaration
 -   [ ] Parse enum declaration
 -   [x] Parse use statement

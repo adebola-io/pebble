@@ -22,4 +22,6 @@
 22. Types can be compounded using the `or` operator.
 23. @use imports can only be used at the top level of a module or a file.
 24. Class constructors are methods that have the class name as a function id. A class cannot have multiple constructors.
-25. Properties of an object must have a default value, or be explicitly assigned in the constructor of the object class.
+25. Properties of an class must have a default value, or be explicitly assigned in the constructor of the object class.
+26. Properties of an interface cannot have values assigned.
+27. Interfaces cannot be used as types.

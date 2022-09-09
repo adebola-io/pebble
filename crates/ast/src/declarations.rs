@@ -47,6 +47,7 @@ pub struct TypeAlias<'a> {
 /// An abstract structure that allows the enforcing of properties on classes and objects. e.g.
 /// ```pebble
 /// @interface Equatable {
+///     @implement PartialOrd,
 ///     isGreater: (rhs: Self) -> Boolean,
 ///     isLesser: (rhs: Self) -> Boolean,
 /// }
@@ -59,6 +60,28 @@ pub struct Interface<'a> {
     pub span: TextSpan,
 }
 
+/// A template-like structure for creating instances and objects in Pebble. e.g.
+/// ```pebble
+/// @class Person {
+///     Person(name: String, age: String) {
+///         self.name = name;
+///         self.age = age;
+///         self.id = generateID();
+///     }
+///     name: String,
+///     age: UnsignedInt,
+///     id: String,
+/// }
+/// ```
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct Class<'a> {
+    pub name: Identifier<'a>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
+    pub properties: Vec<Property<'a>>,
+    pub span: TextSpan,
+}
+
+/// The property of a class or interface.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Property<'a> {
     Method {
