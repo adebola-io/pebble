@@ -6,8 +6,8 @@ use ast::{
     Function, GenericLabel, Identifier, IfStatement, Import, Injunction, Keyword, Literal,
     LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement, PrintLnStatement,
     PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan,
-    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind, UseImport,
-    WhileStatement,
+    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind, UseImport, VarKind,
+    VariableDeclaration, WhileStatement,
 };
 use utils::Stack;
 
@@ -152,6 +152,9 @@ impl<'a> Parser<'a> {
             TokenKind::Identifier(_) => self.identifier(),
             TokenKind::Operator(operator) => self.unary_expression(operator),
             TokenKind::Keyword(Keyword::Fn) => self.functional_expression(),
+            TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftSquare)) => {
+                self.array_expression()
+            }
             TokenKind::Punctuation(Punctuation::Bracket(BracketKind::LeftParenthesis)) => {
                 self.grouped_expression()
             }
@@ -461,6 +464,33 @@ impl<'a> Parser<'a> {
             Ok(self.reparse(assign_exp)?)
         }
     }
+    /// Parses an array expression.
+    fn array_expression(&'a self) -> NodeOrError<Expression<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past [
+        self.operators.borrow_mut().push(&Operator::Temp);
+        let mut elements = vec![];
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightSquare)) {
+            let element = self.expression()?;
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightSquare) {
+                return Err(("Expected a , or ] ", self.token().span));
+            }
+            elements.push(element)
+        }
+        if self.end() {
+            return Err(("Expected a ]", self.token().span));
+        }
+        let end = self.token().span[1];
+        self.operators.borrow_mut().pop();
+        self.advance(); // Move past ]
+        let array_exp = Expression::ArrayExpr {
+            elements,
+            span: [start, end],
+        };
+        Ok(self.reparse(array_exp)?)
+    }
     /// Parses an anonymous function.
     fn functional_expression(&'a self) -> NodeOrError<Expression<'a>> {
         let start = self.token().span[0];
@@ -506,8 +536,8 @@ impl<'a> Parser<'a> {
             Injunction::Type => todo!(),
             Injunction::Class => todo!(),
             Injunction::Record => todo!(),
-            Injunction::Const => todo!(),
-            Injunction::Let => todo!(),
+            Injunction::Const => self.variable_declaration("const"),
+            Injunction::Let => self.variable_declaration("let"),
             Injunction::Use => self.use_import(),
             Injunction::Prepend => self.prepend_statement(),
             Injunction::Test => self.test_block(),
@@ -548,6 +578,58 @@ impl<'a> Parser<'a> {
             span: [start, end],
         });
         Ok(decl)
+    }
+    /// Parses a variable declaration, either const or let.
+    fn variable_declaration(&'a self, var_type: &str) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past @let or @const.
+        let name;
+        let initializer;
+        let end;
+        if let Token {
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+            span,
+        } = &self.token()
+        {
+            name = Identifier { value, span: *span };
+            self.advance(); // Move past name.
+        } else {
+            return Err(("Expected a variable name.", self.token().span));
+        }
+        let type_label = self.maybe_type_label()?;
+        if self.token().is_operator(&Operator::Assign) {
+            self.advance(); // Move past =
+            initializer = Some(self.expression()?);
+            end = initializer.as_ref().unwrap().get_range()[1];
+        } else {
+            initializer = None;
+            if type_label.is_none() && initializer.is_none() {
+                return Err(("Variables without an initializer must have their types declared in their definition.", name.span));
+            } else if var_type == "const" && (type_label.is_none() || initializer.is_none()) {
+                return Err((
+                    "Constants must have both type labels and initializers. ",
+                    name.span,
+                ));
+            } else {
+                end = type_label.as_ref().unwrap().get_range()[1];
+            }
+        }
+        if !self.token().is_semi_colon() {
+            return Err(("Expected a semi-colon ", self.token().span));
+        }
+        self.advance();
+        let exp = Statement::VariableDeclaration(VariableDeclaration {
+            name,
+            initializer,
+            kind: if var_type == "let" {
+                VarKind::Let
+            } else {
+                VarKind::Const
+            },
+            type_label,
+            span: [start, end],
+        });
+        Ok(exp)
     }
     /// Parses a @use import.
     fn use_import(&'a self) -> NodeOrError<Statement<'a>> {

@@ -11,7 +11,7 @@ use ast::{
     Function, Identifier, IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop,
     Operator, Parameter, PrependStatement, PrintLnStatement, Punctuation, RecoverBlock,
     ReturnStatement, Statement, TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock,
-    Type, TypeKind, UseImport, WhileStatement,
+    Type, TypeKind, UseImport, VarKind, VariableDeclaration, WhileStatement,
 };
 
 #[test]
@@ -1314,6 +1314,95 @@ fn it_parses_functional_expression() {
                 span: [[1, 5], [1, 23]]
             })],
             span: [[1, 1], [1, 25]]
+        })
+    )
+}
+
+#[test]
+fn it_parses_let_statement() {
+    let mut scanner = Scanner::new("@let name: String = \"Akomolafe\";");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::VariableDeclaration(VariableDeclaration {
+            name: Identifier {
+                value: "name",
+                span: [[1, 6], [1, 10]]
+            },
+            kind: VarKind::Let,
+            initializer: Some(Expression::StringExpression(TextString {
+                value: "Akomolafe",
+                span: [[1, 21], [1, 31]]
+            })),
+            type_label: Some(Type {
+                kind: TypeKind::Concrete {
+                    name: Identifier {
+                        value: "String",
+                        span: [[1, 12], [1, 18]]
+                    },
+                    arguments: vec![]
+                },
+                span: [[1, 12], [1, 18]]
+            }),
+            span: [[1, 1], [1, 31]]
+        })
+    )
+}
+
+#[test]
+fn it_parses_const_statement() {
+    let mut scanner =
+        Scanner::new("@const NAMES: ArrayList<String> = [\"Akomolafe\", \"Sefunmi\"];");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::VariableDeclaration(VariableDeclaration {
+            name: Identifier {
+                value: "NAMES",
+                span: [[1, 8], [1, 13]]
+            },
+            kind: VarKind::Const,
+            initializer: Some(Expression::ArrayExpr {
+                elements: vec![
+                    Expression::StringExpression(TextString {
+                        value: "Akomolafe",
+                        span: [[1, 36], [1, 46]]
+                    }),
+                    Expression::StringExpression(TextString {
+                        value: "Sefunmi",
+                        span: [[1, 49], [1, 57]]
+                    })
+                ],
+                span: [[1, 35], [1, 59]]
+            }),
+            type_label: Some(Type {
+                kind: TypeKind::Concrete {
+                    name: Identifier {
+                        value: "ArrayList",
+                        span: [[1, 15], [1, 24]]
+                    },
+                    arguments: vec![Type {
+                        kind: TypeKind::Concrete {
+                            name: Identifier {
+                                value: "String",
+                                span: [[1, 25], [1, 31]]
+                            },
+                            arguments: vec![]
+                        },
+                        span: [[1, 25], [1, 31]]
+                    }]
+                },
+                span: [[1, 15], [1, 32]]
+            }),
+            span: [[1, 1], [1, 59]]
         })
     )
 }

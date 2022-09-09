@@ -1,7 +1,7 @@
 use crate::{
     Block, Break, Continue, CrashStatement, Expression, ExpressionStatement, Function, IfStatement,
-    LetDeclaration, Location, Loop, Module, PrependStatement, PrintLnStatement, PublicModifier,
-    ReturnStatement, TestBlock, TextSpan, TryBlock, UseImport, WhileStatement,
+    Location, Loop, Module, PrependStatement, PrintLnStatement, PublicModifier, ReturnStatement,
+    TestBlock, TextSpan, TryBlock, UseImport, VariableDeclaration, WhileStatement,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9,7 +9,7 @@ pub enum Statement<'a> {
     IfStatement(IfStatement<'a>),
     PrintLnStatement(PrintLnStatement<'a>),
     PrependStatement(PrependStatement<'a>),
-    LetDeclaration(LetDeclaration<'a>),
+    VariableDeclaration(VariableDeclaration<'a>),
     Break(Break<'a>),
     Continue(Continue<'a>),
     TestBlock(TestBlock<'a>),
@@ -44,7 +44,7 @@ impl<'a> Location for Statement<'a> {
             | Self::PrintLnStatement(PrintLnStatement { span, .. })
             | Self::ExpressionStatement(ExpressionStatement { span, .. })
             | Self::UseImport(UseImport { span, .. })
-            | Self::LetDeclaration(LetDeclaration { span, .. })
+            | Self::VariableDeclaration(VariableDeclaration { span, .. })
             | Self::Break(Break { span, .. })
             | Self::Continue(Continue { span, .. })
             | Self::TestBlock(TestBlock { span, .. })

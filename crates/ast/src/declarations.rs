@@ -52,11 +52,18 @@ pub struct Module<'a> {
 /// @let name: String = "johnny";
 /// ```
 #[derive(Location, Clone, Debug, PartialEq)]
-pub struct LetDeclaration<'a> {
-    pub identifier: Identifier<'a>,
+pub struct VariableDeclaration<'a> {
+    pub name: Identifier<'a>,
+    pub kind: VarKind,
     pub initializer: Option<Expression<'a>>,
     pub type_label: Option<Type<'a>>,
     pub span: TextSpan,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum VarKind {
+    Let,
+    Const,
 }
 
 /// A testing block, i.e. a group of functions for testing code functionality. e.g.
