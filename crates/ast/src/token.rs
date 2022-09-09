@@ -220,6 +220,7 @@ impl Token {
                 "from" => Keyword::From,
                 "break" => Keyword::Break,
                 "while" => Keyword::While,
+                "fn" => Keyword::Fn,
                 "implements" => Keyword::Implements,
                 "continue" => Keyword::Continue,
                 "return" => Keyword::Return,

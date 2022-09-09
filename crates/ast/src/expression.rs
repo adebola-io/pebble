@@ -1,6 +1,6 @@
 use macros::Location;
 
-use crate::{FunctionalSignature, Location, Operator, TextSpan};
+use crate::{Block, GenericLabel, Location, Operator, Parameter, TextSpan, Type};
 
 /// The base node for an expression.
 #[derive(Debug, Clone, PartialEq)]
@@ -78,10 +78,7 @@ pub enum Expression<'a> {
         span: TextSpan,
     },
     /// A functional expression.
-    FnExpr {
-        signature: Box<FunctionalSignature<'a>>,
-        span: TextSpan,
-    },
+    FnExpression(FnExpression<'a>),
 }
 
 /// An expression consisting of a single identifier.
@@ -109,6 +106,17 @@ pub struct Number<'a> {
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct Boolean<'a> {
     pub value: &'a str,
+    pub span: TextSpan,
+}
+
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct FnExpression<'a> {
+    pub labels: Option<Vec<GenericLabel<'a>>>,
+    pub parameters: Vec<Parameter<'a>>,
+    pub return_type: Option<Type<'a>>,
+    pub body: Option<Block<'a>>,
+    /// A functional expression may consist only of its return expression.
+    pub implicit_return: Option<Box<Expression<'a>>>,
     pub span: TextSpan,
 }
 
@@ -292,7 +300,7 @@ impl Location for Expression<'_> {
             | Self::RangeExpr { span, .. }
             | Self::TernaryExpr { span, .. }
             | Self::AssignmentExpr { span, .. }
-            | Self::FnExpr { span, .. } => *span,
+            | Self::FnExpression(FnExpression { span, .. }) => *span,
         }
     }
 }

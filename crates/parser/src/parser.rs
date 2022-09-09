@@ -2,12 +2,12 @@ use std::{cell::RefCell, marker::PhantomData};
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, Block, BracketKind, Break, Continue, CrashStatement, Expression, Function,
-    FunctionalSignature, GenericLabel, Identifier, IfStatement, Import, Injunction, Keyword,
-    Literal, LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement,
-    PrintLnStatement, PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement,
-    TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind,
-    UseImport, WhileStatement,
+    precedence_of, Block, BracketKind, Break, Continue, CrashStatement, Expression, FnExpression,
+    Function, GenericLabel, Identifier, IfStatement, Import, Injunction, Keyword, Literal,
+    LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement, PrintLnStatement,
+    PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan,
+    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind, UseImport,
+    WhileStatement,
 };
 use utils::Stack;
 
@@ -461,26 +461,40 @@ impl<'a> Parser<'a> {
             Ok(self.reparse(assign_exp)?)
         }
     }
+    /// Parses an anonymous function.
     fn functional_expression(&'a self) -> NodeOrError<Expression<'a>> {
         let start = self.token().span[0];
         self.advance(); // Move past fn.
-        let signature = self.functional_signature()?;
-        if signature.name.is_some() {
+        let labels = self.maybe_generic_label()?;
+        if self.token().is_identifier() {
             return Err((
-                "A functional expression cannot be named.",
+                "Function expressions cannot have function names",
                 self.token().span,
             ));
         }
-        let end = signature.get_range()[1];
-        let fn_exp = Expression::FnExpr {
-            signature: Box::new(signature),
+        let parameters = self.parameters()?;
+        let return_type = self.maybe_return_type()?;
+        let body;
+        let implicit_return;
+        let end;
+        if self.token().is_bracket(&BracketKind::LeftCurly) {
+            body = Some(self.block()?);
+            implicit_return = None;
+            end = body.as_ref().unwrap().get_range()[1];
+        } else {
+            body = None;
+            implicit_return = Some(Box::new(self.expression()?));
+            end = implicit_return.as_ref().as_ref().unwrap().get_range()[1];
+        }
+        let fn_exp = Expression::FnExpression(FnExpression {
+            labels,
+            parameters,
+            return_type,
+            body,
+            implicit_return,
             span: [start, end],
-        };
+        });
         Ok(self.reparse(fn_exp)?)
-    }
-    /// Parses a functional signature.
-    fn functional_signature(&'a self) -> NodeOrError<FunctionalSignature<'a>> {
-        todo!()
     }
 }
 

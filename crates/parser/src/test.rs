@@ -7,11 +7,11 @@ use crate::{
     scanner::Scanner,
 };
 use ast::{
-    Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, Function,
-    Identifier, IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop, Operator,
-    Parameter, PrependStatement, PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement,
-    Statement, TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind,
-    UseImport, WhileStatement,
+    Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, FnExpression,
+    Function, Identifier, IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop,
+    Operator, Parameter, PrependStatement, PrintLnStatement, Punctuation, RecoverBlock,
+    ReturnStatement, Statement, TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock,
+    Type, TypeKind, UseImport, WhileStatement,
 };
 
 #[test]
@@ -1278,6 +1278,42 @@ fn it_parses_plain_function() {
                 span: [[2, 52], [4, 5]]
             },
             span: [[2, 5], [4, 5]]
+        })
+    )
+}
+
+#[test]
+fn it_parses_functional_expression() {
+    let mut scanner = Scanner::new("map(fn (item) item * 2 );");
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::create_expr_stmnt(Expression::CallExpr {
+            callee: Box::new(Expression::create_ident_expr("map", [[1, 1], [1, 4]])),
+            arguments: vec![Expression::FnExpression(FnExpression {
+                labels: None,
+                parameters: vec![Parameter {
+                    name: Identifier {
+                        value: "item",
+                        span: [[1, 9], [1, 13]]
+                    },
+                    label: None,
+                    span: [[1, 9], [1, 13]]
+                }],
+                return_type: None,
+                body: None,
+                implicit_return: Some(Box::new(Expression::create_bin_expr(
+                    Expression::create_ident_expr("item", [[1, 15], [1, 19]]),
+                    &Operator::Multiply,
+                    Expression::create_num_expr("2", [[1, 22], [1, 23]])
+                ),)),
+                span: [[1, 5], [1, 23]]
+            })],
+            span: [[1, 1], [1, 25]]
         })
     )
 }

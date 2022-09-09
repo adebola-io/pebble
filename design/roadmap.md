@@ -42,7 +42,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse type labels
 -   [x] Parse generic type
 -   [ ] Parse call expression with type argument
--   [ ] Parse functional expression
+-   [x] Parse functional expression
 -   [x] Parse if statement
 -   [x] Parse else block
 -   [x] Parse while statement
