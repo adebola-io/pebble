@@ -109,6 +109,17 @@ impl Token {
             false
         }
     }
+    pub fn is_operator(&self, op: &Operator) -> bool {
+        if let Token {
+            kind: TokenKind::Operator(operator),
+            ..
+        } = self
+        {
+            op == operator
+        } else {
+            false
+        }
+    }
     pub fn is_identifier(&self) -> bool {
         matches!(
             self,

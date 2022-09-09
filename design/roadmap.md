@@ -39,8 +39,8 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse logical expression
 -   [x] Parse ternary expression
 -   [x] Parse assignment expression
--   [ ] Parse type labels
--   [ ] Parse generic type
+-   [x] Parse type labels
+-   [x] Parse generic type
 -   [ ] Parse call expression with type argument
 -   [ ] Parse functional expression
 -   [x] Parse if statement
@@ -57,7 +57,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse variable declaration
 -   [ ] Parse constant declaration
 -   [ ] Parse record declaration
--   [ ] Parse function declaration
+-   [x] Parse function declaration
 -   [ ] Parse type declaration
 -   [ ] Parse class declaration
 -   [ ] Parse class property
@@ -71,10 +71,28 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 
 ## Semantic Analysis
 
+-   [ ] Stray return statements
+-   [ ] Stray break statements
+-   [ ] Typeless function parameters
+-   [ ] Infinite loops
+-   [ ] Boolean conditions
+-   [ ] Unreachable code
+-   [ ] Control flow Analysis
 -   [ ] Bundling and File Hashing
+-   [ ] Prepend conflict resolution.
+-   [ ] Type inference
+-   [ ] Constant mutability blocking
+-   [ ] Meaningless public modifiers.
+-   [ ] Parameter mutability blocking
+-   [ ] Circular interface implementation blocking.
+-   [ ] Local test blocks blocking.
+-   [ ] Record runtime value blocking.
+-   [ ] Stray use imports.
+-   [ ] Undefined class properties blocking.
+-   [ ] Nil assignment blocking.
+-   [ ] Function return type resolution.
 -   [ ] Identifier resolution
 -   [ ] Scope checking
--   [ ] Return type resolution
 -   [ ] Build symbol table
 
 ## Compiler Optimizations
@@ -93,6 +111,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Syntax Highlighting
 -   [ ] Hover Information
 -   [ ] Support for @prepend
+-   [ ] Support for @use
 -   [ ] Code Completion
 
 ## Prepiler

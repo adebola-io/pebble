@@ -3,10 +3,11 @@ use std::{cell::RefCell, marker::PhantomData};
 use crate::scanner::Scanner;
 use ast::{
     precedence_of, Block, BracketKind, Break, Continue, CrashStatement, Expression, Function,
-    FunctionalSignature, Identifier, IfStatement, Import, Injunction, Keyword, Literal,
-    LiteralKind, Location, Loop, Operator, Parameter, PrependStatement, PrintLnStatement,
-    PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextSpan,
-    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, UseImport, WhileStatement,
+    FunctionalSignature, GenericLabel, Identifier, IfStatement, Import, Injunction, Keyword,
+    Literal, LiteralKind, Location, Loop, Module, Operator, Parameter, PrependStatement,
+    PrintLnStatement, PublicModifier, Punctuation, RecoverBlock, ReturnStatement, Statement,
+    TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind,
+    UseImport, WhileStatement,
 };
 use utils::Stack;
 
@@ -126,7 +127,7 @@ impl<'a> Parser<'a> {
         }
     }
     fn empty_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let emp_stat = Statement::EmptyStatement(self.token().span.clone());
+        let emp_stat = Statement::EmptyStatement(self.token().span);
         self.advance();
         Ok(emp_stat)
     }
@@ -140,7 +141,7 @@ impl<'a> Parser<'a> {
                     Ok(Statement::create_expr_stmnt(exp))
                 } else {
                     // Every expression statement must end with a semi-colon.
-                    Err(("Expected a semi-colon.", self.token().span.clone()))
+                    Err(("Expected a semi-colon.", self.token().span))
                 }
             }
         }
@@ -329,18 +330,15 @@ impl<'a> Parser<'a> {
                 } else if !self.token().is_bracket(&right_bracket) {
                     return Err((
                         "Unexpected token. Expected a function argument.",
-                        self.token().span.clone(),
+                        self.token().span,
                     ));
                 }
             }
             self.operators.borrow_mut().pop();
             if self.end() {
-                Err((
-                    "Unexpected end of text. Expected a ).",
-                    self.token().span.clone(),
-                ))
+                Err(("Unexpected end of text. Expected a ).", self.token().span))
             } else {
-                let end = self.token().span.clone()[1];
+                let end = self.token().span[1];
                 self.advance(); // Move past )
                 let callexp = Expression::create_call_expr(callee, arguments, end);
 
@@ -359,9 +357,9 @@ impl<'a> Parser<'a> {
             let property = self.expression()?; // Parse property.
             self.operators.borrow_mut().pop();
             if !self.token().is_bracket(&BracketKind::RightSquare) {
-                return Err(("Expected a ].", self.token().span.clone()));
+                return Err(("Expected a ].", self.token().span));
             }
-            let end = self.token().span.clone()[1];
+            let end = self.token().span[1];
             self.advance(); // Move past ]
             let index_exp = Expression::create_index_expr(accessor, property, end);
             Ok(self.reparse(index_exp)?)
@@ -377,7 +375,7 @@ impl<'a> Parser<'a> {
             | Operator::LogicalNot
             | Operator::BitWiseNot => {
                 self.operators.borrow_mut().push(operator);
-                let start = self.token().span.clone()[0];
+                let start = self.token().span[0];
                 self.advance(); // Move past operator.
                 let operand = self.expression()?;
                 self.operators.borrow_mut().pop();
@@ -386,7 +384,7 @@ impl<'a> Parser<'a> {
             }
             _ => Err((
                 "Unexpected operator. Expected an expression",
-                self.token().span.clone(),
+                self.token().span,
             )),
         }
     }
@@ -438,7 +436,7 @@ impl<'a> Parser<'a> {
             let consequent = self.expression()?;
             self.operators.borrow_mut().pop();
             if !self.token().is_colon() {
-                return Err(("Expected a colon.", self.token().span.clone()));
+                return Err(("Expected a colon.", self.token().span));
             }
             self.advance();
             self.operators.borrow_mut().push(&Operator::Colon);
@@ -464,13 +462,13 @@ impl<'a> Parser<'a> {
         }
     }
     fn functional_expression(&'a self) -> NodeOrError<Expression<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past fn.
         let signature = self.functional_signature()?;
         if signature.name.is_some() {
             return Err((
                 "A functional expression cannot be named.",
-                self.token().span.clone(),
+                self.token().span,
             ));
         }
         let end = signature.get_range()[1];
@@ -509,7 +507,7 @@ impl<'a> Parser<'a> {
     }
     /// Parses a function decalaration.
     fn function_declaration(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past @function
         let name;
         if let Token {
@@ -518,17 +516,18 @@ impl<'a> Parser<'a> {
         } = &self.token()
         {
             name = Identifier { value, span: *span };
+            self.advance(); // Move past function name.
         } else {
-            return Err(("Expected a function name.", self.token().span.clone()));
+            return Err(("Expected a function name.", self.token().span));
         }
-        let label = self.maybe_generic_label()?;
+        let labels = self.maybe_generic_label()?;
         let parameters = self.parameters()?;
         let return_type = self.maybe_return_type()?;
         let body = self.block()?;
-        let end = self.token().span.clone()[1];
+        let end = self.token().span[1];
         let decl = Statement::Function(Function {
             name,
-            label,
+            labels,
             parameters,
             return_type,
             body,
@@ -536,17 +535,9 @@ impl<'a> Parser<'a> {
         });
         Ok(decl)
     }
-    /// Parse a generic label that may or may not exist.
-    fn maybe_generic_label(&'a self) -> NodeOrError<Option<Type>> {
-        todo!()
-    }
-    /// Parse a return type that may or may not exist.
-    fn maybe_return_type(&'a self) -> NodeOrError<Option<Type>> {
-        todo!()
-    }
     /// Parses a @use import.
     fn use_import(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past @use.
         let imports = self.imports()?;
         if let Token {
@@ -567,9 +558,9 @@ impl<'a> Parser<'a> {
                 let source = TextString { value, span: *span };
                 self.advance();
                 if !self.token().is_semi_colon() {
-                    return Err(("Expected a semi-colon", self.token().span.clone()));
+                    return Err(("Expected a semi-colon", self.token().span));
                 }
-                let end = self.token().span.clone()[1];
+                let end = self.token().span[1];
                 self.advance();
                 let use_stat = Statement::UseImport(UseImport {
                     imports,
@@ -578,15 +569,15 @@ impl<'a> Parser<'a> {
                 });
                 Ok(use_stat)
             } else {
-                return Err(("Missing import source ", self.token().span.clone()));
+                return Err(("Missing import source ", self.token().span));
             }
         } else {
-            return Err(("Expected \"from\"", self.token().span.clone()));
+            return Err(("Expected \"from\"", self.token().span));
         }
     }
     fn imports(&'a self) -> NodeOrError<Vec<Import<'a>>> {
         if !self.token().is_bracket(&BracketKind::LeftCurly) {
-            return Err(("Expected a {", self.token().span.clone()));
+            return Err(("Expected a {", self.token().span));
         }
         self.advance(); // Move past {
         let mut imports = vec![];
@@ -596,20 +587,17 @@ impl<'a> Parser<'a> {
             if self.token().is_comma() {
                 self.advance();
             } else if !self.token().is_bracket(&BracketKind::RightCurly) {
-                return Err(("Expected a comma or a } ", self.token().span.clone()));
+                return Err(("Expected a comma or a } ", self.token().span));
             }
         }
         if self.end() {
-            return Err((
-                "Unclosed import space. Expected a }",
-                self.token().span.clone(),
-            ));
+            return Err(("Unclosed import space. Expected a }", self.token().span));
         }
         self.advance();
         Ok(imports)
     }
     fn import(&'a self) -> NodeOrError<Import<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         let imported_name;
         let local_name;
         let collapsed_import;
@@ -633,7 +621,7 @@ impl<'a> Parser<'a> {
             };
             collapsed_import = true;
         } else {
-            return Err(("Expected an import", self.token().span.clone()));
+            return Err(("Expected an import", self.token().span));
         }
         self.advance();
 
@@ -648,11 +636,11 @@ impl<'a> Parser<'a> {
                 self.advance();
                 end = local_name.as_ref().unwrap().get_range()[1];
             } else {
-                return Err(("Expected an identifier.", self.token().span.clone()));
+                return Err(("Expected an identifier.", self.token().span));
             }
         } else {
             if collapsed_import {
-                return Err(("Expected keyword \"as\"", self.token().span.clone()));
+                return Err(("Expected keyword \"as\"", self.token().span));
             }
             end = imported_name.get_range()[1];
             local_name = None;
@@ -667,13 +655,13 @@ impl<'a> Parser<'a> {
     }
     /// Parses an @prepend statement.
     fn prepend_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past @prepend
         let source = self.expression()?;
         if !self.token().is_semi_colon() {
-            Err(("Expected a semicolon.", self.token().span.clone()))
+            Err(("Expected a semicolon.", self.token().span))
         } else {
-            let end = self.token().span.clone()[1];
+            let end = self.token().span[1];
             self.advance();
             let prep_stat = Statement::PrependStatement(PrependStatement {
                 source,
@@ -684,7 +672,7 @@ impl<'a> Parser<'a> {
     }
     /// Parses an @tests block.
     fn test_block(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past @tests.
         let body = self.block()?;
         let end = body.get_range()[1];
@@ -696,7 +684,7 @@ impl<'a> Parser<'a> {
     }
     /// Parses a public statement.
     fn public_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past @public.
         let statement = self.statement()?;
         let end = statement.get_range()[1];
@@ -706,23 +694,32 @@ impl<'a> Parser<'a> {
         });
         Ok(pub_stat)
     }
+    /// Parses a module.
     fn module(&'a self) -> NodeOrError<Statement<'a>> {
-        // let start = self.token().span.clone()[0];
-        // let name;
-        // self.advance(); // Move past @module.
-        // if let Token {
-        //     span,
-        //     kind: TokenKind::Identifier(TokenIdentifier { value }),
-        // } = self.token()
-        // {
-        //     name = Expression::create_ident_expr(value, *span)
-        // } else {
-        //     return Err(("Expected a module name.", self.token().span.clone()));
-        // }
-        todo!()
+        let start = self.token().span[0];
+        let name;
+        self.advance(); // Move past @module.
+        if let Token {
+            span,
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+        } = self.token()
+        {
+            name = Identifier { value, span: *span };
+            self.advance(); // Move past module name.
+        } else {
+            return Err(("Expected a module name.", self.token().span));
+        }
+        let body = self.block()?;
+        let end = body.get_range()[1];
+        let module = Statement::Module(Module {
+            name,
+            body,
+            span: [start, end],
+        });
+        Ok(module)
     }
     fn unknown_injunction(&'a self) -> NodeOrError<Statement<'a>> {
-        Err(("Unknown injunction ", self.token().span.clone()))
+        Err(("Unknown injunction ", self.token().span))
     }
 }
 
@@ -744,21 +741,21 @@ impl<'a> Parser<'a> {
             Keyword::Recover => self.illegal("recover"),
             _ => Err((
                 "Unexpected keyword. Expected identifier or expression. ",
-                self.token().span.clone(),
+                self.token().span,
             )),
         }
     }
     /// Parse the condition of a while loop or an if statement.
     fn condition(&'a self) -> NodeOrError<Expression<'a>> {
         if !self.token().is_bracket(&BracketKind::LeftParenthesis) {
-            return Err(("Expected a (", self.token().span.clone()));
+            return Err(("Expected a (", self.token().span));
         }
-        self.advance();
+        self.advance(); // Move past (
         self.operators.borrow_mut().push(&Operator::Temp);
         let expression = self.expression()?;
         self.operators.borrow_mut().pop();
         if !self.token().is_bracket(&BracketKind::RightParenthesis) {
-            return Err(("Expected a )", self.token().span.clone()));
+            return Err(("Expected a )", self.token().span));
         }
         self.advance();
         Ok(expression)
@@ -776,7 +773,7 @@ impl<'a> Parser<'a> {
         Ok(Statement::BlockStatement(self.block()?))
     }
     fn block(&'a self) -> NodeOrError<Block<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past {
         let close = BracketKind::RightCurly;
         let mut statements = vec![];
@@ -785,9 +782,9 @@ impl<'a> Parser<'a> {
             statements.push(statement);
         }
         if self.end() {
-            return Err(("Expected a }", self.token().span.clone()));
+            return Err(("Expected a }", self.token().span));
         }
-        let end = self.token().span.clone()[1];
+        let end = self.token().span[1];
         self.advance(); // Move past }
         let block = Block {
             body: statements,
@@ -797,7 +794,7 @@ impl<'a> Parser<'a> {
     }
     /// Parse an if statement.
     fn if_statememt(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past the if.
         let test = self.condition()?;
         let body = self.consequent()?;
@@ -811,7 +808,7 @@ impl<'a> Parser<'a> {
         {
             self.advance();
             alternate = self.consequent()?;
-            end = self.token().span.clone()[0];
+            end = self.token().span[0];
             if_stat = Statement::IfStatement(IfStatement {
                 test,
                 body: Box::new(body),
@@ -819,7 +816,7 @@ impl<'a> Parser<'a> {
                 span: [start, end],
             });
         } else {
-            end = self.token().span.clone()[0];
+            end = self.token().span[0];
             if_stat = Statement::IfStatement(IfStatement {
                 test,
                 body: Box::new(body),
@@ -833,7 +830,7 @@ impl<'a> Parser<'a> {
         Ok(if_stat)
     }
     fn while_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past while.
         let test = self.condition()?;
         let body = self.consequent()?;
@@ -847,13 +844,13 @@ impl<'a> Parser<'a> {
     }
     /// Parses a print statement.
     fn print_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past print.
         let argument = self.expression()?;
         if !self.token().is_semi_colon() {
-            Err(("Expected a semicolon.", self.token().span.clone()))
+            Err(("Expected a semicolon.", self.token().span))
         } else {
-            let end = self.token().span.clone()[1];
+            let end = self.token().span[1];
             self.advance(); // Move past ;
             let print_stat = Statement::PrintLnStatement(PrintLnStatement {
                 argument,
@@ -864,20 +861,20 @@ impl<'a> Parser<'a> {
     }
     /// Parses a return statement.
     fn return_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past return.
         let argument;
         let end;
         if self.token().is_semi_colon() {
-            end = self.token().span.clone()[1];
+            end = self.token().span[1];
             self.advance();
             argument = None;
         } else {
             argument = Some(self.expression()?);
             if !self.token().is_semi_colon() {
-                return Err(("Expected a semicolon.", self.token().span.clone()));
+                return Err(("Expected a semicolon.", self.token().span));
             } else {
-                end = self.token().span.clone()[1];
+                end = self.token().span[1];
                 self.advance(); // Move past ;
             }
         }
@@ -889,7 +886,7 @@ impl<'a> Parser<'a> {
     }
     /// Parses a loop statement.
     fn loop_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past loop.
         let constraint;
         if self.token().is_bracket(&BracketKind::LeftParenthesis) {
@@ -911,12 +908,12 @@ impl<'a> Parser<'a> {
     }
     /// Parses a break statement.
     fn break_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance();
         if !self.token().is_semi_colon() {
-            return Err(("Expected a semicolon ", self.token().span.clone()));
+            return Err(("Expected a semicolon ", self.token().span));
         }
-        let end = self.token().span.clone()[1];
+        let end = self.token().span[1];
         self.advance();
         let break_stat = Statement::Break(Break {
             span: [start, end],
@@ -926,13 +923,13 @@ impl<'a> Parser<'a> {
     }
     /// Parses a crash statemnet.
     fn crash_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past crash.
         let argument = self.expression()?;
         if !self.token().is_semi_colon() {
-            return Err(("Expected a semicolon", self.token().span.clone()));
+            return Err(("Expected a semicolon", self.token().span));
         }
-        let end = self.token().span.clone()[1];
+        let end = self.token().span[1];
         self.advance();
         let crash_stat = Statement::CrashStmnt(CrashStatement {
             argument,
@@ -942,7 +939,7 @@ impl<'a> Parser<'a> {
     }
     /// Parses a try block.
     fn try_block(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past try.
         let body = self.block()?;
         let recoverblock;
@@ -970,7 +967,7 @@ impl<'a> Parser<'a> {
     }
     /// Parses a recover block.
     fn recover_block(&'a self) -> NodeOrError<RecoverBlock<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         self.advance(); // Move past recover.
         let params = self.parameters()?;
         let body = self.block()?;
@@ -984,11 +981,11 @@ impl<'a> Parser<'a> {
     }
     /// Parses a continue statement.
     fn continue_statement(&'a self) -> NodeOrError<Statement<'a>> {
-        let start = self.token().span.clone()[0];
+        let start = self.token().span[0];
         if !self.token().is_semi_colon() {
-            return Err(("Expected a semi_colon", self.token().span.clone()));
+            return Err(("Expected a semi_colon", self.token().span));
         }
-        let end = self.token().span.clone()[1];
+        let end = self.token().span[1];
         self.advance();
         let cont_stat = Statement::Continue(Continue {
             span: [start, end],
@@ -1003,15 +1000,15 @@ impl<'a> Parser<'a> {
             "recover" => "A recover statement must succede a try block.",
             _ => unreachable!(),
         };
-        Err((message, self.token().span.clone()))
+        Err((message, self.token().span))
     }
 }
 
-/// Functions and Types
+/// Functions
 impl<'a> Parser<'a> {
     fn parameters(&'a self) -> NodeOrError<Vec<Parameter<'a>>> {
         if !self.token().is_bracket(&BracketKind::LeftParenthesis) {
-            return Err((("Expected an ("), self.token().span.clone()));
+            return Err((("Expected an ("), self.token().span));
         }
         let mut parameters = vec![];
         self.advance(); // Move past (
@@ -1025,18 +1022,18 @@ impl<'a> Parser<'a> {
                 name = Identifier { value, span: *span };
                 self.advance();
             } else {
-                return Err(("Expected a parameter name", self.token().span.clone()));
+                return Err(("Expected a parameter name", self.token().span));
             }
             let label = self.maybe_type_label()?;
             let start = name.get_range()[0];
             let end;
             if self.token().is_comma() {
-                end = self.token().span.clone()[1];
+                end = self.token().span[1];
                 self.advance();
             } else if !self.token().is_bracket(&BracketKind::RightParenthesis) {
-                return Err(("Expected a )", self.token().span.clone()));
+                return Err(("Expected a )", self.token().span));
             } else {
-                end = self.token().span.clone()[0];
+                end = self.token().span[0];
             }
             let parameter = Parameter {
                 name,
@@ -1046,16 +1043,199 @@ impl<'a> Parser<'a> {
             parameters.push(parameter);
         }
         if self.end() {
-            return Err(("Expected an )", self.token().span.clone()));
+            return Err(("Expected an )", self.token().span));
         };
         self.advance();
         Ok(parameters)
     }
+}
+
+/// Types
+impl<'a> Parser<'a> {
+    /// Parse a generic label that may or may not exist.
+    fn maybe_generic_label(&'a self) -> NodeOrError<Option<Vec<GenericLabel>>> {
+        if !self.token().is_operator(&Operator::LessThan) {
+            return Ok(None);
+        }
+        Ok(Some(self.generic_labels()?))
+    }
+    /// Parse a return type that may or may not exist.
+    fn maybe_return_type(&'a self) -> NodeOrError<Option<Type>> {
+        if !self.token().is_operator(&Operator::Returns) {
+            return Ok(None);
+        }
+        Ok(Some(self.return_type()?))
+    }
+    /// Parses the generic labels of a function.
+    fn generic_labels(&'a self) -> NodeOrError<Vec<GenericLabel>> {
+        if !self.token().is_operator(&Operator::LessThan) {
+            return Err(("Expected a < here ", self.token().span));
+        }
+        self.advance(); // Move past <
+        let mut labels = vec![];
+        while !(self.end() || self.token().is_operator(&Operator::GreaterThan)) {
+            let label = self.generic_label()?;
+            labels.push(label);
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_operator(&Operator::GreaterThan) {
+                return Err(("Expected a > or , here", self.token().span));
+            }
+        }
+        if self.end() {
+            return Err(("Expected a > here ", self.token().span));
+        }
+        self.advance(); // Move past >
+        Ok(labels)
+    }
+    /// Parses a generic label.
+    fn generic_label(&'a self) -> NodeOrError<GenericLabel> {
+        let start;
+        let name;
+        let mut implements = vec![];
+        let end;
+        if let Token {
+            span,
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+        } = self.token()
+        {
+            name = Identifier { span: *span, value };
+            start = span[0];
+            self.advance();
+            if self.token().is_keyword(&Keyword::Implements) {
+                self.advance(); // Move past implements
+                while !(self.end()
+                    || self.token().is_comma()
+                    || self.token().is_operator(&Operator::GreaterThan))
+                {
+                    let implement;
+                    if let Token {
+                        span,
+                        kind: TokenKind::Identifier(TokenIdentifier { value }),
+                    } = self.token()
+                    {
+                        implement = Identifier { value, span: *span };
+                        self.advance(); // Move past interface name.
+                    } else {
+                        return Err(("Expected an interface name", self.token().span));
+                    }
+                    implements.push(implement);
+                    if self.token().is_operator(&Operator::Add) {
+                        self.advance();
+                    } else if !(self.token().is_comma()
+                        || self.token().is_operator(&Operator::GreaterThan))
+                    {
+                        return Err(("Unexpected token, expected + or >", self.token().span));
+                    }
+                }
+                if self.end() {
+                    return Err(("Expected a , or a >", self.token().span));
+                }
+                end = self.token().span[0];
+            } else {
+                end = name.get_range()[1];
+            }
+        } else {
+            return Err(("Expected a generic type name ", self.token().span));
+        }
+        let label = GenericLabel {
+            name,
+            implements: if implements.len() > 0 {
+                Some(implements)
+            } else {
+                None
+            },
+            span: [start, end],
+        };
+        Ok(label)
+    }
+    /// Parses a return type signature.
+    fn return_type(&'a self) -> NodeOrError<Type> {
+        if !self.token().is_operator(&Operator::Returns) {
+            return Err(("Expected a return type arrow -> ", self.token().span));
+        }
+        self.advance(); // Move past ->
+        self.type_label()
+    }
+    /// Parses a type label that may or may not exist.
     fn maybe_type_label(&'a self) -> NodeOrError<Option<Type>> {
         if self.token().is_colon() {
-            todo!()
+            self.advance(); // Move past label :.
+            Ok(Some(self.type_label()?))
         } else {
             Ok(None)
         }
+    }
+    /// Parses a type label.
+    fn type_label(&'a self) -> NodeOrError<Type> {
+        if self.token().is_operator(&Operator::LessThan)
+            || self.token().is_bracket(&BracketKind::LeftParenthesis)
+        {
+            self.functional_type()
+        } else {
+            self.concrete_type()
+        }
+    }
+    fn functional_type(&'a self) -> NodeOrError<Type> {
+        let start = self.token().span[0];
+        let labels;
+        if self.token().is_bracket(&BracketKind::LeftParenthesis) {
+            labels = None;
+        } else {
+            labels = Some(self.generic_labels()?);
+        }
+        let parameters = self.parameters()?;
+        let return_type = Box::new(self.return_type()?);
+        let end = return_type.get_range()[1];
+        let func_type = Type {
+            kind: TypeKind::Functional {
+                parameters,
+                return_type,
+                labels,
+            },
+            span: [start, end],
+        };
+        Ok(func_type)
+    }
+    fn concrete_type(&'a self) -> NodeOrError<Type> {
+        let start;
+        let name;
+        let end;
+        let mut arguments = vec![];
+        if let Token {
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+            span,
+        } = self.token()
+        {
+            name = Identifier { value, span: *span };
+            start = span[0];
+            self.advance();
+        } else {
+            return Err(("Expected a type name ", self.token().span));
+        }
+        if self.token().is_operator(&Operator::LessThan) {
+            self.advance(); // Move past <
+            while !(self.end() || self.token().is_operator(&Operator::GreaterThan)) {
+                let argument = self.concrete_type()?;
+                if self.token().is_comma() {
+                    self.advance();
+                } else if !self.token().is_operator(&Operator::GreaterThan) {
+                    return Err(("Expected a > or a ,", self.token().span));
+                }
+                arguments.push(argument);
+            }
+            if self.end() {
+                return Err(("Expected a > ", self.token().span));
+            }
+            end = self.token().span[1];
+            self.advance();
+        } else {
+            end = name.get_range()[1];
+        }
+        let conc_type = Type {
+            kind: TypeKind::Concrete { name, arguments },
+            span: [start, end],
+        };
+        Ok(conc_type)
     }
 }

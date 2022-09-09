@@ -13,13 +13,15 @@ The Pebble core library is a set of functions, interfaces and classes that are m
 
 ---
 
-### `assert.isEqual: <T>(item: T, item2: T) -> Nil`
+### `assert.isEqual: <T implements Equatable>(item: T, item2: T) -> Nil`
 
 ---
 
-### `assert.isUnequal: <T>(condtion: Boolean) -> Nil`
+### `assert.isUnequal: <T implements Equatable>(condtion: Boolean) -> Nil`
 
 ---
+
+### `assert.isGreater: <T implements Comparison>(left: T, right: T)`
 
 ### `assert.calls: (f: Function, times: UnsignedInt) -> Nil`
 
@@ -73,6 +75,12 @@ The Pebble core library is a set of functions, interfaces and classes that are m
 
 ---
 
+### `process.exit: (code: UnsignedInt) -> Nil`
+
+Terminates the current program with an error code.
+
+---
+
 ---
 
 <br>
@@ -94,6 +102,18 @@ The Pebble core library is a set of functions, interfaces and classes that are m
 <br>
 
 ## `fs`
+
+### `fs.FileBuffer`
+
+#### `FileBuffer.toString: () -> String`
+
+### `fs.readFile: () -> FileBuffer`
+
+### `fs.deleteFile: (path: String) -> Result<Nil, FileSystemError>`
+
+### `fs.copyFile: (source_path: String, dest_path: String) -> Result<Nil, FileSystemError>`
+
+### `fs.makeDirectory: (path: String) -> Result<Nil, FileSystemError>`
 
 ---
 
@@ -181,11 +201,25 @@ The base class for dealing with the creation, utilization and formatting of text
 
 #### `String.length: UnsignedInt`
 
+#### `String.isEmpty: Boolean`
+
 #### `String.pushString: (str: String) -> Nil`
 
 #### `String.pushChar: (char: Char) -> Nil`
 
+#### `String.popChar: () -> Option<Char>`
+
 #### `String.contains: (str: String) -> Boolean`
+
+#### `String.toLowerCase: () -> String`
+
+#### `String.toUpperCase: () -> String`
+
+#### `String.toCapitalCase: () -> String`
+
+#### `String.toToggleCase: () -> String`
+
+#### `String.toCamelCase: () -> String`
 
 #### `String.startsWith: (str: String) -> Boolean`
 
@@ -195,9 +229,21 @@ The base class for dealing with the creation, utilization and formatting of text
 
 #### `String.trimEnd: (str: String) -> String`
 
+#### `String.padStart: (index: UnsignedInt) -> String`
+
+#### `String.padEnd: (index: UnsignedInt) -> String`
+
 #### `String.chars: () -> Iterator<Char>`
 
+#### `String.charAt: (index: UnsignedInt) -> Option<Char>`
+
+#### `String.overwrite: (substring: String, substitute: String) -> String`
+
+#### `String.charCodeAt: (index: UnsignedInt) -> Option<Number>`
+
 #### `String.slice: (start: Integer, end: Integer) -> String`
+
+#### `String.split: (separator: String) -> Iterator<String>`
 
 ---
 
@@ -211,15 +257,23 @@ The base class for character data in Pebble.
 
 #### `Char.code: Number`
 
+#### `Char.utf8: () -> Number`
+
 ---
 
 ### `prelude.Number`
 
 The base class for dealing with numeric values of any kind. It is a wrapper around the [`UnsignedInt`](#preludeunsignedint), [`Float`](#preludefloat) and [`Integer`](#preludeinteger) classes.
 
-#### `Number.toString: () -> Result<String, ParseError>`
+#### `Number.toString: (radix: UnsignedInt) -> Result<String, ParseError>`
 
 #### `Number.approx: (precision: UnsignedInt) -> Number`
+
+#### `Number.toFloat: () -> Float`
+
+#### `Number.toUnsignedInt: () -> UnsignedInt`
+
+#### `Number.toInteger: () -> Integer`
 
 ### `prelude.UnsignedInt`
 
@@ -290,6 +344,18 @@ The base class for dealing with numeric values of any kind. It is a wrapper arou
 <br>
 
 ## `internals`
+
+---
+
+---
+
+<br>
+
+## `dynamic`
+
+---
+
+### `dynamic.ALL: Any`
 
 ---
 

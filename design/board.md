@@ -13,7 +13,7 @@
 13. Numbers can either be Hexadecimal, decimal, octal or binary.
 14. There is only one self pointer.
 15. A record cannot consist of runtime values. All keys and values must be known at compile time.
-16. Constant structs cannot call mutative methods from within function scopes other than the ones in which they were defined.
+16. Constant structs cannot call mutative methods.
 17. Test blocks can only be defined at the top level of modules or files.
 18. On no circumstance should it be possible to assign a variable or constant to nil.
 19. Variables are passed by reference.

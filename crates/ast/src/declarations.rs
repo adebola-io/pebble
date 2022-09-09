@@ -11,10 +11,17 @@ use crate::{Block, Expression, Identifier, Location, Statement, TextSpan, TextSt
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct Function<'a> {
     pub name: Identifier<'a>,
-    pub label: Option<Type<'a>>,
+    pub labels: Option<Vec<GenericLabel<'a>>>,
     pub parameters: Vec<Parameter<'a>>,
     pub return_type: Option<Type<'a>>,
     pub body: Block<'a>,
+    pub span: TextSpan,
+}
+
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct GenericLabel<'a> {
+    pub name: Identifier<'a>,
+    pub implements: Option<Vec<Identifier<'a>>>,
     pub span: TextSpan,
 }
 
@@ -35,6 +42,7 @@ pub struct Parameter<'a> {
 /// ```
 #[derive(Location, Clone, Debug, PartialEq)]
 pub struct Module<'a> {
+    pub name: Identifier<'a>,
     pub body: Block<'a>,
     pub span: TextSpan,
 }

@@ -7,10 +7,11 @@ use crate::{
     scanner::Scanner,
 };
 use ast::{
-    Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, Identifier,
-    IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop, Operator, Parameter,
-    PrependStatement, PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement, Statement,
-    TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock, UseImport, WhileStatement,
+    Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, Function,
+    Identifier, IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop, Operator,
+    Parameter, PrependStatement, PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement,
+    Statement, TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind,
+    UseImport, WhileStatement,
 };
 
 #[test]
@@ -1194,6 +1195,89 @@ fn it_parses_use_import() {
                 span: [[1, 82], [1, 96]]
             },
             span: [[1, 1], [1, 97]]
+        })
+    )
+}
+
+#[test]
+fn it_parses_plain_function() {
+    let mut scanner = Scanner::new(
+        " 
+    @function add (x: Number, y: Number) -> Number {
+        return x + y;
+    }",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let statements = parser.statements.borrow().clone();
+    assert_eq!(
+        statements[0],
+        Statement::Function(Function {
+            name: Identifier {
+                value: "add",
+                span: [[2, 15], [2, 18]]
+            },
+            labels: None,
+            parameters: vec![
+                Parameter {
+                    name: Identifier {
+                        value: "x",
+                        span: [[2, 20], [2, 21]]
+                    },
+                    label: Some(Type {
+                        kind: TypeKind::Concrete {
+                            name: Identifier {
+                                value: "Number",
+                                span: [[2, 23], [2, 29]]
+                            },
+                            arguments: vec![]
+                        },
+                        span: [[2, 23], [2, 29]]
+                    }),
+                    span: [[2, 20], [2, 30]]
+                },
+                Parameter {
+                    name: Identifier {
+                        value: "y",
+                        span: [[2, 31], [2, 32]]
+                    },
+                    label: Some(Type {
+                        kind: TypeKind::Concrete {
+                            name: Identifier {
+                                value: "Number",
+                                span: [[2, 34], [2, 40]]
+                            },
+                            arguments: vec![]
+                        },
+                        span: [[2, 34], [2, 40]]
+                    }),
+                    span: [[2, 31], [2, 40]]
+                }
+            ],
+            return_type: Some(Type {
+                kind: TypeKind::Concrete {
+                    name: Identifier {
+                        value: "Number",
+                        span: [[2, 45], [2, 51]]
+                    },
+                    arguments: vec![]
+                },
+                span: [[2, 45], [2, 51]]
+            }),
+            body: Block {
+                body: vec![Statement::ReturnStatement(ReturnStatement {
+                    argument: Some(Expression::create_bin_expr(
+                        Expression::create_ident_expr("x", [[3, 16], [3, 17]]),
+                        &Operator::Add,
+                        Expression::create_ident_expr("y", [[3, 20], [3, 21]]),
+                    )),
+                    span: [[3, 9], [4, 0]]
+                })],
+                span: [[2, 52], [4, 5]]
+            },
+            span: [[2, 5], [4, 5]]
         })
     )
 }
