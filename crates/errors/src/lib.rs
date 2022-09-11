@@ -64,6 +64,16 @@ impl Display for SyntaxError {
     }
 }
 
+pub enum TypeError {
+    UnsupportedAddOperation,
+    UnsupportedSubtractOperation,
+    UnsupportedMultiplyOperation,
+    InconsistentAssignment,
+    InconsistentInitializer,
+    UnusedVariable,
+    AssigningToNil,
+}
+
 impl Error {
     pub fn scanner_error(error_code: i32) -> &'static str {
         match error_code {

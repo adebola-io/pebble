@@ -7,12 +7,12 @@ use crate::{
     scanner::Scanner,
 };
 use ast::{
-    ArrayExpression, Block, BracketKind, Break, CallExpression, Comment, CommentKind,
+    ArrayExpression, Block, BracketKind, Break, CallExpression, Comment, CommentKind, ConcreteType,
     CrashStatement, Expression, FnExpression, Function, Identifier, IfStatement, Import,
     Injunction, Keyword, Literal, LiteralKind, Loop, Operator, Parameter, PrependStatement,
     PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextString,
-    Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind, UseImport, VarKind,
-    VariableDeclaration, WhileStatement,
+    Token, TokenIdentifier, TokenKind, TryBlock, Type, UseImport, VarKind, VariableDeclaration,
+    WhileStatement,
 };
 
 #[test]
@@ -1227,20 +1227,15 @@ fn it_parses_plain_function() {
                         value: "x",
                         span: [[2, 20], [2, 21]]
                     },
-                    label: Some(Type {
-                        kind: TypeKind::Concrete {
-                            name: Identifier {
-                                value: "Number",
-                                span: [[2, 23], [2, 29]]
-                            },
-                            objects: vec![Identifier {
-                                value: "Number",
-                                span: [[2, 23], [2, 29]]
-                            }],
-                            arguments: vec![]
+                    label: Some(Type::Concrete(ConcreteType {
+                        name: Identifier {
+                            value: "Number",
+                            span: [[2, 23], [2, 29]]
                         },
+                        arguments: vec![],
+
                         span: [[2, 23], [2, 29]]
-                    }),
+                    })),
                     span: [[2, 20], [2, 30]]
                 },
                 Parameter {
@@ -1248,37 +1243,25 @@ fn it_parses_plain_function() {
                         value: "y",
                         span: [[2, 31], [2, 32]]
                     },
-                    label: Some(Type {
-                        kind: TypeKind::Concrete {
-                            name: Identifier {
-                                value: "Number",
-                                span: [[2, 34], [2, 40]]
-                            },
-                            objects: vec![Identifier {
-                                value: "Number",
-                                span: [[2, 34], [2, 40]]
-                            }],
-                            arguments: vec![]
+                    label: Some(Type::Concrete(ConcreteType {
+                        name: Identifier {
+                            value: "Number",
+                            span: [[2, 34], [2, 40]]
                         },
+                        arguments: vec![],
                         span: [[2, 34], [2, 40]]
-                    }),
+                    })),
                     span: [[2, 31], [2, 40]]
                 }
             ],
-            return_type: Some(Type {
-                kind: TypeKind::Concrete {
-                    name: Identifier {
-                        value: "Number",
-                        span: [[2, 45], [2, 51]]
-                    },
-                    objects: vec![Identifier {
-                        value: "Number",
-                        span: [[2, 45], [2, 51]]
-                    }],
-                    arguments: vec![]
+            return_type: Some(Type::Concrete(ConcreteType {
+                name: Identifier {
+                    value: "Number",
+                    span: [[2, 45], [2, 51]]
                 },
+                arguments: vec![],
                 span: [[2, 45], [2, 51]]
-            }),
+            })),
             body: Block {
                 body: vec![Statement::ReturnStatement(ReturnStatement {
                     argument: Some(Expression::create_bin_expr(
@@ -1351,20 +1334,14 @@ fn it_parses_let_statement() {
                 value: "Akomolafe",
                 span: [[1, 21], [1, 31]]
             })),
-            type_label: Some(Type {
-                kind: TypeKind::Concrete {
-                    name: Identifier {
-                        value: "String",
-                        span: [[1, 12], [1, 18]]
-                    },
-                    objects: vec![Identifier {
-                        value: "String",
-                        span: [[1, 12], [1, 18]]
-                    }],
-                    arguments: vec![]
+            type_label: Some(Type::Concrete(ConcreteType {
+                name: Identifier {
+                    value: "String",
+                    span: [[1, 12], [1, 18]]
                 },
+                arguments: vec![],
                 span: [[1, 12], [1, 18]]
-            }),
+            })),
             span: [[1, 1], [1, 31]]
         })
     )
@@ -1400,33 +1377,22 @@ fn it_parses_const_statement() {
                 ],
                 span: [[1, 35], [1, 59]]
             })),
-            type_label: Some(Type {
-                kind: TypeKind::Concrete {
-                    name: Identifier {
-                        value: "ArrayList",
-                        span: [[1, 15], [1, 24]]
-                    },
-                    objects: vec![Identifier {
-                        value: "ArrayList",
-                        span: [[1, 15], [1, 24]]
-                    },],
-                    arguments: vec![Type {
-                        kind: TypeKind::Concrete {
-                            name: Identifier {
-                                value: "String",
-                                span: [[1, 25], [1, 31]]
-                            },
-                            objects: vec![Identifier {
-                                value: "String",
-                                span: [[1, 25], [1, 31]]
-                            }],
-                            arguments: vec![]
-                        },
-                        span: [[1, 25], [1, 31]]
-                    }]
+            type_label: Some(Type::Concrete(ConcreteType {
+                name: Identifier {
+                    value: "ArrayList",
+                    span: [[1, 15], [1, 24]]
                 },
+                arguments: vec![Type::Concrete(ConcreteType {
+                    name: Identifier {
+                        value: "String",
+                        span: [[1, 25], [1, 31]]
+                    },
+                    arguments: vec![],
+                    span: [[1, 25], [1, 31]]
+                }),],
                 span: [[1, 15], [1, 32]]
-            }),
+            })),
+
             span: [[1, 1], [1, 59]]
         })
     )

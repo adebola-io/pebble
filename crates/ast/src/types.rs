@@ -1,50 +1,77 @@
+use macros::Location;
+
 use crate::{GenericArgument, Identifier, Location, Parameter, TextSpan};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Type<'a> {
-    pub kind: TypeKind<'a>,
-    pub span: TextSpan,
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum TypeKind<'a> {
-    /// Types that imply classes or enums. e.g. `a: String` or `b: UnsignedInt`
-    Concrete {
-        name: Identifier<'a>,
-        objects: Vec<Identifier<'a>>,
-        arguments: Vec<Type<'a>>,
-    },
-    /// Types that imply functions. e.g. `a: () -> Nil` or `b: <T>(a: T) -> T`
-    Functional {
-        parameters: Vec<Parameter<'a>>,
-        return_type: Box<Type<'a>>,
-        generic_arguments: Option<Vec<GenericArgument<'a>>>,
-    },
+pub enum Type<'a> {
+    Concrete(ConcreteType<'a>),
+    Function(FunctionType<'a>),
+    Dot(DotType<'a>),
 }
 
 impl Type<'_> {
-    fn is_functional_type(&self) -> bool {
-        matches!(
-            self,
-            Type {
-                kind: TypeKind::Functional { .. },
-                ..
-            }
-        )
+    /// Returns `true` if the type is [`Dot`].
+    ///
+    /// [`Dot`]: Type::Dot
+    pub fn is_dot(&self) -> bool {
+        matches!(self, Self::Dot(..))
     }
-    fn is_concrete_type(&self) -> bool {
-        matches!(
-            self,
-            Type {
-                kind: TypeKind::Concrete { .. },
-                ..
-            }
-        )
+
+    /// Returns `true` if the type is [`Concrete`].
+    ///
+    /// [`Concrete`]: Type::Concrete
+    pub fn is_concrete(&self) -> bool {
+        matches!(self, Self::Concrete(..))
+    }
+
+    /// Returns `true` if the type is [`Function`].
+    ///
+    /// [`Function`]: Type::Function
+    pub fn is_function(&self) -> bool {
+        matches!(self, Self::Function(..))
+    }
+}
+
+impl<'a> Type<'a> {
+    pub fn create_dot_type(object: Self, property: Self) -> Self {
+        let span = [object.get_range()[0], property.get_range()[1]];
+        Type::Dot(DotType {
+            levels: vec![object, property],
+            span,
+        })
     }
 }
 
 impl Location for Type<'_> {
     fn get_range(&self) -> TextSpan {
-        self.span
+        match self {
+            Type::Concrete(ConcreteType { span, .. })
+            | Type::Function(FunctionType { span, .. })
+            | Type::Dot(DotType { span, .. }) => *span,
+        }
     }
+}
+
+/// Types that imply classes or enums. e.g. `a: String` or `b: Stack<UnsignedInt>`
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct ConcreteType<'a> {
+    pub name: Identifier<'a>,
+    pub arguments: Vec<Type<'a>>,
+    pub span: TextSpan,
+}
+
+/// Types that imply functions. e.g. `a: () -> Nil` or `b: <T>(a: T) -> T`
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct FunctionType<'a> {
+    pub parameters: Vec<Parameter<'a>>,
+    pub return_type: Box<Type<'a>>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
+    pub span: TextSpan,
+}
+
+/// Types that are children of external modules or files. e.g. `a: core.prelude.String`
+#[derive(Location, Clone, Debug, PartialEq)]
+pub struct DotType<'a> {
+    pub levels: Vec<Type<'a>>,
+    pub span: TextSpan,
 }

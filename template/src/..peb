@@ -1,6 +1,12 @@
-@function main() {
-   println "Hello, world!";
+@public @module core {
+   @public @module fs {
+        ## Reads the content of a file into a string.
+        @public @function readToString(p: Path) -> Result<String, FileSystemError> {
+
+        }
+        ## Deletes a file from the system.
+        @public @function deleteFile(p: Path) -> Result<Nil, FileSystemError> {
+
+        }
+    }
 }
-
-main();
-
