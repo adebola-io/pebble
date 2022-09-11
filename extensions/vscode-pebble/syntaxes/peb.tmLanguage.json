@@ -164,6 +164,7 @@
         "type": {
             "patterns": [
                 { "include": "#type_name" },
+                { "include": "#comment" },
                 { "include": "#type_argument" }
             ]
         },
@@ -173,7 +174,7 @@
         },
         "type_argument": {
             "begin": "\\<\\s*",
-            "patterns": [{ "include": "#type" }],
+            "patterns": [{ "include": "#type" }, { "include": "#comment" }],
             "end": "\\>"
         },
         "instantiator": {

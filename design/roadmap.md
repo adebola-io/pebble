@@ -44,6 +44,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [ ] Parse call expression with type argument
 -   [x] Parse functional expression
 -   [x] Parse if statement
+-   [x] Parse for statement
 -   [x] Parse else block
 -   [x] Parse while statement
 -   [x] Parse loop statement

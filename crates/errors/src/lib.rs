@@ -37,6 +37,7 @@ pub enum SyntaxError {
     ExpectedIdentifier,
     ExpectedAs,
     ExpectedFrom,
+    ExpectedIn,
     ExpectedSemiColon,
     ExpectedColon,
     ExpectedFunctionArgument,
@@ -55,7 +56,7 @@ pub enum SyntaxError {
     UnrecognizedInjunction,
     UnexpectedOperator,
     UnexpectedKeyword,
-    IfDeclaration,
+    IllegalDeclaration,
 }
 
 impl Display for SyntaxError {

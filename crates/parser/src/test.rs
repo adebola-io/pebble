@@ -1483,3 +1483,19 @@ fn it_parses_class() {
     parser.parse();
     assert_eq!(parser.diagnostics, RefCell::new(vec![]))
 }
+
+#[test]
+fn it_parses_for_statement() {
+    let mut scanner = Scanner::new(
+        "
+    for (stuff in arr.iter()) {
+        doStuff(stuff);
+    }   
+    ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics, RefCell::new(vec![]))
+}

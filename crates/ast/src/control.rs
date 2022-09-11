@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use macros::Location;
 
-use crate::{Expression, Location, Parameter, Statement, TextSpan};
+use crate::{Expression, Identifier, Location, Parameter, Statement, TextSpan};
 
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct TryBlock<'a> {
@@ -42,6 +42,20 @@ pub struct Block<'a> {
 pub struct Loop<'a> {
     pub constraint: Option<Expression<'a>>,
     pub body: Block<'a>,
+    pub span: TextSpan,
+}
+
+/// A for loop statement, with the form:
+/// ```pebble
+/// for (item in iterator) {
+///     doStuffWithItem(item);
+/// }
+/// ```
+/// The block can be replaced with a single statement.
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct ForLoop<'a> {
+    pub item: Identifier<'a>,
+    pub iterator: Expression<'a>,
     pub span: TextSpan,
 }
 

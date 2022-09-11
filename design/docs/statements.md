@@ -101,7 +101,8 @@ A function is an enclosed block of code that performs an action and return a val
 
 ```pebble
 ## Adds two numbers together.
-@function add(m: Number, n: Number) -> Number {
+@function add(m: Number, n: Number) -> Number
+{
     @let sum = m + n;
     return sum;
 }
@@ -111,7 +112,8 @@ println add(2, 2); // Will print out 4.
 
 ```pebble
 ## Prints a greeting.
-@function greet() {
+@function greet()
+{
     println "Hello, world!";
 }
 
@@ -140,7 +142,8 @@ Other things that may not be noticed from the examples but are equally important
 
 ```pebble
     ## Subtracts from a number.
-    @function subtract(x: Number, y: Number) -> Number {
+    @function subtract(x: Number, y: Number) -> Number
+    {
         x = x - y; ❌
         return x;
     }
@@ -148,7 +151,8 @@ Other things that may not be noticed from the examples but are equally important
 
 ```pebble
     ## Subtracts from a number.
-    @function subtract(x: Number, y: Number) -> Number {
+    @function subtract(x: Number, y: Number) -> Number
+    {
         @let z = x - y; ✔️
         return z;
     }
@@ -159,7 +163,8 @@ Other things that may not be noticed from the examples but are equally important
 ```pebble
 @let name = "Sefunmi";
 
-@function getName() {
+@function getName()
+{
     println name; ❌
 }
 ```
@@ -167,7 +172,8 @@ Other things that may not be noticed from the examples but are equally important
 ```pebble
 @const name = "Sefunmi";
 
-@function getName() {
+@function getName()
+{
     println name; ✔️
 }
 ```

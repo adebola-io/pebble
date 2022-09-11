@@ -3,12 +3,12 @@ use std::{cell::RefCell, marker::PhantomData};
 use crate::scanner::Scanner;
 use ast::{
     precedence_of, ArrayExpression, Block, BracketKind, Break, Class, ConcreteType, Continue,
-    CrashStatement, Expression, FnExpression, Function, FunctionType, GenericArgument, Identifier,
-    IfStatement, Import, Injunction, Interface, Keyword, Literal, LiteralKind, Location, Loop,
-    Module, Operator, Parameter, PrependStatement, PrintLnStatement, Property, PublicModifier,
-    Punctuation, RecoverBlock, ReturnStatement, SelfExpression, Statement, TestBlock, TextSpan,
-    TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeAlias, UseImport, VarKind,
-    VariableDeclaration, WhileStatement,
+    CrashStatement, Expression, FnExpression, ForLoop, Function, FunctionType, GenericArgument,
+    Identifier, IfStatement, Import, Injunction, Interface, Keyword, Literal, LiteralKind,
+    Location, Loop, Module, Operator, Parameter, PrependStatement, PrintLnStatement, Property,
+    PublicModifier, Punctuation, RecoverBlock, ReturnStatement, SelfExpression, Statement,
+    TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeAlias,
+    UseImport, VarKind, VariableDeclaration, WhileStatement,
 };
 use errors::SyntaxError;
 use utils::Stack;
@@ -106,6 +106,7 @@ impl<'a> Parser<'a> {
                     // Errors are checked at the statement boundary.
                     // If an error is found while parsing, the parser stores it, skips over till it finds the next statement, then continues parsing from there.
                     self.store_error(e);
+                    self.advance();
                     while !(self.end()
                         || self.token().is_semi_colon()
                         || self.token().is_comment()
@@ -165,7 +166,7 @@ impl<'a> Parser<'a> {
             }
             _ => {
                 println!("{:?}", self.token());
-                todo!()
+                Err((SyntaxError::ExpectedExpression, self.token().span))
             }
         }
     }
@@ -997,6 +998,7 @@ impl<'a> Parser<'a> {
             Keyword::Println => self.print_statement(),
             Keyword::While => self.while_statement(),
             Keyword::Return => self.return_statement(),
+            Keyword::For => self.for_statement(),
             Keyword::Crash => self.crash_statement(),
             Keyword::Loop => self.loop_statement(),
             Keyword::Break => self.break_statement(),
@@ -1022,7 +1024,7 @@ impl<'a> Parser<'a> {
         self.advance();
         Ok(expression)
     }
-    /// Parse the consequent of a while loop or an if statement.
+    /// Parse the consequent of a while loop, a for statement or an if statement.
     fn consequent(&'a self) -> NodeOrError<Statement<'a>> {
         if self.token().is_bracket(&BracketKind::LeftCurly) {
             self.block_statement()
@@ -1061,7 +1063,7 @@ impl<'a> Parser<'a> {
         let test = self.condition()?;
         let body = self.consequent()?;
         if body.is_declaration() {
-            return Err((SyntaxError::IfDeclaration, body.get_range()));
+            return Err((SyntaxError::IllegalDeclaration, body.get_range()));
         };
         let if_stat;
         let end;
@@ -1074,7 +1076,7 @@ impl<'a> Parser<'a> {
             self.advance();
             alternate = self.consequent()?;
             if alternate.is_declaration() {
-                return Err((SyntaxError::IfDeclaration, alternate.get_range()));
+                return Err((SyntaxError::IllegalDeclaration, alternate.get_range()));
             };
             end = self.token().span[0];
             if_stat = Statement::IfStatement(IfStatement {
@@ -1151,6 +1153,50 @@ impl<'a> Parser<'a> {
             span: [start, end],
         });
         Ok(ret_stat)
+    }
+    /// Parses a for statement.
+    fn for_statement(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span[0];
+        self.advance(); // Move past for.
+        let (item, iterator) = self.for_condition()?;
+        let body = self.consequent()?;
+        if body.is_declaration() {
+            return Err((SyntaxError::IllegalDeclaration, self.token().span));
+        }
+        let end = body.get_range()[1];
+        let for_stat = Statement::ForStatement(ForLoop {
+            item,
+            iterator,
+            span: [start, end],
+        });
+        Ok(for_stat)
+    }
+    fn for_condition(&'a self) -> NodeOrError<(Identifier<'a>, Expression<'a>)> {
+        if !self.token().is_bracket(&BracketKind::LeftParenthesis) {
+            return Err((SyntaxError::ExpectedLParen, self.token().span));
+        }
+        self.advance(); // Move past (
+        let item;
+        if let Token {
+            span,
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+        } = self.token()
+        {
+            item = Identifier { value, span: *span };
+            self.advance(); // Move past identifier name.
+        } else {
+            return Err((SyntaxError::ExpectedIdentifier, self.token().span));
+        }
+        if !self.token().is_keyword(&Keyword::In) {
+            return Err((SyntaxError::ExpectedIn, self.token().span));
+        }
+        self.advance();
+        let iterator = self.expression()?;
+        if !self.token().is_bracket(&BracketKind::RightParenthesis) {
+            return Err((SyntaxError::ExpectedRParen, self.token().span));
+        }
+        self.advance(); // Move past )
+        Ok((item, iterator))
     }
     /// Parses a loop statement.
     fn loop_statement(&'a self) -> NodeOrError<Statement<'a>> {
