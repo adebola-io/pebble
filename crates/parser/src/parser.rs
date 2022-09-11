@@ -5,10 +5,10 @@ use ast::{
     precedence_of, ArrayExpression, Block, BracketKind, Break, Class, ConcreteType, Continue,
     CrashStatement, Expression, FnExpression, ForLoop, Function, FunctionType, GenericArgument,
     Identifier, IfStatement, Import, Injunction, Interface, Keyword, Literal, LiteralKind,
-    Location, Loop, Module, Operator, Parameter, PrependStatement, PrintLnStatement, Property,
-    PublicModifier, Punctuation, RecoverBlock, ReturnStatement, SelfExpression, Statement,
-    TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeAlias,
-    UseImport, VarKind, VariableDeclaration, WhileStatement,
+    Location, Loop, Mapping, Module, Operator, Parameter, PrependStatement, PrintLnStatement,
+    Property, PublicModifier, Punctuation, Record, RecoverBlock, ReturnStatement, SelfExpression,
+    Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type,
+    TypeAlias, UseImport, VarKind, VariableDeclaration, WhileStatement,
 };
 use errors::SyntaxError;
 use utils::Stack;
@@ -532,7 +532,7 @@ impl<'a> Parser<'a> {
             Injunction::Function => self.function_declaration(),
             Injunction::Type => self.type_alias(),
             Injunction::Class => self.class_declaration(),
-            Injunction::Record => todo!(),
+            Injunction::Record => self.record_declaration(),
             Injunction::Const => self.variable_declaration("const"),
             Injunction::Let => self.variable_declaration("let"),
             Injunction::Use => self.use_import(),
@@ -545,6 +545,20 @@ impl<'a> Parser<'a> {
             Injunction::Public => self.public_statement(),
             Injunction::Unknown(_) => self.unknown_injunction(),
         }
+    }
+    fn get_identifer(&'a self) -> NodeOrError<Identifier<'a>> {
+        let name;
+        if let Token {
+            span,
+            kind: TokenKind::Identifier(TokenIdentifier { value }),
+        } = self.token()
+        {
+            name = Identifier { value, span: *span }
+        } else {
+            return Err((SyntaxError::ExpectedIdentifier, self.token().span));
+        }
+        self.advance();
+        Ok(name)
     }
     /// Parses a function decalaration.
     fn function_declaration(&'a self) -> NodeOrError<Statement<'a>> {
@@ -629,6 +643,51 @@ impl<'a> Parser<'a> {
             span: [start, end],
         });
         Ok(type_alias)
+    }
+    fn record_declaration(&'a self) -> NodeOrError<Statement<'a>> {
+        self.advance(); // Move past @record
+        let name = self.get_identifer()?;
+        if !self.token().is_bracket(&BracketKind::LeftCurly) {
+            return Err((SyntaxError::ExpectedLCurly, self.token().span));
+        }
+        self.advance(); // Move past {
+        let mut mappings = vec![];
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightCurly)) {
+            let mapping = self.record_mapping()?;
+            mappings.push(mapping);
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightCurly) {
+                return Err((SyntaxError::ExpectedCommaOrRCurly, self.token().span));
+            }
+        }
+        if self.end() {
+            return Err((SyntaxError::ExpectedRCurly, self.token().span));
+        }
+        let span = [name.get_range()[0], self.token().span[1]];
+        self.advance();
+        let rec = Statement::Record(Record {
+            name,
+            mappings,
+            span,
+        });
+        Ok(rec)
+    }
+    fn record_mapping(&'a self) -> NodeOrError<Mapping<'a>> {
+        let key = self.expression()?;
+        if !self.token().is_operator(&Operator::Returns) {
+            return Err((SyntaxError::ExpectedArrow, self.token().span));
+        }
+        self.advance(); // Move past ->
+        let value = self.expression()?;
+        if !(key.is_literal() && value.is_literal()) {
+            return Err((
+                SyntaxError::DynamicRecordMap,
+                [key.get_range()[0], value.get_range()[1]],
+            ));
+        }
+        let span = [key.get_range()[0], value.get_range()[1]];
+        Ok(Mapping { key, value, span })
     }
     /// Parses a variable declaration, either const or let.
     fn variable_declaration(&'a self, var_type: &str) -> NodeOrError<Statement<'a>> {

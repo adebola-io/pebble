@@ -201,6 +201,18 @@ impl<'a> Expression<'a> {
     pub fn is_character_expr(&self) -> bool {
         matches!(self, Self::CharacterExpression(_))
     }
+
+    pub fn is_literal(&self) -> bool {
+        if let Self::StringExpression(_)
+        | Self::BooleanExpression(_)
+        | Self::NumericExpression(_)
+        | Self::CharacterExpression(_) = self
+        {
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl<'a> Expression<'a> {

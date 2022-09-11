@@ -1,8 +1,9 @@
 {
     // "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
     // "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
-    "editor.fontFamily": "'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "GitHub Dark",
+    // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
+    "editor.fontFamily": "'Cascadia Code', 'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "Nord",
     "workbench.iconTheme": "vscode-icons",
     "workbench.colorCustomizations": {
         "editorInlayHint.background": "#00000000",

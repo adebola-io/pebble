@@ -57,7 +57,7 @@ Below is the roadmap for the development of Pebble. Done items are marked.
 -   [x] Parse empty statement
 -   [x] Parse let declaration
 -   [x] Parse constant declaration
--   [ ] Parse record declaration
+-   [x] Parse record declaration
 -   [x] Parse function declaration
 -   [x] Parse type declaration
 -   [x] Parse class declaration

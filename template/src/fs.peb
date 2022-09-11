@@ -1,0 +1,58 @@
+## Exposes basic functionality for interacting with the file system of the host machine.
+@public @module fs {
+    @use { Error, ErrorInterface, getStackTrace } from "./errors.peb";
+    @use { Path } from "./path.peb";
+    ## A subset of errors related to file system operations. 
+    ## Some common situations that might lead to errors include:
+    ## - A missing file path
+    ## - Reading from a restricted file
+    ## - Creating a file in a directory without correct authorization, etc.
+    @public @class FileSystemError {
+        FileSystemError(message: String) {
+            self.message = message;
+            self.stackTrace = getStackTrace();
+        },
+        @implement ErrorInterface,
+        message: String,
+        stackTrace: StackTrace
+    }
+    ## Reads the content of a file into a file buffer.
+    @public @function readFile(p: path) -> Result<FileBuffer, FileSystemError> {
+        crash Error("This function has not been implemented.");
+    }
+    ## Reads the contents of a file into a string.
+    ## It is more convenient than `fs.readFile().toString()` in cases where the content is needed more than the intermediate variable.
+    ## As with `fs.readFile()`, it return a [`Result`] enum, which could contain the contents of the file as a base64 string, or a File system error encountered while reading.
+    ## ```pebble
+    ##  @let contentResult = core.fs.readToString("foo.bar");
+    ##  if (contentResult.isError()) {
+    ##      core.io.printErr(contentResult.peel().toString());  
+    ##  } else {
+    ##      core.io.printLn(contentResult.unwrap());
+    ##  }
+    ## ```
+    @public @function readToString(p: Path) -> Result<String, FileSystemError> {
+        crash Error("This function has not been implemented.");
+    }
+    ## Deletes a file from the system.
+    ## Returns - a result with a Nil value if the file was deleted, or an error if it was not.
+    ## ```pebble
+    ##  @let deleted = core.fs.deleteFile("foo.bar");
+    ##  if (deleted.isError()) {
+    ##      core.io.printErr(deleted.peel().toString());
+    ##  } else {
+    ##      core.io.printLn("File deleted successfully.");
+    ##  }
+    ## ```
+    @public @function deleteFile(p: Path) -> Result<Nil, FileSystemError> {
+        crash Error("This function has not been implemented.");
+    }
+    ## Copies a file from one destination to another.
+    @public @function copyFile(source: Path, dest: Path) -> Result<Nil, FileSystemError> {
+        crash Error("The function has not been implemented.");
+    }
+    ## Checks if a file exists.
+    @public @function exists(path: Path) -> Boolean {
+        crash Error("The function has not been implemented.");
+    }
+}

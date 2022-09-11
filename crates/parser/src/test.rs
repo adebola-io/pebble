@@ -1499,3 +1499,19 @@ fn it_parses_for_statement() {
     parser.parse();
     assert_eq!(parser.diagnostics, RefCell::new(vec![]))
 }
+
+#[test]
+fn it_parses_record() {
+    let mut scanner = Scanner::new(
+        "
+    @record NAMES {
+        1 -> \"John Doe\"
+    }  
+    ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics, RefCell::new(vec![]))
+}

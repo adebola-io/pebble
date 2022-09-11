@@ -204,3 +204,24 @@ pub struct Import<'a> {
     pub local_name: Option<Identifier<'a>>,
     pub span: TextSpan,
 }
+
+/// An immutable store of values that can be accessed by any part of the program in O(1) time.
+/// ```pebble
+///     @record NAMES {
+///         1 -> "Akomolafe",
+///         2 -> "Jonathan"
+///     }
+/// ```
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct Record<'a> {
+    pub name: Identifier<'a>,
+    pub mappings: Vec<Mapping<'a>>,
+    pub span: TextSpan,
+}
+
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct Mapping<'a> {
+    pub key: Expression<'a>,
+    pub value: Expression<'a>,
+    pub span: TextSpan,
+}
