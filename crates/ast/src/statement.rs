@@ -36,6 +36,21 @@ impl<'a> Statement<'a> {
         let span = expression.get_range();
         Statement::ExpressionStatement(ExpressionStatement { expression, span })
     }
+    pub fn is_declaration(&self) -> bool {
+        match self {
+            Statement::PrependStatement(_)
+            | Statement::VariableDeclaration(_)
+            | Statement::TestBlock(_)
+            | Statement::PublicModifier(_)
+            | Statement::UseImport(_)
+            | Statement::Function(_)
+            | Statement::TypeAlias(_)
+            | Statement::Interface(_)
+            | Statement::Class(_)
+            | Statement::Module(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl<'a> Location for Statement<'a> {

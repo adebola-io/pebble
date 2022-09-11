@@ -8,76 +8,20 @@ pub enum Expression<'a> {
     IdentifierExpression(Identifier<'a>),
     StringExpression(TextString<'a>),
     NumericExpression(Number<'a>),
-    // A boolean literal, i.e. `true` or `false`
     BooleanExpression(Boolean<'a>),
     CharacterExpression(Character<'a>),
-    /// An operation that occurs on two operands e.g. `a + b`
-    BinaryExpr {
-        operator: &'a Operator,
-        left: Box<Self>,
-        right: Box<Self>,
-        span: TextSpan,
-    },
-    /// An operation expressiong a logical operation, e.g. `a || b`
-    LogicalExpr {
-        operator: &'a Operator,
-        left: Box<Self>,
-        right: Box<Self>,
-        span: TextSpan,
-    },
-    /// An operation that occurs on only one operand. e.g. `!a, ~b`
-    UnaryExpr {
-        operator: &'a Operator,
-        operand: Box<Self>,
-        span: TextSpan,
-    },
-    /// A function call expression. e.g. `a(b)`.
-    CallExpr {
-        callee: Box<Self>,
-        arguments: Vec<Self>,
-        span: TextSpan,
-    },
-    /// An array of expression. e.g. `[a, b, c]`
-    ArrayExpr {
-        elements: Vec<Self>,
-        span: TextSpan,
-    },
-    /// An expression that access an index of an array. e.g `a[b]`.
-    IndexExpr {
-        accessor: Box<Self>,
-        property: Box<Self>,
-        span: TextSpan,
-    },
-    /// A member or dot access of a class. e.g. `a.b`
-    DotExpr {
-        object: Box<Self>,
-        property: Box<Self>,
-        span: TextSpan,
-    },
-    NamespaceExpr {
-        object: Box<Self>,
-        property: Box<Self>,
-        span: TextSpan,
-    },
-    /// An expression that expresses a numeric or alphabetic range. e.g. `a..b`
-    RangeExpr {
-        top: Box<Self>,
-        bottom: Box<Self>,
-        span: TextSpan,
-    },
-    TernaryExpr {
-        test: Box<Self>,
-        consequent: Box<Self>,
-        alternate: Box<Self>,
-        span: TextSpan,
-    },
-    AssignmentExpr {
-        left: Box<Self>,
-        right: Box<Self>,
-        operator: &'a Operator,
-        span: TextSpan,
-    },
-    /// A functional expression.
+    SelfExpression(SelfExpression),
+    BinaryExpression(BinaryExpression<'a>),
+    LogicalExpression(LogicalExpression<'a>),
+    UnaryExpression(UnaryExpression<'a>),
+    CallExpression(CallExpression<'a>),
+    ArrayExpression(ArrayExpression<'a>),
+    IndexExpression(IndexExpression<'a>),
+    DotExpression(DotExpression<'a>),
+    NamespaceExpression(NamespaceExpression<'a>),
+    RangeExpression(RangeExpression<'a>),
+    TernaryExpression(TernaryExpression<'a>),
+    AssignmentExpression(AssignmentExpression<'a>),
     FnExpression(FnExpression<'a>),
 }
 
@@ -102,13 +46,109 @@ pub struct Number<'a> {
     pub span: TextSpan,
 }
 
-/// A number literal in Pebble. e.g. `1, 3.5, 4e9, 0x03, Ob22, 007`
+// A boolean literal, i.e. `true` or `false`
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct Boolean<'a> {
     pub value: &'a str,
     pub span: TextSpan,
 }
 
+/// An operation that occurs on two operands e.g. `a + b`
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct BinaryExpression<'a> {
+    pub operator: &'a Operator,
+    pub operands: Vec<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// An operation expressiong a logical operation, e.g. `a || b`
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct LogicalExpression<'a> {
+    pub operator: &'a Operator,
+    pub operands: Vec<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// An operation that occurs on only one operand. e.g. `!a, ~b`
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct UnaryExpression<'a> {
+    pub operator: &'a Operator,
+    pub operand: Box<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// A reference value to the current class instance.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SelfExpression {
+    pub span: TextSpan,
+}
+
+impl Location for SelfExpression {
+    fn get_range(&self) -> TextSpan {
+        self.span
+    }
+}
+
+/// A function call expression. e.g. `a(b)`.
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct CallExpression<'a> {
+    pub callee: Box<Expression<'a>>,
+    pub arguments: Vec<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// A member or dot access of a class. e.g. `a.b`
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct DotExpression<'a> {
+    pub object: Box<Expression<'a>>,
+    pub property: Box<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct NamespaceExpression<'a> {
+    pub object: Box<Expression<'a>>,
+    pub property: Box<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// An expression that expresses a numeric or alphabetic range. e.g. `a..b`
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct RangeExpression<'a> {
+    boundaries: Vec<Expression<'a>>,
+    span: TextSpan,
+}
+
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct TernaryExpression<'a> {
+    pub test: Box<Expression<'a>>,
+    pub consequent: Box<Expression<'a>>,
+    pub alternate: Box<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// An array of expression. e.g. `[a, b, c]`
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct ArrayExpression<'a> {
+    pub elements: Vec<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct AssignmentExpression<'a> {
+    pub operands: Vec<Expression<'a>>,
+    pub operator: &'a Operator,
+    pub span: TextSpan,
+}
+
+/// An expression that access an index of an array. e.g `a[b]`.
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct IndexExpression<'a> {
+    accessor_and_property: Vec<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+/// A functional expression.
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct FnExpression<'a> {
     pub labels: Option<Vec<GenericArgument<'a>>>,
@@ -187,97 +227,91 @@ impl<'a> Expression<'a> {
     /// Creates a dot expression.
     pub fn create_dot_expr(object: Self, property: Self) -> Self {
         let span = [object.get_range()[0], property.get_range()[1]];
-        Expression::DotExpr {
+        Expression::DotExpression(DotExpression {
             object: Box::new(object),
             property: Box::new(property),
             span,
-        }
+        })
     }
     /// Creates a namespace expression.
     pub fn create_namespace_expr(object: Self, property: Self) -> Self {
         let span = [object.get_range()[0], property.get_range()[1]];
-        Expression::NamespaceExpr {
+        Expression::NamespaceExpression(NamespaceExpression {
             object: Box::new(object),
             property: Box::new(property),
             span,
-        }
+        })
     }
     /// Creates a binary expression.
     pub fn create_bin_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
         let span = [left.get_range()[0], right.get_range()[1]];
-        Expression::BinaryExpr {
+        Expression::BinaryExpression(BinaryExpression {
             operator,
-            left: Box::new(left),
-            right: Box::new(right),
+            operands: vec![left, right],
             span,
-        }
+        })
     }
     /// Creates a call expression.
     pub fn create_call_expr(callee: Self, arguments: Vec<Self>, end: [u64; 2]) -> Self {
         let start = callee.get_range()[0];
-        Expression::CallExpr {
+        Expression::CallExpression(CallExpression {
             callee: Box::new(callee),
             arguments,
             span: [start, end],
-        }
+        })
     }
     /// Creates a index expression.
     pub fn create_index_expr(accessor: Self, property: Self, end: [u64; 2]) -> Self {
         let span = [accessor.get_range()[0], end];
-        Expression::IndexExpr {
-            accessor: Box::new(accessor),
-            property: Box::new(property),
+        Expression::IndexExpression(IndexExpression {
+            accessor_and_property: vec![accessor, property],
             span,
-        }
+        })
     }
     /// Creates a unary expression.
     pub fn create_unary_expr(start: [u64; 2], operator: &'a Operator, operand: Self) -> Self {
         let span = [start, operand.get_range()[1]];
-        Expression::UnaryExpr {
+        Expression::UnaryExpression(UnaryExpression {
             operator,
             operand: Box::new(operand),
             span,
-        }
+        })
     }
     /// Creates a range expression.
     pub fn create_range_expr(top: Self, bottom: Self) -> Self {
         let span = [top.get_range()[0], bottom.get_range()[1]];
-        Expression::RangeExpr {
-            top: Box::new(top),
-            bottom: Box::new(bottom),
+        Expression::RangeExpression(RangeExpression {
+            boundaries: vec![top, bottom],
             span,
-        }
+        })
     }
     /// Creates a logical expression.
     pub fn create_logical_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
         let span = [left.get_range()[0], right.get_range()[1]];
-        Expression::LogicalExpr {
+        Expression::LogicalExpression(LogicalExpression {
             operator,
-            left: Box::new(left),
-            right: Box::new(right),
-
+            operands: vec![left, right],
             span,
-        }
+        })
     }
     /// Creates a ternary expression.
     pub fn create_ternary_expr(test: Self, consequent: Self, alternate: Self) -> Self {
         let span = [test.get_range()[0], alternate.get_range()[1]];
-        Expression::TernaryExpr {
+        Expression::TernaryExpression(TernaryExpression {
             test: Box::new(test),
             consequent: Box::new(consequent),
             alternate: Box::new(alternate),
             span,
-        }
+        })
     }
     /// Creates an assignment expression.
     pub fn create_assign_expr(left: Self, operator: &'a Operator, right: Self) -> Self {
         let span = [left.get_range()[0], right.get_range()[1]];
-        Expression::AssignmentExpr {
+        Expression::AssignmentExpression(AssignmentExpression {
             operator,
-            left: Box::new(left),
-            right: Box::new(right),
+            operands: vec![left, right],
             span,
-        }
+        })
     }
 }
 
@@ -289,17 +323,18 @@ impl Location for Expression<'_> {
             | Self::NumericExpression(Number { span, .. })
             | Self::BooleanExpression(Boolean { span, .. })
             | Self::CharacterExpression(Character { span, .. })
-            | Self::BinaryExpr { span, .. }
-            | Self::LogicalExpr { span, .. }
-            | Self::UnaryExpr { span, .. }
-            | Self::CallExpr { span, .. }
-            | Self::ArrayExpr { span, .. }
-            | Self::IndexExpr { span, .. }
-            | Self::DotExpr { span, .. }
-            | Self::NamespaceExpr { span, .. }
-            | Self::RangeExpr { span, .. }
-            | Self::TernaryExpr { span, .. }
-            | Self::AssignmentExpr { span, .. }
+            | Self::SelfExpression(SelfExpression { span })
+            | Self::BinaryExpression(BinaryExpression { span, .. })
+            | Self::LogicalExpression(LogicalExpression { span, .. })
+            | Self::UnaryExpression(UnaryExpression { span, .. })
+            | Self::CallExpression(CallExpression { span, .. })
+            | Self::ArrayExpression(ArrayExpression { span, .. })
+            | Self::IndexExpression(IndexExpression { span, .. })
+            | Self::DotExpression(DotExpression { span, .. })
+            | Self::NamespaceExpression(NamespaceExpression { span, .. })
+            | Self::RangeExpression(RangeExpression { span, .. })
+            | Self::TernaryExpression(TernaryExpression { span, .. })
+            | Self::AssignmentExpression(AssignmentExpression { span, .. })
             | Self::FnExpression(FnExpression { span, .. }) => *span,
         }
     }

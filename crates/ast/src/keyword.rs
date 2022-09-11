@@ -1,4 +1,4 @@
-pub const KEYWORDS: &'static [&'static str; 18] = &[
+pub const KEYWORDS: &'static [&'static str; 19] = &[
     "if",
     "else",
     "for",
@@ -8,6 +8,7 @@ pub const KEYWORDS: &'static [&'static str; 18] = &[
     "loop",
     "from",
     "as",
+    "self",
     "implements",
     "while",
     "break",
@@ -51,6 +52,7 @@ pub enum Keyword {
     Implements,
     Return,
     Crash,
+    Self_,
     Try,
     Recover,
     Println,

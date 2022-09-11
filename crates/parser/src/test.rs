@@ -7,11 +7,12 @@ use crate::{
     scanner::Scanner,
 };
 use ast::{
-    Block, BracketKind, Break, Comment, CommentKind, CrashStatement, Expression, FnExpression,
-    Function, Identifier, IfStatement, Import, Injunction, Keyword, Literal, LiteralKind, Loop,
-    Operator, Parameter, PrependStatement, PrintLnStatement, Punctuation, RecoverBlock,
-    ReturnStatement, Statement, TestBlock, TextString, Token, TokenIdentifier, TokenKind, TryBlock,
-    Type, TypeKind, UseImport, VarKind, VariableDeclaration, WhileStatement,
+    ArrayExpression, Block, BracketKind, Break, CallExpression, Comment, CommentKind,
+    CrashStatement, Expression, FnExpression, Function, Identifier, IfStatement, Import,
+    Injunction, Keyword, Literal, LiteralKind, Loop, Operator, Parameter, PrependStatement,
+    PrintLnStatement, Punctuation, RecoverBlock, ReturnStatement, Statement, TestBlock, TextString,
+    Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeKind, UseImport, VarKind,
+    VariableDeclaration, WhileStatement,
 };
 
 #[test]
@@ -1304,7 +1305,7 @@ fn it_parses_functional_expression() {
     let statements = parser.statements.borrow().clone();
     assert_eq!(
         statements[0],
-        Statement::create_expr_stmnt(Expression::CallExpr {
+        Statement::create_expr_stmnt(Expression::CallExpression(CallExpression {
             callee: Box::new(Expression::create_ident_expr("map", [[1, 1], [1, 4]])),
             arguments: vec![Expression::FnExpression(FnExpression {
                 labels: None,
@@ -1326,7 +1327,7 @@ fn it_parses_functional_expression() {
                 span: [[1, 5], [1, 23]]
             })],
             span: [[1, 1], [1, 25]]
-        })
+        }))
     )
 }
 
@@ -1386,7 +1387,7 @@ fn it_parses_const_statement() {
                 span: [[1, 8], [1, 13]]
             },
             kind: VarKind::Const,
-            initializer: Some(Expression::ArrayExpr {
+            initializer: Some(Expression::ArrayExpression(ArrayExpression {
                 elements: vec![
                     Expression::StringExpression(TextString {
                         value: "Akomolafe",
@@ -1398,7 +1399,7 @@ fn it_parses_const_statement() {
                     })
                 ],
                 span: [[1, 35], [1, 59]]
-            }),
+            })),
             type_label: Some(Type {
                 kind: TypeKind::Concrete {
                     name: Identifier {
@@ -1507,7 +1508,7 @@ fn it_parses_class() {
         },
         port: UnsignedInt,
         messages: Array<Messages>
-    }
+    }   
     ",
     );
     scanner.run();

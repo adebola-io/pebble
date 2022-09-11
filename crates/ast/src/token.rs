@@ -228,6 +228,7 @@ impl Token {
                 "try" => Keyword::Try,
                 "recover" => Keyword::Recover,
                 "println" => Keyword::Println,
+                "self" => Keyword::Self_,
                 _ => unreachable!(),
             }),
         }

@@ -2,7 +2,7 @@
     // "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
     "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
     // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "Andromeda",
+    "workbench.colorTheme": "GitHub Dark Dimmed",
     "workbench.iconTheme": "material-icon-theme",
     "workbench.colorCustomizations": {
         "editorInlayHint.background": "#00000000",
@@ -11,6 +11,7 @@
     },
     "editor.tabSize": 4,
     "prettier.tabWidth": 4,
+    "editor.stickyScroll.enabled": true,
     "editor.inlayHints.fontSize": 10,
     "rust-analyzer.inlayHints.typeHints.enable": true,
     "rust-analyzer.inlayHints.parameterHints.enable": true,
