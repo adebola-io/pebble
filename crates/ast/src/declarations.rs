@@ -114,6 +114,45 @@ impl<'a> Location for Property<'a> {
     }
 }
 
+/// An enumerated value, which could be any of its defined variants. e.g.
+/// ```pebble
+///     @enum Directions {
+///         Up,
+///         Down,
+///         Left,
+///         Right
+///     }
+/// ```
+#[derive(Location, Debug, Clone, PartialEq)]
+pub struct Enum<'a> {
+    pub name: Identifier<'a>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
+    pub variants: Vec<Variant<'a>>,
+    pub span: TextSpan,
+}
+
+/// Any of the values an enum could take.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Variant<'a> {
+    Tuple {
+        name: Identifier<'a>,
+        elements: Vec<Type<'a>>,
+        span: TextSpan,
+    },
+    Concrete {
+        name: Identifier<'a>,
+        span: TextSpan,
+    },
+}
+
+impl Location for Variant<'_> {
+    fn get_range(&self) -> TextSpan {
+        match self {
+            Self::Tuple { span, .. } | Self::Concrete { span, .. } => *span,
+        }
+    }
+}
+
 /// A namespace of code that encloses related code. Every file is a module by default.
 /// ```pebble
 /// @module process {

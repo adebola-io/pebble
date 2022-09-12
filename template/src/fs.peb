@@ -1,5 +1,5 @@
 ## Exposes basic functionality for interacting with the file system of the host machine.
-@public @module fs {
+@module fs {
     @use { Error, ErrorInterface, getStackTrace } from "./errors.peb";
     @use { Path } from "./path.peb";
     ## A subset of errors related to file system operations. 

@@ -3,12 +3,12 @@ use std::{cell::RefCell, marker::PhantomData};
 use crate::scanner::Scanner;
 use ast::{
     precedence_of, ArrayExpression, Block, BracketKind, Break, Class, ConcreteType, Continue,
-    CrashStatement, Expression, FnExpression, ForLoop, Function, FunctionType, GenericArgument,
-    Identifier, IfStatement, Import, Injunction, Interface, Keyword, Literal, LiteralKind,
-    Location, Loop, Mapping, Module, Operator, Parameter, PrependStatement, PrintLnStatement,
-    Property, PublicModifier, Punctuation, Record, RecoverBlock, ReturnStatement, SelfExpression,
-    Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind, TryBlock, Type,
-    TypeAlias, UseImport, VarKind, VariableDeclaration, WhileStatement,
+    CrashStatement, Enum, Expression, FnExpression, ForLoop, Function, FunctionType,
+    GenericArgument, Identifier, IfStatement, Import, Injunction, Interface, Keyword, Literal,
+    LiteralKind, Location, Loop, Mapping, Module, Operator, Parameter, PrependStatement,
+    PrintLnStatement, Property, PublicModifier, Punctuation, Record, RecoverBlock, ReturnStatement,
+    SelfExpression, Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind,
+    TryBlock, Type, TypeAlias, UseImport, VarKind, VariableDeclaration, Variant, WhileStatement,
 };
 use errors::SyntaxError;
 use utils::Stack;
@@ -538,7 +538,7 @@ impl<'a> Parser<'a> {
             Injunction::Use => self.use_import(),
             Injunction::Prepend => self.prepend_statement(),
             Injunction::Test => self.test_block(),
-            Injunction::Enum => todo!(),
+            Injunction::Enum => self.enum_declaration(),
             Injunction::Interface => self.interface_declaration(),
             Injunction::Implement => Err((SyntaxError::StrayImplement, self.token().span)),
             Injunction::Module => self.module(),
@@ -594,7 +594,7 @@ impl<'a> Parser<'a> {
     fn class_declaration(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span[0];
         self.advance(); // Move past @class
-        let (name, generic_arguments) = self.typed_name()?;
+        let (name, generic_arguments) = self.typed_identifier()?;
         if !self.token().is_bracket(&BracketKind::LeftCurly) {
             return Err((SyntaxError::ExpectedLCurly, self.token().span));
         }
@@ -626,12 +626,12 @@ impl<'a> Parser<'a> {
     fn type_alias(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span[0];
         self.advance(); // Move past @type
-        let (name, labels) = self.typed_name()?;
+        let (name, labels) = self.typed_identifier()?;
         if !self.token().is_operator(&Operator::Assign) {
             return Err((SyntaxError::UninitializedTypeAlias, self.token().span));
         }
         self.advance(); // Move past =
-        let value = self.type_label()?;
+        let value = self.type_name()?;
         if !self.token().is_semi_colon() {
             return Err((SyntaxError::ExpectedSemiColon, self.token().span));
         }
@@ -885,11 +885,77 @@ impl<'a> Parser<'a> {
         });
         Ok(test_block)
     }
+    /// Parses an enum.
+    fn enum_declaration(&'a self) -> NodeOrError<Statement<'a>> {
+        let start = self.token().span[0];
+        self.advance();
+        let (name, generic_arguments) = self.typed_identifier()?;
+        if !self.token().is_bracket(&BracketKind::LeftCurly) {
+            return Err((SyntaxError::ExpectedLCurly, self.token().span));
+        }
+        self.advance();
+        let mut variants = vec![];
+        while !(self.end() || self.token().is_bracket(&BracketKind::RightCurly)) {
+            let variant = self.variant()?;
+            variants.push(variant);
+            if self.token().is_comma() {
+                self.advance();
+            } else if !self.token().is_bracket(&BracketKind::RightCurly) {
+                return Err((SyntaxError::ExpectedCommaOrRCurly, self.token().span));
+            }
+        }
+        if self.end() {
+            return Err((SyntaxError::ExpectedRCurly, self.token().span));
+        }
+        let end = self.token().span[1];
+        self.advance();
+        let enum_ = Statement::Enum(Enum {
+            name,
+            generic_arguments,
+            variants,
+            span: [start, end],
+        });
+        Ok(enum_)
+    }
+    fn variant(&'a self) -> NodeOrError<Variant<'a>> {
+        let start = self.token().span[0];
+        let name = self.get_identifer()?;
+        let end;
+        if self.token().is_bracket(&BracketKind::LeftParenthesis) {
+            self.advance();
+            let mut elements = vec![];
+            while !(self.end() || self.token().is_bracket(&BracketKind::RightParenthesis)) {
+                let type_ = self.type_name()?;
+                elements.push(type_);
+                if self.token().is_comma() {
+                    self.advance();
+                } else if !self.token().is_bracket(&BracketKind::RightParenthesis) {
+                    return Err((SyntaxError::ExpectedRParen, self.token().span));
+                }
+            }
+            if self.end() {
+                return Err((SyntaxError::ExpectedRParen, self.token().span));
+            }
+            end = self.token().span[1];
+            self.advance();
+            Ok(Variant::Tuple {
+                name,
+                elements,
+                span: [start, end],
+            })
+        } else {
+            end = name.get_range()[1];
+            Ok(Variant::Concrete {
+                name,
+                span: [start, end],
+            })
+        }
+    }
     /// Parses an interface.
     fn interface_declaration(&'a self) -> NodeOrError<Statement<'a>> {
         let start = self.token().span[0];
         self.advance(); // Move past @interface
-        let (name, generic_arguments) = self.typed_name()?;
+        let (name, generic_arguments) = self.typed_identifier()?;
         if !self.token().is_bracket(&BracketKind::LeftCurly) {
             return Err((SyntaxError::ExpectedLCurly, self.token().span));
         }
@@ -1425,7 +1491,7 @@ impl<'a> Parser<'a> {
 
 /// Types
 impl<'a> Parser<'a> {
-    fn typed_name(&'a self) -> NodeOrError<(Identifier, Option<Vec<GenericArgument>>)> {
+    fn typed_identifier(&'a self) -> NodeOrError<(Identifier, Option<Vec<GenericArgument>>)> {
         let name;
         if let Token {
             span,
@@ -1543,19 +1609,19 @@ impl<'a> Parser<'a> {
             return Err((SyntaxError::ExpectedReturnType, self.token().span));
         }
         self.advance(); // Move past ->
-        self.type_label()
+        self.type_name()
     }
     /// Parses a type label that may or may not exist.
     fn maybe_type_label(&'a self) -> NodeOrError<Option<Type<'a>>> {
         if self.token().is_colon() {
             self.advance(); // Move past label :.
-            Ok(Some(self.type_label()?))
+            Ok(Some(self.type_name()?))
         } else {
             Ok(None)
         }
     }
     /// Parses a type label.
-    fn type_label(&'a self) -> NodeOrError<Type<'a>> {
+    fn type_name(&'a self) -> NodeOrError<Type<'a>> {
         if self.token().is_operator(&Operator::LessThan)
             || self.token().is_bracket(&BracketKind::LeftParenthesis)
         {
