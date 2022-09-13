@@ -22,6 +22,9 @@ where
     InvalidRangeBoundaries,
     UnknownAssignment,
     UnusedVariable,
+    Uncallable(T),
+    UnequalArgs(usize, usize),
+    ParameterMismatch(T, T),
     IllegalTestBlock,
     AliasUsedAsValue(String),
     ValueUsedAsAlias(String),
@@ -72,6 +75,9 @@ where
                 SemanticError::IllegalTestBlock => format!("Invalid @tests block. Test blocks can only be used in the global scope of a module or file"),
                 SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
                 SemanticError::InconsistentInitializer => todo!(),
+                SemanticError::Uncallable(x) => format!("'{}' is not a callable type", x),
+                SemanticError::UnequalArgs(x, y) => format!("Function required {} arguments but got {}", x, y),
+                SemanticError::ParameterMismatch(x, y) => format!("Invalid argument. Expected type '{}' and got '{}'", x, y),
                 SemanticError::HeterogenousArray(x, y) => format!(
                     "Elements of type '{}' and '{}' cannot be put in the same array. Arrays can only contain elements of the same type", x, y
                 ),

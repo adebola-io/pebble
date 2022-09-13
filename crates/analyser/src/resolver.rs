@@ -1,7 +1,9 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
-use crate::{ResolveError, Symbol, SymbolOrError, SymbolType};
+use crate::{
+    FunctionType, ParameterSymbol, ResolveError, Symbol, SymbolOrError, SymbolType, TypeAlias,
+};
 use ast::{Expression, Location, Operator, Statement, Visitor};
 use errors::SemanticError;
 use parser::{Parser, ParserError};
@@ -52,7 +54,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::BinaryExpression(b) => self.binary_exp(b),
             Expression::LogicalExpression(l) => self.logical_exp(l),
             Expression::UnaryExpression(u) => self.unary_exp(u),
-            Expression::CallExpression(_) => todo!(),
+            Expression::CallExpression(c) => self.call_exp(c),
             Expression::ArrayExpression(a) => self.array_exp(a),
             Expression::IndexExpression(i) => self.index_exp(i),
             Expression::DotExpression(_) => todo!(),
@@ -230,7 +232,37 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn call_exp(&'a self, call_exp: &ast::CallExpression<'a>) -> SymbolOrError {
-        todo!()
+        let callee_symbol = self.expression(&call_exp.callee)?;
+        if let SymbolType::Function(f) = callee_symbol._type {
+            if f.parameters.len() != call_exp.arguments.len() {
+                return Err((
+                    SemanticError::UnequalArgs(f.parameters.len(), call_exp.arguments.len()),
+                    call_exp.span,
+                ));
+            }
+            let mut i = 0;
+            while i < f.parameters.len() {
+                let arg_symbol = self.expression(&call_exp.arguments[i])?;
+                if f.parameters[i]._type != arg_symbol._type
+                    && f.parameters[i]._type != SymbolType::Unknown
+                {
+                    return Err((
+                        SemanticError::ParameterMismatch(
+                            f.parameters[i]._type.clone(),
+                            arg_symbol._type,
+                        ),
+                        call_exp.arguments[i].get_range(),
+                    ));
+                }
+                i += 1;
+            }
+            Ok(*f.return_type.clone())
+        } else {
+            Err((
+                SemanticError::Uncallable(callee_symbol._type),
+                callee_symbol.span,
+            ))
+        }
     }
 
     /// Type checks an array expression.
@@ -465,7 +497,48 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         todo!()
     }
 
-    fn function(&'a self, function: &ast::Function<'a>) {}
+    fn function(&'a self, function: &ast::Function<'a>) {
+        let name = function.name.value;
+        let mut parameter_symbols = vec![];
+        for parameter_node in &function.parameters {
+            let _type;
+            match self.parameter(parameter_node) {
+                Err(e) => {
+                    self.diagnostics.borrow_mut().push(e);
+                    _type = SymbolType::Unknown
+                }
+                Ok(s) => _type = s._type,
+            };
+            parameter_symbols.push(ParameterSymbol {
+                name: parameter_node.name.value.to_string(),
+                _type,
+                span: parameter_node.span,
+            });
+        }
+        // If the return type is either invalid or absent, set it to nil.
+        let return_type = match &function.return_type {
+            Some(s) => self.type_label(&s).unwrap_or(Symbol::nil(function.span)),
+            None => Symbol::nil(function.span),
+        };
+
+        if let Some(sym) = self.stage.borrow().get(name) {
+            self.diagnostics.borrow_mut().push((
+                SemanticError::AlreadyDeclared(name.to_string()),
+                function.name.span,
+            ));
+            return;
+        }
+        self.stage.borrow_mut().set(
+            name,
+            Symbol {
+                _type: SymbolType::Function(FunctionType {
+                    parameters: parameter_symbols,
+                    return_type: Box::new(return_type),
+                }),
+                span: function.span,
+            },
+        )
+    }
 
     fn enum_declaration(&'a self, enum_: &ast::Enum<'a>) {
         todo!()
@@ -484,7 +557,10 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn parameter(&'a self, param: &ast::Parameter<'a>) -> SymbolOrError {
-        todo!()
+        match &param.label {
+            Some(label) => Ok(self.type_label(label)?),
+            None => Ok(Symbol::unknown(param.span)),
+        }
     }
 
     /// Type checks type aliases.
@@ -498,10 +574,14 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
                 aliased_symbol = Symbol::unknown(type_alias.span)
             }
         }
+        let arguments = Vec::new();
         self.stage.borrow_mut().set(
             name,
             Symbol {
-                _type: SymbolType::Alias(Box::new(aliased_symbol)),
+                _type: SymbolType::Alias(TypeAlias {
+                    actual_symbol: Box::new(aliased_symbol),
+                    arguments,
+                }),
                 span: type_alias.span,
             },
         );
@@ -524,10 +604,13 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn concrete_type(&'a self, concrete_type: &ast::ConcreteType<'a>) -> SymbolOrError {
+        for argument in &concrete_type.arguments {
+            let arg = self.type_label(&argument)?;
+        }
         match self.stage.borrow().lookup(concrete_type.name.value) {
             Some(d) => match &d._type {
                 SymbolType::Class(_) => Ok(d.clone()),
-                SymbolType::Alias(a) => Ok(*a.clone()),
+                SymbolType::Alias(a) => Ok(*a.actual_symbol.clone()),
                 _ => {
                     return Err((
                         SemanticError::ValueUsedAsAlias(concrete_type.name.value.to_string()),

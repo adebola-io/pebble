@@ -28,40 +28,52 @@ impl Symbol {
             (
                 "Number",
                 Symbol {
-                    _type: SymbolType::Alias(Box::new(Symbol {
-                        _type: SymbolType::Number,
-                        span: [[0, 0], [0, 0]],
-                    })),
+                    _type: SymbolType::Alias(TypeAlias {
+                        actual_symbol: Box::new(Symbol {
+                            _type: SymbolType::Number,
+                            span: [[0, 0], [0, 0]],
+                        }),
+                        arguments: Vec::new(),
+                    }),
                     span: [[0, 0], [0, 0]],
                 },
             ),
             (
                 "String",
                 Symbol {
-                    _type: SymbolType::Alias(Box::new(Symbol {
-                        _type: SymbolType::String,
-                        span: [[0, 0], [0, 0]],
-                    })),
+                    _type: SymbolType::Alias(TypeAlias {
+                        actual_symbol: Box::new(Symbol {
+                            _type: SymbolType::String,
+                            span: [[0, 0], [0, 0]],
+                        }),
+                        arguments: Vec::new(),
+                    }),
                     span: [[0, 0], [0, 0]],
                 },
             ),
             (
                 "Boolean",
                 Symbol {
-                    _type: SymbolType::Alias(Box::new(Symbol {
-                        _type: SymbolType::Boolean,
-                        span: [[0, 0], [0, 0]],
-                    })),
+                    _type: SymbolType::Alias(TypeAlias {
+                        actual_symbol: Box::new(Symbol {
+                            _type: SymbolType::Boolean,
+                            span: [[0, 0], [0, 0]],
+                        }),
+                        arguments: Vec::new(),
+                    }),
                     span: [[0, 0], [0, 0]],
                 },
             ),
             (
                 "Character",
                 Symbol {
-                    _type: SymbolType::Alias(Box::new(Symbol {
-                        _type: SymbolType::Character,
-                        span: [[0, 0], [0, 0]],
-                    })),
+                    _type: SymbolType::Alias(TypeAlias {
+                        actual_symbol: Box::new(Symbol {
+                            _type: SymbolType::Character,
+                            span: [[0, 0], [0, 0]],
+                        }),
+                        arguments: Vec::new(),
+                    }),
                     span: [[0, 0], [0, 0]],
                 },
             ),
@@ -114,33 +126,46 @@ pub enum SymbolType {
     Unknown,
     Module,
     String,
+    Generic(Generic),
     Number,
     Character,
     Array(Box<Symbol>),
     Boolean,
-    Alias(Box<Symbol>),
+    Alias(TypeAlias),
     Class(ClassType),
     Function(FunctionType),
     Instance { class: Rc<ClassType> },
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClassType {
-    name: String,
-    arguments: Vec<Box<Symbol>>,
-    properties: Vec<Box<Symbol>>,
+    pub name: String,
+    pub arguments: Vec<Box<Symbol>>,
+    pub properties: Vec<Box<Symbol>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TypeAlias {
+    pub actual_symbol: Box<Symbol>,
+    pub arguments: Vec<Symbol>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionType {
-    pub parameters: Vec<ParameterType>,
-    pub return_type: Rc<Symbol>,
+    pub parameters: Vec<ParameterSymbol>,
+    pub return_type: Box<Symbol>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ParameterType {
+pub struct ParameterSymbol {
     pub name: String,
     pub _type: SymbolType,
     pub span: TextSpan,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Generic {
+    pub name: String,
+    pub implements: Box<Symbol>,
 }
 
 impl Display for SymbolType {
@@ -156,14 +181,15 @@ impl Display for SymbolType {
                 SymbolType::Number => String::from("Number"),
                 SymbolType::Character => String::from("Character"),
                 SymbolType::Boolean => String::from("Boolean"),
-                SymbolType::Alias(s) => s._type.to_string(),
-                SymbolType::Array(s) => format!("[{}]", s._type),
+                SymbolType::Alias(TypeAlias { actual_symbol, .. }) =>
+                    actual_symbol._type.to_string(),
+                SymbolType::Array(s) => format!("Array<{}>", s._type),
                 SymbolType::Class(ClassType { name, .. }) => name.to_string(),
                 SymbolType::Function(FunctionType {
                     parameters,
                     return_type,
                 }) => format!(
-                    "({})-> {}",
+                    "({}) -> {}",
                     {
                         let mut output = String::new();
                         let mut i = 0;
@@ -179,12 +205,13 @@ impl Display for SymbolType {
                     return_type._type
                 ),
                 SymbolType::Instance { class } => class.name.to_string(),
+                SymbolType::Generic(Generic { .. }) => todo!(),
             }
         )
     }
 }
 
-impl Display for ParameterType {
+impl Display for ParameterSymbol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", format!("{}: {}", self.name, self._type))
     }
@@ -197,10 +224,10 @@ impl Symbol {
         let mut left_type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = left_type {
-            left_type = &a._type
+            left_type = &a.actual_symbol._type
         }
         while let SymbolType::Alias(a) = right_type {
-            right_type = &a._type
+            right_type = &a.actual_symbol._type
         }
         match (left_type, right_type) {
             // a: String * b: Number = c: String
@@ -229,10 +256,10 @@ impl Symbol {
         let mut left_type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = left_type {
-            left_type = &a._type
+            left_type = &a.actual_symbol._type
         }
         while let SymbolType::Alias(a) = right_type {
-            right_type = &a._type
+            right_type = &a.actual_symbol._type
         }
         match (left_type, right_type) {
             // a: String + b: String = c: String
@@ -261,10 +288,10 @@ impl Symbol {
         let mut left_type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = left_type {
-            left_type = &a._type
+            left_type = &a.actual_symbol._type
         }
         while let SymbolType::Alias(a) = right_type {
-            right_type = &a._type
+            right_type = &a.actual_symbol._type
         }
         if let (SymbolType::Number, SymbolType::Number) = (left_type, right_type) {
             Ok(Symbol {
@@ -286,7 +313,7 @@ impl Symbol {
         let mut _type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = _type {
-            _type = &a._type
+            _type = &a.actual_symbol._type
         }
         if let SymbolType::Boolean = _type {
             Ok(self.clone())
@@ -303,10 +330,10 @@ impl Symbol {
         let mut left_type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = left_type {
-            left_type = &a._type
+            left_type = &a.actual_symbol._type
         }
         while let SymbolType::Alias(a) = right_type {
-            right_type = &a._type
+            right_type = &a.actual_symbol._type
         }
         if left_type == right_type {
             Ok(Symbol {
@@ -330,10 +357,10 @@ impl Symbol {
         let mut left_type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = left_type {
-            left_type = &a._type
+            left_type = &a.actual_symbol._type
         }
         while let SymbolType::Alias(a) = right_type {
-            right_type = &a._type
+            right_type = &a.actual_symbol._type
         }
         // a: Number x b: Number = c: Number
         if let (SymbolType::Number, SymbolType::Number) = (left_type, right_type) {
@@ -358,10 +385,10 @@ impl Symbol {
         let mut left_type = &self._type;
         // Unwrap aliased types.
         while let SymbolType::Alias(a) = left_type {
-            left_type = &a._type
+            left_type = &a.actual_symbol._type
         }
         while let SymbolType::Alias(a) = right_type {
-            right_type = &a._type
+            right_type = &a.actual_symbol._type
         }
         // a: Boolean && b: Boolean = c: Boolean
         // a: Boolean || b: Boolean = c: Boolean

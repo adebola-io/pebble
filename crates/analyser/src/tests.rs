@@ -287,6 +287,44 @@ fn it_remembers_type_aliases() {
 }
 
 #[test]
+fn it_matches_blank_function() {
+    let mut scanner = Scanner::new(
+        "
+   @function generateNumber() -> Number {
+    crash Error();
+   }
+   @let a = generateNumber() + 100;
+    ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(resolver.diagnostics.take(), vec![])
+}
+
+#[test]
+fn it_tests_add_function() {
+    let mut scanner = Scanner::new(
+        "
+   @function add(x: Number, y: Number) -> Number {
+    crash Error();
+   }
+   @let a = add(9, 10) + 100;
+    ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(resolver.diagnostics.take(), vec![])
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();
