@@ -59,7 +59,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::FnExpression(_) => todo!(),
         }
     }
-
+    // Retrieves the type of an identifier.
     fn ident(&'a self, ident: &ast::Identifier<'a>) -> SymbolOrError {
         match self.stage.borrow().lookup(ident.value) {
             Some(d) => Ok(d.clone()),
@@ -102,7 +102,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     fn self_exp(&'a self, self_: &ast::SelfExpression) -> SymbolOrError {
         todo!()
     }
-
+    /// Type checks a binary expression.
     fn binary_exp(&'a self, bin_exp: &ast::BinaryExpression<'a>) -> SymbolOrError {
         let [left, right] = [
             self.expression(&bin_exp.operands[0])?,
@@ -127,7 +127,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             _ => unreachable!(),
         }
     }
-
+    /// Type checks a logical expression.
     fn logical_exp(&'a self, log_exp: &ast::LogicalExpression<'a>) -> SymbolOrError {
         let [left, right] = [
             self.expression(&log_exp.operands[0])?,
@@ -158,7 +158,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         todo!()
     }
 
-    /// Typechecks an assignment expression.
+    /// Type checks an assignment expression.
     fn assign_exp(&'a self, assign_exp: &ast::AssignmentExpression<'a>) -> SymbolOrError {
         let mut rhs_symbol = self.expression(&assign_exp.operands[1])?;
         let lhs_symbol = self.expression(&assign_exp.operands[0])?;
@@ -223,6 +223,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         todo!()
     }
 
+    /// Type checks an array expression.
     fn array_exp(&'a self, array_exp: &ast::ArrayExpression<'a>) -> SymbolOrError {
         if array_exp.elements.len() == 0 {
             Ok(Symbol::array(SymbolType::Unknown, array_exp.span))
@@ -241,6 +242,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Ok(Symbol::array(first_type, array_exp.span))
         }
     }
+
     /// Type checks a ternary expression.
     fn tern_exp(&'a self, tern_exp: &ast::TernaryExpression<'a>) -> SymbolOrError {
         let test_symbol = self.expression(&tern_exp.test)?;
@@ -265,7 +267,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         Ok(consequent_symbol)
     }
 
-    /// Typechecks a range expression.
+    /// Type checks a range expression.
     fn range_exp(&'a self, rang_exp: &ast::RangeExpression<'a>) -> SymbolOrError {
         let lower_symbol = self.expression(&rang_exp.boundaries[0])?;
         let upper_symbol = self.expression(&rang_exp.boundaries[1])?;
@@ -288,7 +290,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Statement::VariableDeclaration(v) => self.var_decl(v),
             Statement::Break(_) => todo!(),
             Statement::Continue(_) => todo!(),
-            Statement::TestBlock(_) => todo!(),
+            Statement::TestBlock(tb) => self.test_block(tb),
             Statement::LoopStmnt(_) => todo!(),
             Statement::ForStatement(_) => todo!(),
             Statement::WhileStatement(_) => todo!(),
@@ -369,7 +371,12 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn test_block(&'a self, test_block: &ast::TestBlock<'a>) {
-        todo!()
+        if self.stage.borrow().depth() > 0 {
+            self.diagnostics
+                .borrow_mut()
+                .push((SemanticError::IllegalTestBlock, test_block.span))
+        }
+        self.block(&test_block.body)
     }
 
     fn loop_statement(&'a self, loop_stmnt: &ast::Loop<'a>) {

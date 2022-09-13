@@ -22,6 +22,7 @@ where
     InvalidRangeBoundaries,
     UnknownAssignment,
     UnusedVariable,
+    IllegalTestBlock,
     AssigningToNil,
     HeterogenousArray(T, T),
 }
@@ -66,6 +67,7 @@ where
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
                 SemanticError::UnknownAssignment => format!("Cannot infer value type from usage"),
                 SemanticError::UnsupportedNegation(_) => todo!(),
+                SemanticError::IllegalTestBlock => format!("Invalid @tests block. Test blocks can only be used in the global scope of a module or file"),
                 SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
                 SemanticError::InconsistentInitializer => todo!(),
                 SemanticError::HeterogenousArray(x, y) => format!(

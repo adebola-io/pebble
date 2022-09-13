@@ -73,20 +73,27 @@ pub enum SymbolType {
     Boolean,
     Custom {},
     Class(ClassType),
-    Function {
-        arguments: Box<Symbol>,
-        parameters: Vec<Symbol>,
-        return_type: Rc<Symbol>,
-    },
-    Instance {
-        class: Rc<ClassType>,
-    },
+    Function(FunctionType),
+    Instance { class: Rc<ClassType> },
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClassType {
     name: String,
     arguments: Box<Symbol>,
     properties: Vec<Box<Symbol>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionType {
+    pub parameters: Vec<ParameterType>,
+    pub return_type: Rc<Symbol>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ParameterType {
+    pub name: String,
+    pub _type: SymbolType,
+    pub span: TextSpan,
 }
 
 impl Display for SymbolType {
@@ -105,10 +112,34 @@ impl Display for SymbolType {
                 SymbolType::Custom {} => String::from("Custom"),
                 SymbolType::Array(s) => format!("[{}]", s),
                 SymbolType::Class(ClassType { name, .. }) => name.to_string(),
-                SymbolType::Function { .. } => String::from("Function"),
+                SymbolType::Function(FunctionType {
+                    parameters,
+                    return_type,
+                }) => format!(
+                    "({})-> {}",
+                    {
+                        let mut output = String::new();
+                        let mut i = 0;
+                        while i < parameters.len() {
+                            output.push_str(&format!("{}", parameters[i]));
+                            if i < parameters.len() - 1 {
+                                output.push_str(", ")
+                            }
+                            i += 1;
+                        }
+                        output
+                    },
+                    return_type._type
+                ),
                 SymbolType::Instance { class } => class.name.to_string(),
             }
         )
+    }
+}
+
+impl Display for ParameterType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", format!("{}: {}", self.name, self._type))
     }
 }
 
@@ -161,29 +192,30 @@ impl Symbol {
     }
     pub fn operate(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        match (&self._type, &rhs._type) {
-            // a: Number x b: Number = c: Number
-            (SymbolType::Number, SymbolType::Number) => Ok(Symbol {
+        if let (SymbolType::Number, SymbolType::Number) = (&self._type, &rhs._type) {
+            Ok(Symbol {
                 _type: SymbolType::Number,
                 span,
-            }),
-            _ => Err((
+            })
+        } else {
+            Err((
                 SemanticError::UnsupportedBinaryOperation(
                     operator.clone(),
                     self._type.clone(),
                     rhs._type,
                 ),
                 span,
-            )),
+            ))
         }
     }
     pub fn negate(&self) -> SymbolOrError {
-        match self._type {
-            SymbolType::Boolean => Ok(self.clone()),
-            _ => Err((
+        if let SymbolType::Boolean = self._type {
+            Ok(self.clone())
+        } else {
+            Err((
                 SemanticError::UnsupportedNegation(self._type.clone()),
                 self.span,
-            )),
+            ))
         }
     }
     pub fn equate(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
@@ -206,39 +238,41 @@ impl Symbol {
     }
     pub fn compare(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        match (&self._type, &rhs._type) {
-            // a: Number x b: Number = c: Number
-            (SymbolType::Number, SymbolType::Number) => Ok(Symbol {
+        // a: Number x b: Number = c: Number
+        if let (SymbolType::Number, SymbolType::Number) = (&self._type, &rhs._type) {
+            Ok(Symbol {
                 _type: SymbolType::Number,
                 span,
-            }),
-            _ => Err((
+            })
+        } else {
+            Err((
                 SemanticError::UnsupportedBinaryOperation(
                     operator.clone(),
                     self._type.clone(),
                     rhs._type,
                 ),
                 span,
-            )),
+            ))
         }
     }
     pub fn andor(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        match (&self._type, &rhs._type) {
-            // a: Boolean && b: Boolean = c: Boolean
-            // a: Boolean || b: Boolean = c: Boolean
-            (SymbolType::Boolean, SymbolType::Boolean) => Ok(Symbol {
+        // a: Boolean && b: Boolean = c: Boolean
+        // a: Boolean || b: Boolean = c: Boolean
+        if let (SymbolType::Boolean, SymbolType::Boolean) = (&self._type, &rhs._type) {
+            Ok(Symbol {
                 _type: SymbolType::Boolean,
                 span,
-            }),
-            _ => Err((
+            })
+        } else {
+            Err((
                 SemanticError::UnsupportedLogicalOperation(
                     operator.clone(),
                     self._type.clone(),
                     rhs._type,
                 ),
                 span,
-            )),
+            ))
         }
     }
 }

@@ -243,6 +243,28 @@ fn it_faults_invalid_assignment() {
 }
 
 #[test]
+fn it_fault_nested_test_block() {
+    let mut scanner = Scanner::new(
+        "
+    {
+        @tests {
+            
+        }
+    }",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(SemanticError::IllegalTestBlock, [[2, 9], [5, 0]])]
+    )
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();

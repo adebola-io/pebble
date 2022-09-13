@@ -87,7 +87,7 @@ where
         &self._fields[self._current_f]
     }
     /// Returns the depth of the stage. i.e the level of field nesting.
-    pub fn depth(&mut self) -> usize {
+    pub fn depth(&self) -> usize {
         self._levels
     }
 }
