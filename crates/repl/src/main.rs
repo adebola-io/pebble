@@ -53,7 +53,7 @@ fn evaluate(input: &str) {
                     println!("{}", error);
                 }
             } else {
-                println!("..");
+                println!("No errors were found. ");
             }
         }
     }

@@ -50,6 +50,15 @@ impl Symbol {
             }
         )
     }
+    pub fn is_unknown(&self) -> bool {
+        matches!(
+            self,
+            Symbol {
+                _type: SymbolType::Unknown,
+                ..
+            }
+        )
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -219,7 +228,7 @@ impl Symbol {
             // a: Boolean && b: Boolean = c: Boolean
             // a: Boolean || b: Boolean = c: Boolean
             (SymbolType::Boolean, SymbolType::Boolean) => Ok(Symbol {
-                _type: SymbolType::Number,
+                _type: SymbolType::Boolean,
                 span,
             }),
             _ => Err((

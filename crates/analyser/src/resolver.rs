@@ -55,7 +55,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::NamespaceExpression(_) => todo!(),
             Expression::RangeExpression(r) => self.range_exp(r),
             Expression::TernaryExpression(t) => self.tern_exp(t),
-            Expression::AssignmentExpression(_) => todo!(),
+            Expression::AssignmentExpression(a) => self.assign_exp(a),
             Expression::FnExpression(_) => todo!(),
         }
     }
@@ -158,8 +158,39 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         todo!()
     }
 
+    /// Typechecks an assignment expression.
     fn assign_exp(&'a self, assign_exp: &ast::AssignmentExpression<'a>) -> SymbolOrError {
-        todo!()
+        let mut rhs_symbol = self.expression(&assign_exp.operands[1])?;
+        let lhs_symbol = self.expression(&assign_exp.operands[0])?;
+        match assign_exp.operator {
+            Operator::AddAssign => rhs_symbol = lhs_symbol.add(rhs_symbol)?,
+            Operator::SubtractAssign => {
+                rhs_symbol = lhs_symbol.operate(rhs_symbol, &Operator::Subtract)?
+            }
+            Operator::DivideAssign => {
+                rhs_symbol = lhs_symbol.operate(rhs_symbol, &Operator::Divide)?
+            }
+            Operator::MultiplyAssign => rhs_symbol = lhs_symbol.mul(rhs_symbol)?,
+            Operator::LogicalAndAssign => {
+                rhs_symbol = lhs_symbol.andor(rhs_symbol, &Operator::LogicalAnd)?
+            }
+            Operator::LogicalOrAssign => {
+                rhs_symbol = lhs_symbol.andor(rhs_symbol, &Operator::LogicalOr)?
+            }
+            _ => {}
+        }
+        if lhs_symbol.is_unknown() && rhs_symbol.is_unknown() {
+            Err((SemanticError::UnknownAssignment, lhs_symbol.span))
+        } else if rhs_symbol.is_nil() {
+            Err((SemanticError::AssigningToNil, lhs_symbol.span))
+        } else if lhs_symbol._type != rhs_symbol._type {
+            Err((
+                SemanticError::InconsistentAssignment(lhs_symbol._type, rhs_symbol._type),
+                assign_exp.span,
+            ))
+        } else {
+            Ok(lhs_symbol)
+        }
     }
 
     /// Type checks an index expression.

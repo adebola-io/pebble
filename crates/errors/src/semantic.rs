@@ -17,9 +17,10 @@ where
     InvalidIndexer(T),
     InconsistentTernarySides(T, T),
     UnsupportedNegation(T),
-    InconsistentAssignment(String, String),
+    InconsistentAssignment(T, T),
     InconsistentInitializer,
     InvalidRangeBoundaries,
+    UnknownAssignment,
     UnusedVariable,
     AssigningToNil,
     HeterogenousArray(T, T),
@@ -36,11 +37,11 @@ where
             match self {
 
                 SemanticError::UnsupportedBinaryOperation(op, x, y) => format!(
-                    "The operation '{}' is not defined for '{}' and '{}'",
+                    "The operation '{}' is not defined for types '{}' and '{}'",
                     op, x, y
                 ),
                 SemanticError::UnsupportedLogicalOperation(op, x, y) => format!(
-                    "Cannot perform the operation '{}' on a '{}' and a '{}'",
+                    "Cannot perform the logical operation '{}' on types '{}' and '{}'",
                     op, x, y
                 ),
                 SemanticError::ComparisionBetweenDifferentTypes(op, x, y) => format!(
@@ -60,11 +61,12 @@ where
                 ),
                 SemanticError::InvalidIndex(x) => format!("The type '{}' is not an indexable type", x),
                 SemanticError::InvalidIndexer(x) => format!("The type '{}' cannot be used as an index", x),
-                SemanticError::InvalidRangeBoundaries => format!("Invalid range. The boundaries of a range must be both be either characters or numbers."),
+                SemanticError::InvalidRangeBoundaries => format!("Invalid range. The boundaries of a range must be both be either characters or numbers"),
                 SemanticError::UndeclaredVariable(x) => format!("Variable '{}' is not defined", x),
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
+                SemanticError::UnknownAssignment => format!("Cannot infer value type from usage"),
                 SemanticError::UnsupportedNegation(_) => todo!(),
-                SemanticError::InconsistentAssignment(_, _) => todo!(),
+                SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
                 SemanticError::InconsistentInitializer => todo!(),
                 SemanticError::HeterogenousArray(x, y) => format!(
                     "Elements of type '{}' and '{}' cannot be put in the same array. Arrays can only contain elements of the same type", x, y

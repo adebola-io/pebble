@@ -220,6 +220,29 @@ fn it_faults_invalid_range_boundary() {
 }
 
 #[test]
+fn it_faults_invalid_assignment() {
+    let mut scanner = Scanner::new(
+        "
+    @let day = \"Monday\";
+    @let time = 1600;
+    day = time;",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(
+            SemanticError::InconsistentAssignment(SymbolType::String, SymbolType::Number),
+            [[3, 5], [3, 15]]
+        )]
+    )
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();
