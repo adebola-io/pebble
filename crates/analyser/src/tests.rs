@@ -180,6 +180,28 @@ fn it_fault_inconsistent_ternaries() {
 }
 
 #[test]
+fn it_faults_invalid_index() {
+    let mut scanner = Scanner::new(
+        "
+    @let numArray = [1, 2, 3];
+    @let num = numArray['x'];",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(
+            SemanticError::InvalidIndexer(SymbolType::Character),
+            [[2, 25], [2, 27]]
+        )]
+    )
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();

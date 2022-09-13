@@ -13,6 +13,8 @@ where
     UndeclaredVariable(String),
     AlreadyDeclared(String),
     InvalidTernaryTest(T),
+    InvalidIndex(T),
+    InvalidIndexer(T),
     InconsistentTernarySides(T, T),
     UnsupportedNegation(T),
     InconsistentAssignment(String, String),
@@ -55,6 +57,8 @@ where
                 SemanticError::InconsistentTernarySides(x, y) => format!(
                     "Expected '{}' for alternate expression, got '{}'. Both sides of a ternary expression must have the same type", x, y
                 ),
+                SemanticError::InvalidIndex(x) => format!("'{}' is not an indexable type", x),
+                SemanticError::InvalidIndexer(x) => format!("The type '{}' cannot be used as an index", x),
                 SemanticError::UndeclaredVariable(x) => format!("Variable '{}' is not defined", x),
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
                 SemanticError::UnsupportedNegation(_) => todo!(),

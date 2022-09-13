@@ -144,7 +144,7 @@ pub struct AssignmentExpression<'a> {
 /// An expression that access an index of an array. e.g `a[b]`.
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct IndexExpression<'a> {
-    accessor_and_property: Vec<Expression<'a>>,
+    pub accessor_and_property: Vec<Expression<'a>>,
     pub span: TextSpan,
 }
 

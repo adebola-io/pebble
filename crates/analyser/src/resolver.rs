@@ -50,7 +50,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::UnaryExpression(u) => self.unary_exp(u),
             Expression::CallExpression(_) => todo!(),
             Expression::ArrayExpression(a) => self.array_exp(a),
-            Expression::IndexExpression(_) => todo!(),
+            Expression::IndexExpression(i) => self.index_exp(i),
             Expression::DotExpression(_) => todo!(),
             Expression::NamespaceExpression(_) => todo!(),
             Expression::RangeExpression(_) => todo!(),
@@ -162,8 +162,30 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         todo!()
     }
 
+    /// Type checks an index expression.
     fn index_exp(&'a self, index_exp: &ast::IndexExpression<'a>) -> SymbolOrError {
-        todo!()
+        let accessor_symbol = self.expression(&index_exp.accessor_and_property[0])?;
+        let property_symbol = self.expression(&index_exp.accessor_and_property[1])?;
+        let element_type;
+        if let SymbolType::Array(x) = accessor_symbol._type {
+            element_type = *x;
+        } else {
+            return Err((
+                SemanticError::InvalidIndex(accessor_symbol._type),
+                accessor_symbol.span,
+            ));
+        }
+        if let SymbolType::Number = property_symbol._type {
+            Ok(Symbol {
+                _type: element_type,
+                span: index_exp.span,
+            })
+        } else {
+            return Err((
+                SemanticError::InvalidIndexer(property_symbol._type),
+                property_symbol.span,
+            ));
+        }
     }
 
     fn call_exp(&'a self, call_exp: &ast::CallExpression<'a>) -> SymbolOrError {
