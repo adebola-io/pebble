@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 /// All valid Operators in Pebble.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Operator {
@@ -46,7 +48,7 @@ pub enum Operator {
 // The operator representations. This array is sorted in descending order by the length of the operators.
 pub const OPERATORS: &'static [&'static str; 36] = &[
     "...", "&&=", "||=", "*=", "/=", "+=", "-=", "==", "!=", ">=", "<=", "=>", "->", "++", "--",
-    "..", "::", "||", "&&", "<<", "**", "*", "/", "+", "-", "%", "&", "|", "!", "~", ".", "?", ":",
+    "..", "::", "||", "&&", "<<", "^", "*", "/", "+", "-", "%", "&", "|", "!", "~", ".", "?", ":",
     ">", "<", "=",
 ];
 
@@ -82,5 +84,99 @@ pub fn precedence_of(operator: &Operator) -> i32 {
         | Operator::LogicalAndAssign => 4,
         Operator::Temp => 0,
         _ => todo!(),
+    }
+}
+
+impl Operator {
+    pub fn from(op: &str) -> Self {
+        match op {
+            "+" => Operator::Add,
+            "*" => Operator::Multiply,
+            "-" => Operator::Subtract,
+            "/" => Operator::Divide,
+            "%" => Operator::Remainder,
+            "^" => Operator::PowerOf,
+            "||" => Operator::LogicalOr,
+            "&&" => Operator::LogicalAnd,
+            "!" => Operator::LogicalNot,
+            "|" => Operator::BitwiseOr,
+            "&" => Operator::BitwiseAnd,
+            "~" => Operator::BitWiseNot,
+            "<<" => Operator::BitwiseLeftShift,
+            ".." => Operator::RangeBetween,
+            "=" => Operator::Assign,
+            "+=" => Operator::AddAssign,
+            "-=" => Operator::SubtractAssign,
+            "/=" => Operator::DivideAssign,
+            "*=" => Operator::MultiplyAssign,
+            "||=" => Operator::LogicalAndAssign,
+            "==" => Operator::Equals,
+            "!=" => Operator::NotEquals,
+            ">" => Operator::GreaterThan,
+            "<" => Operator::LessThan,
+            ">=" => Operator::GreaterThanOrEquals,
+            "<=" => Operator::LessThanOrEquals,
+            "?" => Operator::Confirm,
+            ":" => Operator::Colon,
+            "..." => Operator::RestOf,
+            "::" => Operator::Namespace,
+            "." => Operator::Dot,
+            "=>" => Operator::Arrow,
+            "->" => Operator::Returns,
+            "++" => Operator::Increment,
+            "--" => Operator::Decrement,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Display for Operator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Operator::Add => "+",
+                Operator::Multiply => "*",
+                Operator::Subtract => "-",
+                Operator::Divide => "/",
+                Operator::Remainder => "*",
+                Operator::PowerOf => "^",
+                Operator::LogicalAnd => "&&",
+                Operator::LogicalOr => "||",
+                Operator::LogicalNot => "!",
+                Operator::BitwiseOr => "|",
+                Operator::BitwiseAnd => "&",
+                Operator::BitWiseNot => "~",
+                Operator::BitwiseLeftShift => "<<",
+                Operator::BitwiseRightShift => ">>",
+                Operator::RangeBetween => "..",
+                Operator::Assign => "=",
+                Operator::AddAssign => "+=",
+                Operator::SubtractAssign => "-=",
+                Operator::DivideAssign => "/=",
+                Operator::MultiplyAssign => "*=",
+                Operator::LogicalAndAssign => "&&=",
+                Operator::LogicalOrAssign => "||=",
+                Operator::Equals => "==",
+                Operator::NotEquals => "!=",
+                Operator::GreaterThan => ">",
+                Operator::LessThan => "<",
+                Operator::GreaterThanOrEquals => ">=",
+                Operator::LessThanOrEquals => "<=",
+                Operator::Confirm => "?",
+                Operator::Colon => ":",
+                Operator::RestOf => "...",
+                Operator::Namespace => "::",
+                Operator::Dot => ".",
+                Operator::Arrow => "=>",
+                Operator::Returns => "->",
+                Operator::Increment => "++",
+                Operator::Decrement => "--",
+                Operator::Call => "()",
+                Operator::Index => "[]",
+                Operator::Temp => "0",
+            }
+        )
     }
 }

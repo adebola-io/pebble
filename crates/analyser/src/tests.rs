@@ -31,15 +31,108 @@ fn it_tests_number_plus_string() {
     let resolver = Resolver::new(&parser);
     resolver.resolve().unwrap();
     assert_eq!(
-        resolver.diagnostics,
-        RefCell::new(vec![(
+        resolver.diagnostics.take(),
+        vec![(
             SemanticError::UnsupportedBinaryOperation(
                 Operator::Add,
                 SymbolType::Number,
                 SymbolType::String
             ),
             [[1, 1], [1, 5]]
-        )])
+        )]
+    )
+}
+
+#[test]
+fn it_tests_numeric_identifier_plus_string() {
+    let mut scanner = Scanner::new(
+        "
+    @let a = 2; 
+    a + \"hello\";",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(
+            SemanticError::UnsupportedBinaryOperation(
+                Operator::Add,
+                SymbolType::Number,
+                SymbolType::String
+            ),
+            [[1, 15], [2, 9]]
+        )]
+    )
+}
+
+#[test]
+fn it_tests_identifiers() {
+    let mut scanner = Scanner::new(
+        "
+    @let a = 2;
+    @let b = 4;
+    @let c = a + b;
+    @let d = c;
+    d + '\\n';",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(
+            SemanticError::UnsupportedBinaryOperation(
+                Operator::Add,
+                SymbolType::Number,
+                SymbolType::Character
+            ),
+            [[1, 15], [5, 9]]
+        )]
+    )
+}
+
+#[test]
+fn it_tests_identifiers_across_blocks() {
+    let mut scanner = Scanner::new(
+        "
+    @let a = 2;
+    {
+        @let b = 4 + a;
+        @let c = true;
+        println b + c;
+    }
+    println b;
+    println a;",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![
+            (
+                SemanticError::UnsupportedBinaryOperation(
+                    Operator::Add,
+                    SymbolType::Number,
+                    SymbolType::Boolean
+                ),
+                [[3, 18], [4, 18]]
+            ),
+            (
+                SemanticError::UndeclaredVariable(String::from("b")),
+                [[7, 13], [7, 14]]
+            )
+        ]
     )
 }
 

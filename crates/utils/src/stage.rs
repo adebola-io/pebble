@@ -59,7 +59,7 @@ where
         }
     }
     /// Searches for a value using its key in the current field.
-    pub fn get(&mut self, key: K) -> Option<&V> {
+    pub fn get(&self, key: K) -> Option<&V> {
         self._get_current_field().get(&key)
     }
     /// Creates a field within the current field and sets it as the new current field.

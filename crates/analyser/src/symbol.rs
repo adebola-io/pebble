@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{fmt::Display, rc::Rc};
 
 use ast::{Operator, TextSpan};
 use errors::SemanticError;
@@ -22,6 +22,30 @@ impl Default for Symbol {
     }
 }
 
+impl Symbol {
+    pub fn nil(span: TextSpan) -> Self {
+        Self {
+            _type: SymbolType::Nil,
+            span,
+        }
+    }
+    pub fn unknown(span: TextSpan) -> Self {
+        Self {
+            _type: SymbolType::Unknown,
+            span,
+        }
+    }
+    pub fn is_nil(&self) -> bool {
+        matches!(
+            self,
+            Symbol {
+                _type: SymbolType::Nil,
+                ..
+            }
+        )
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum SymbolType {
     Nil,
@@ -31,21 +55,44 @@ pub enum SymbolType {
     Number,
     Character,
     Boolean,
-    Class {
-        arguments: Box<Symbol>,
-        properties: Vec<Box<Symbol>>,
-    },
-    Constant {
-        _type: Box<SymbolType>,
-    },
+    Custom {},
+    Class(ClassType),
     Function {
         arguments: Box<Symbol>,
         parameters: Vec<Symbol>,
         return_type: Rc<Symbol>,
     },
     Instance {
-        class: Rc<Symbol>,
+        class: Rc<ClassType>,
     },
+}
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClassType {
+    name: String,
+    arguments: Box<Symbol>,
+    properties: Vec<Box<Symbol>>,
+}
+
+impl Display for SymbolType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                SymbolType::Nil => "Nil",
+                SymbolType::Unknown => "Unknown",
+                SymbolType::Module => "Module",
+                SymbolType::String => "String",
+                SymbolType::Number => "Number",
+                SymbolType::Character => "Character",
+                SymbolType::Boolean => "Boolean",
+                SymbolType::Custom {} => "Custom",
+                SymbolType::Class(ClassType { name, .. }) => &name,
+                SymbolType::Function { .. } => "Function",
+                SymbolType::Instance { class } => &class.name,
+            }
+        )
+    }
 }
 
 impl Symbol {

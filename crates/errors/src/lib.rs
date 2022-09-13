@@ -1,5 +1,8 @@
-use ast::Operator;
-use std::fmt::Display;
+mod semantic;
+mod syntax;
+
+pub use semantic::*;
+pub use syntax::*;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Error {
@@ -12,72 +15,6 @@ pub enum LexicalError {
     UnterminatedStringLiteral,
     /// A character token has more than one character in its body.
     InvalidCharacterCount,
-}
-
-#[derive(Debug, PartialEq)]
-pub enum SyntaxError {
-    NamedFunctionExpr,
-    UninitializedTypeAlias,
-    UninitializedConstant,
-    UninitializedUntypedVariable,
-    ExpectedImportSource,
-    ExpectedImport,
-    UnclosedImportSpace,
-    StrayImplement,
-    IllegalElse,
-    IllegalRecover,
-    DynamicRecordMap,
-    ExpectedFunctionName,
-    ExpectedParamterName,
-    ExpectedVariableName,
-    ExpectedPropertyName,
-    ExpectedInterfaceName,
-    ExpectedTypeName,
-    ExpectedGenericTypeParameter,
-    ExpectedReturnType,
-    ExpectedAModuleName,
-    ExpectedIdentifier,
-    ExpectedAs,
-    ExpectedFrom,
-    ExpectedIn,
-    ExpectedSemiColon,
-    ExpectedColon,
-    ExpectedFunctionArgument,
-    ExpectedLParen,
-    ExpectedRParen,
-    ExpectedLCurly,
-    ExpectedRCurly,
-    ExpectedLSquareBrac,
-    ExpectedRSquareBrac,
-    ExpectedLAngleBrac,
-    ExpectedRAngleBrac,
-    ExpectedCommaOrRSquareBrac,
-    ExpectedCommaOrRCurly,
-    ExpectedCommaOrRAngleBrac,
-    ExpectedArrow,
-    ExpectedExpression,
-    UnrecognizedInjunction,
-    UnexpectedOperator,
-    UnexpectedKeyword,
-    IllegalDeclaration,
-}
-
-impl Display for SyntaxError {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum SemanticError<T> {
-    UnsupportedBinaryOperation(Operator, T, T),
-    UnsupportedLogicalOperation(Operator, T, T),
-    ComparisionBetweenDifferentTypes(Operator, T, T),
-    UnsupportedNegation(T),
-    InconsistentAssignment(String, String),
-    InconsistentInitializer,
-    UnusedVariable,
-    AssigningToNil,
 }
 
 impl Error {

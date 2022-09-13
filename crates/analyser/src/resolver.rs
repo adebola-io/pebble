@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 
 use ast::{Expression, Location, Operator, Statement, Visitor};
+use errors::SemanticError;
 use parser::{Parser, ParserError};
 use std::cell::RefCell;
 use utils::Stage;
@@ -39,7 +40,7 @@ impl<'a> Resolver<'a> {
 impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     fn expression(&'a self, exp: &ast::Expression<'a>) -> SymbolOrError {
         match exp {
-            Expression::IdentifierExpression(_) => todo!(),
+            Expression::IdentifierExpression(i) => self.ident(i),
             Expression::StringExpression(s) => self.string(s),
             Expression::NumericExpression(n) => self.number(n),
             Expression::BooleanExpression(b) => self.boolean(b),
@@ -61,7 +62,14 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn ident(&'a self, ident: &ast::Identifier<'a>) -> SymbolOrError {
-        todo!()
+        match self.stage.borrow().lookup(ident.value) {
+            Some(d) => Ok(d.clone()),
+            // Store error if the value is undefined.
+            None => Err((
+                SemanticError::UndeclaredVariable(ident.value.to_string()),
+                ident.span,
+            )),
+        }
     }
 
     fn string(&'a self, string: &ast::TextString<'a>) -> SymbolOrError {
@@ -182,7 +190,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     fn statement(&'a self, statement: &ast::Statement<'a>) {
         match statement {
             Statement::IfStatement(_) => todo!(),
-            Statement::PrintLnStatement(_) => todo!(),
+            Statement::PrintLnStatement(p) => self.println_statement(p),
             Statement::PrependStatement(_) => todo!(),
             Statement::VariableDeclaration(v) => self.var_decl(v),
             Statement::Break(_) => todo!(),
@@ -193,11 +201,11 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Statement::WhileStatement(_) => todo!(),
             Statement::PublicModifier(_) => todo!(),
             Statement::ExpressionStatement(e) => self.exp_statement(e),
-            Statement::BlockStatement(_) => todo!(),
+            Statement::BlockStatement(b) => self.block(b),
             Statement::UseImport(_) => todo!(),
             Statement::ReturnStatement(_) => todo!(),
             Statement::CrashStmnt(_) => todo!(),
-            Statement::EmptyStatement(_) => todo!(),
+            Statement::EmptyStatement(e) => {}
             Statement::TryBlock(_) => todo!(),
             Statement::Function(_) => todo!(),
             Statement::TypeAlias(_) => todo!(),
@@ -214,14 +222,50 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn println_statement(&'a self, println_stmnt: &ast::PrintLnStatement<'a>) {
-        todo!()
+        match self.expression(&println_stmnt.argument) {
+            Ok(_) => {}
+            Err(e) => self.diagnostics.borrow_mut().push(e),
+        };
     }
 
     fn prepend_statement(&'a self, prepend_stmnt: &ast::PrependStatement<'a>) {
         todo!()
     }
 
-    fn var_decl(&'a self, var_decl: &ast::VariableDeclaration<'a>) {}
+    fn var_decl(&'a self, var_decl: &ast::VariableDeclaration<'a>) {
+        let name = var_decl.name.value;
+        // Block double declaration of the same name in the same scope.
+        if self.stage.borrow().get(name).is_some() {
+            self.diagnostics.borrow_mut().push((
+                SemanticError::AlreadyDeclared(name.to_string()),
+                var_decl.span,
+            ));
+            return;
+        }
+        let symbol;
+        // Infer type from assigned expression.
+        if let Some(init) = &var_decl.initializer {
+            match self.expression(init) {
+                Ok(inferred) => {
+                    if inferred.is_nil() {
+                        symbol = Symbol::unknown(var_decl.span);
+                        self.diagnostics
+                            .borrow_mut()
+                            .push((SemanticError::AssigningToNil, var_decl.span))
+                    } else {
+                        symbol = inferred
+                    }
+                }
+                Err(e) => {
+                    self.diagnostics.borrow_mut().push(e);
+                    symbol = Symbol::unknown(var_decl.span)
+                }
+            }
+        } else {
+            symbol = Symbol::unknown(var_decl.span);
+        }
+        self.stage.borrow_mut().set(name, symbol);
+    }
 
     fn breack(&'a self, brk: &ast::Break<'a>) {
         todo!()
@@ -259,7 +303,11 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn block(&'a self, block: &ast::Block<'a>) {
-        todo!()
+        self.stage.borrow_mut().create_inner();
+        for statement in &block.body {
+            self.statement(statement);
+        }
+        self.stage.borrow_mut().ascend();
     }
 
     fn use_import(&'a self, use_stmnt: &ast::UseImport<'a>) {

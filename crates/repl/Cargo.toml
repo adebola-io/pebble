@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 parser = { version = "0.1.0", path = "../parser" }
 interpreter = { version = "*", path = "../interpreter" }
+analyser = { version = "*", path = "../analyser" }

@@ -106,7 +106,6 @@ impl<'a> Parser<'a> {
                     // Errors are checked at the statement boundary.
                     // If an error is found while parsing, the parser stores it, skips over till it finds the next statement, then continues parsing from there.
                     self.store_error(e);
-                    self.advance();
                     while !(self.end()
                         || self.token().is_semi_colon()
                         || self.token().is_comment()
@@ -1461,7 +1460,7 @@ impl<'a> Parser<'a> {
                 name = Identifier { value, span: *span };
                 self.advance();
             } else {
-                return Err((SyntaxError::ExpectedParamterName, self.token().span));
+                return Err((SyntaxError::ExpectedParameterName, self.token().span));
             }
             let label = self.maybe_type_label()?;
             let start = name.get_range()[0];
