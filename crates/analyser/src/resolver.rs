@@ -54,7 +54,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::DotExpression(_) => todo!(),
             Expression::NamespaceExpression(_) => todo!(),
             Expression::RangeExpression(_) => todo!(),
-            Expression::TernaryExpression(_) => todo!(),
+            Expression::TernaryExpression(t) => self.tern_exp(t),
             Expression::AssignmentExpression(_) => todo!(),
             Expression::FnExpression(_) => todo!(),
         }
@@ -188,9 +188,28 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Ok(Symbol::array(first_type, array_exp.span))
         }
     }
-
+    /// Type checks a ternary expression.
     fn tern_exp(&'a self, tern_exp: &ast::TernaryExpression<'a>) -> SymbolOrError {
-        todo!()
+        let test_symbol = self.expression(&tern_exp.test)?;
+        if test_symbol._type != SymbolType::Boolean {
+            return Err((
+                SemanticError::InvalidTernaryTest(test_symbol._type),
+                test_symbol.span,
+            ));
+        }
+        let consequent_symbol = self.expression(&tern_exp.consequent)?;
+        let alternate_symbol = self.expression(&tern_exp.alternate)?;
+
+        if consequent_symbol._type != alternate_symbol._type {
+            return Err((
+                SemanticError::InconsistentTernarySides(
+                    consequent_symbol._type,
+                    alternate_symbol._type,
+                ),
+                alternate_symbol.span,
+            ));
+        }
+        Ok(consequent_symbol)
     }
 
     fn range_exp(&'a self, rang_exp: &ast::RangeExpression<'a>) -> SymbolOrError {

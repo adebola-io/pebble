@@ -12,6 +12,8 @@ where
     ComparisionBetweenDifferentTypes(Operator, T, T),
     UndeclaredVariable(String),
     AlreadyDeclared(String),
+    InvalidTernaryTest(T),
+    InconsistentTernarySides(T, T),
     UnsupportedNegation(T),
     InconsistentAssignment(String, String),
     InconsistentInitializer,
@@ -47,6 +49,12 @@ where
                     }
                         , x, y
                     ),
+                SemanticError::InvalidTernaryTest(x) => format!(
+                    "Expected Boolean type for ternary operation, got '{}'", x
+                ),
+                SemanticError::InconsistentTernarySides(x, y) => format!(
+                    "Expected '{}' for alternate expression, got '{}'. Both sides of a ternary expression must have the same type", x, y
+                ),
                 SemanticError::UndeclaredVariable(x) => format!("Variable '{}' is not defined", x),
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
                 SemanticError::UnsupportedNegation(_) => todo!(),

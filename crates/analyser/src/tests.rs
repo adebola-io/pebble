@@ -158,6 +158,28 @@ fn it_faults_heterogenous_arrays() {
 }
 
 #[test]
+fn it_fault_inconsistent_ternaries() {
+    let mut scanner = Scanner::new(
+        "
+    @let isTrue = true;
+    @let array = isTrue ? 345: \"John Doe\";",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(
+            SemanticError::InconsistentTernarySides(SymbolType::Number, SymbolType::String),
+            [[2, 32], [2, 41]]
+        )]
+    )
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();
