@@ -10,7 +10,7 @@ where
     UnsupportedBinaryOperation(Operator, T, T),
     UnsupportedLogicalOperation(Operator, T, T),
     ComparisionBetweenDifferentTypes(Operator, T, T),
-    UndeclaredVariable(String),
+    Undeclared(String),
     AlreadyDeclared(String),
     InvalidTernaryTest(T),
     InvalidIndex(T),
@@ -23,6 +23,8 @@ where
     UnknownAssignment,
     UnusedVariable,
     IllegalTestBlock,
+    AliasUsedAsValue(String),
+    ValueUsedAsAlias(String),
     AssigningToNil,
     HeterogenousArray(T, T),
 }
@@ -63,7 +65,7 @@ where
                 SemanticError::InvalidIndex(x) => format!("The type '{}' is not an indexable type", x),
                 SemanticError::InvalidIndexer(x) => format!("The type '{}' cannot be used as an index", x),
                 SemanticError::InvalidRangeBoundaries => format!("Invalid range. The boundaries of a range must be both be either characters or numbers"),
-                SemanticError::UndeclaredVariable(x) => format!("Variable '{}' is not defined", x),
+                SemanticError::Undeclared(x) => format!("'{}' is not defined", x),
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
                 SemanticError::UnknownAssignment => format!("Cannot infer value type from usage"),
                 SemanticError::UnsupportedNegation(_) => todo!(),
@@ -73,6 +75,8 @@ where
                 SemanticError::HeterogenousArray(x, y) => format!(
                     "Elements of type '{}' and '{}' cannot be put in the same array. Arrays can only contain elements of the same type", x, y
                 ),
+                SemanticError::AliasUsedAsValue(x) => format!("'{}' is a type, but it is being used as a value", x),
+                SemanticError::ValueUsedAsAlias(x) => format!("'{}' is a value, but it is being used as a type", x),
                 SemanticError::UnusedVariable => todo!(),
                 SemanticError::AssigningToNil => todo!(),
             }

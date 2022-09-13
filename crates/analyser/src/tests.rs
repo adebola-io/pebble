@@ -129,7 +129,7 @@ fn it_tests_identifiers_across_blocks() {
                 [[3, 18], [4, 18]]
             ),
             (
-                SemanticError::UndeclaredVariable(String::from("b")),
+                SemanticError::Undeclared(String::from("b")),
                 [[7, 13], [7, 14]]
             )
         ]
@@ -262,6 +262,28 @@ fn it_fault_nested_test_block() {
         resolver.diagnostics.take(),
         vec![(SemanticError::IllegalTestBlock, [[2, 9], [5, 0]])]
     )
+}
+
+#[test]
+fn it_remembers_type_aliases() {
+    let mut scanner = Scanner::new(
+        "
+    @type Metres = Number;
+    @let distance1: Metres = 900;
+    {
+        @type Kilometres = Metres;
+        @let distance2: Kilometres = 400;
+        @let distance = distance1 + distance2;
+    }
+    ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(resolver.diagnostics.take(), vec![])
 }
 
 #[test]

@@ -23,6 +23,53 @@ impl Default for Symbol {
 }
 
 impl Symbol {
+    pub fn primitives() -> Vec<(&'static str, Self)> {
+        vec![
+            (
+                "Number",
+                Symbol {
+                    _type: SymbolType::Alias(Box::new(Symbol {
+                        _type: SymbolType::Number,
+                        span: [[0, 0], [0, 0]],
+                    })),
+                    span: [[0, 0], [0, 0]],
+                },
+            ),
+            (
+                "String",
+                Symbol {
+                    _type: SymbolType::Alias(Box::new(Symbol {
+                        _type: SymbolType::String,
+                        span: [[0, 0], [0, 0]],
+                    })),
+                    span: [[0, 0], [0, 0]],
+                },
+            ),
+            (
+                "Boolean",
+                Symbol {
+                    _type: SymbolType::Alias(Box::new(Symbol {
+                        _type: SymbolType::Boolean,
+                        span: [[0, 0], [0, 0]],
+                    })),
+                    span: [[0, 0], [0, 0]],
+                },
+            ),
+            (
+                "Character",
+                Symbol {
+                    _type: SymbolType::Alias(Box::new(Symbol {
+                        _type: SymbolType::Character,
+                        span: [[0, 0], [0, 0]],
+                    })),
+                    span: [[0, 0], [0, 0]],
+                },
+            ),
+        ]
+    }
+}
+
+impl Symbol {
     pub fn nil(span: TextSpan) -> Self {
         Self {
             _type: SymbolType::Nil,
@@ -35,7 +82,7 @@ impl Symbol {
             span,
         }
     }
-    pub fn array(inner_type: SymbolType, span: TextSpan) -> Self {
+    pub fn array(inner_type: Symbol, span: TextSpan) -> Self {
         Self {
             _type: SymbolType::Array(Box::new(inner_type)),
             span,
@@ -69,9 +116,9 @@ pub enum SymbolType {
     String,
     Number,
     Character,
-    Array(Box<SymbolType>),
+    Array(Box<Symbol>),
     Boolean,
-    Custom {},
+    Alias(Box<Symbol>),
     Class(ClassType),
     Function(FunctionType),
     Instance { class: Rc<ClassType> },
@@ -79,7 +126,7 @@ pub enum SymbolType {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClassType {
     name: String,
-    arguments: Box<Symbol>,
+    arguments: Vec<Box<Symbol>>,
     properties: Vec<Box<Symbol>>,
 }
 
@@ -109,8 +156,8 @@ impl Display for SymbolType {
                 SymbolType::Number => String::from("Number"),
                 SymbolType::Character => String::from("Character"),
                 SymbolType::Boolean => String::from("Boolean"),
-                SymbolType::Custom {} => String::from("Custom"),
-                SymbolType::Array(s) => format!("[{}]", s),
+                SymbolType::Alias(s) => s._type.to_string(),
+                SymbolType::Array(s) => format!("[{}]", s._type),
                 SymbolType::Class(ClassType { name, .. }) => name.to_string(),
                 SymbolType::Function(FunctionType {
                     parameters,
@@ -146,7 +193,16 @@ impl Display for ParameterType {
 impl Symbol {
     pub fn mul(&self, rhs: Self) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        match (&self._type, &rhs._type) {
+        let mut right_type = &rhs._type;
+        let mut left_type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = left_type {
+            left_type = &a._type
+        }
+        while let SymbolType::Alias(a) = right_type {
+            right_type = &a._type
+        }
+        match (left_type, right_type) {
             // a: String * b: Number = c: String
             (SymbolType::String, SymbolType::Number) => Ok(Symbol {
                 _type: SymbolType::String,
@@ -169,7 +225,16 @@ impl Symbol {
     }
     pub fn add(&self, rhs: Self) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        match (&self._type, &rhs._type) {
+        let mut right_type = &rhs._type;
+        let mut left_type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = left_type {
+            left_type = &a._type
+        }
+        while let SymbolType::Alias(a) = right_type {
+            right_type = &a._type
+        }
+        match (left_type, right_type) {
             // a: String + b: String = c: String
             (SymbolType::String, SymbolType::String) => Ok(Symbol {
                 _type: SymbolType::String,
@@ -192,7 +257,16 @@ impl Symbol {
     }
     pub fn operate(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        if let (SymbolType::Number, SymbolType::Number) = (&self._type, &rhs._type) {
+        let mut right_type = &rhs._type;
+        let mut left_type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = left_type {
+            left_type = &a._type
+        }
+        while let SymbolType::Alias(a) = right_type {
+            right_type = &a._type
+        }
+        if let (SymbolType::Number, SymbolType::Number) = (left_type, right_type) {
             Ok(Symbol {
                 _type: SymbolType::Number,
                 span,
@@ -209,7 +283,12 @@ impl Symbol {
         }
     }
     pub fn negate(&self) -> SymbolOrError {
-        if let SymbolType::Boolean = self._type {
+        let mut _type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = _type {
+            _type = &a._type
+        }
+        if let SymbolType::Boolean = _type {
             Ok(self.clone())
         } else {
             Err((
@@ -220,7 +299,16 @@ impl Symbol {
     }
     pub fn equate(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
-        if self._type == rhs._type {
+        let mut right_type = &rhs._type;
+        let mut left_type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = left_type {
+            left_type = &a._type
+        }
+        while let SymbolType::Alias(a) = right_type {
+            right_type = &a._type
+        }
+        if left_type == right_type {
             Ok(Symbol {
                 _type: SymbolType::Boolean,
                 span,
@@ -238,8 +326,17 @@ impl Symbol {
     }
     pub fn compare(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
+        let mut right_type = &rhs._type;
+        let mut left_type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = left_type {
+            left_type = &a._type
+        }
+        while let SymbolType::Alias(a) = right_type {
+            right_type = &a._type
+        }
         // a: Number x b: Number = c: Number
-        if let (SymbolType::Number, SymbolType::Number) = (&self._type, &rhs._type) {
+        if let (SymbolType::Number, SymbolType::Number) = (left_type, right_type) {
             Ok(Symbol {
                 _type: SymbolType::Number,
                 span,
@@ -257,9 +354,18 @@ impl Symbol {
     }
     pub fn andor(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
+        let mut right_type = &rhs._type;
+        let mut left_type = &self._type;
+        // Unwrap aliased types.
+        while let SymbolType::Alias(a) = left_type {
+            left_type = &a._type
+        }
+        while let SymbolType::Alias(a) = right_type {
+            right_type = &a._type
+        }
         // a: Boolean && b: Boolean = c: Boolean
         // a: Boolean || b: Boolean = c: Boolean
-        if let (SymbolType::Boolean, SymbolType::Boolean) = (&self._type, &rhs._type) {
+        if let (SymbolType::Boolean, SymbolType::Boolean) = (left_type, right_type) {
             Ok(Symbol {
                 _type: SymbolType::Boolean,
                 span,

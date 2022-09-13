@@ -1,11 +1,12 @@
 use crate::{
     ArrayExpression, AssignmentExpression, BinaryExpression, Block, Boolean, Break, CallExpression,
-    Character, Continue, CrashStatement, DotExpression, Enum, Expression, ExpressionStatement,
-    FnExpression, ForLoop, Function, GenericArgument, Identifier, IfStatement, IndexExpression,
-    Interface, LogicalExpression, Loop, Mapping, NamespaceExpression, Number, Parameter,
-    PrependStatement, PrintLnStatement, PublicModifier, RangeExpression, Record, ReturnStatement,
-    SelfExpression, Statement, TernaryExpression, TestBlock, TextString, TryBlock, TypeAlias,
-    UnaryExpression, UseImport, VariableDeclaration, Variant, WhileStatement,
+    Character, ConcreteType, Continue, CrashStatement, DotExpression, Enum, Expression,
+    ExpressionStatement, FnExpression, ForLoop, Function, FunctionType, GenericArgument,
+    Identifier, IfStatement, IndexExpression, Interface, LogicalExpression, Loop, Mapping,
+    NamespaceExpression, Number, Parameter, PrependStatement, PrintLnStatement, PublicModifier,
+    RangeExpression, Record, ReturnStatement, SelfExpression, Statement, TernaryExpression,
+    TestBlock, TextString, TryBlock, Type, TypeAlias, UnaryExpression, UseImport,
+    VariableDeclaration, Variant, WhileStatement,
 };
 
 pub trait Visitor<'a, T = ()> {
@@ -48,12 +49,15 @@ pub trait Visitor<'a, T = ()> {
     fn empty_statement(&'a self, empty: &ExpressionStatement<'a>);
     fn try_block(&'a self, try_block: &TryBlock<'a>);
     fn function(&'a self, function: &Function<'a>);
-    fn enum_declaration(&'a self, enum_: Enum<'a>);
-    fn record_declaration(&'a self, record: Record<'a>);
-    fn mapping(&'a self, map: Mapping<'a>);
-    fn variant(&'a self, variant: Variant<'a>);
-    fn parameter(&'a self, param: Parameter<'a>);
+    fn enum_declaration(&'a self, enum_: &Enum<'a>);
+    fn record_declaration(&'a self, record: &Record<'a>);
+    fn mapping(&'a self, map: &Mapping<'a>);
+    fn variant(&'a self, variant: &Variant<'a>);
+    fn parameter(&'a self, param: &Parameter<'a>) -> T;
     fn type_alias(&'a self, type_alias: &TypeAlias<'a>);
+    fn type_label(&'a self, label: &Type<'a>) -> T;
+    fn concrete_type(&'a self, concrete_type: &ConcreteType<'a>) -> T;
+    fn functional_type(&'a self, functional_type: &FunctionType<'a>) -> T;
     fn interface(&'a self, interface: &Interface<'a>);
-    fn gen_arg(&'a self, argument: GenericArgument);
+    fn gen_arg(&'a self, argument: &GenericArgument);
 }

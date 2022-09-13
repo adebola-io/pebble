@@ -28,6 +28,10 @@ impl<'a> Resolver<'a> {
         if self.parser.diagnostics.borrow().len() > 0 {
             Err(self.parser.diagnostics.take())
         } else {
+            let primitives = Symbol::primitives();
+            for primitive in primitives {
+                self.stage.borrow_mut().set(primitive.0, primitive.1);
+            }
             for statement in self.parser.statements.take() {
                 self.statement(&statement);
             }
@@ -62,10 +66,19 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     // Retrieves the type of an identifier.
     fn ident(&'a self, ident: &ast::Identifier<'a>) -> SymbolOrError {
         match self.stage.borrow().lookup(ident.value) {
-            Some(d) => Ok(d.clone()),
+            Some(d) => {
+                if let SymbolType::Alias(_) = d._type {
+                    return Err((
+                        SemanticError::AliasUsedAsValue(ident.value.to_string()),
+                        ident.span,
+                    ));
+                } else {
+                    Ok(d.clone())
+                }
+            }
             // Store error if the value is undefined.
             None => Err((
-                SemanticError::UndeclaredVariable(ident.value.to_string()),
+                SemanticError::Undeclared(ident.value.to_string()),
                 ident.span,
             )),
         }
@@ -197,9 +210,9 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     fn index_exp(&'a self, index_exp: &ast::IndexExpression<'a>) -> SymbolOrError {
         let accessor_symbol = self.expression(&index_exp.accessor_and_property[0])?;
         let property_symbol = self.expression(&index_exp.accessor_and_property[1])?;
-        let element_type;
+        let element_symbol;
         if let SymbolType::Array(x) = accessor_symbol._type {
-            element_type = *x;
+            element_symbol = *x;
         } else {
             return Err((
                 SemanticError::InvalidIndex(accessor_symbol._type),
@@ -207,10 +220,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             ));
         }
         if let SymbolType::Number = property_symbol._type {
-            Ok(Symbol {
-                _type: element_type,
-                span: index_exp.span,
-            })
+            Ok(element_symbol)
         } else {
             return Err((
                 SemanticError::InvalidIndexer(property_symbol._type),
@@ -226,20 +236,23 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     /// Type checks an array expression.
     fn array_exp(&'a self, array_exp: &ast::ArrayExpression<'a>) -> SymbolOrError {
         if array_exp.elements.len() == 0 {
-            Ok(Symbol::array(SymbolType::Unknown, array_exp.span))
+            Ok(Symbol::array(
+                Symbol::unknown(array_exp.span),
+                array_exp.span,
+            ))
         } else {
             // Match the types of all elements in the array against the first element.
-            let first_type = self.expression(&array_exp.elements[0])?._type;
+            let first_symbol = self.expression(&array_exp.elements[0])?;
             for child_expression in &array_exp.elements {
                 let child_symbol = self.expression(child_expression)?;
-                if child_symbol._type != first_type {
+                if child_symbol._type != first_symbol._type {
                     return Err((
-                        SemanticError::HeterogenousArray(first_type, child_symbol._type),
+                        SemanticError::HeterogenousArray(first_symbol._type, child_symbol._type),
                         child_symbol.span,
                     ));
                 }
             }
-            Ok(Symbol::array(first_type, array_exp.span))
+            Ok(Symbol::array(first_symbol, array_exp.span))
         }
     }
 
@@ -281,7 +294,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     fn fn_exp(&'a self, fn_exp: &ast::FnExpression<'a>) -> SymbolOrError {
         todo!()
     }
-
+    /// Type checks a statement.
     fn statement(&'a self, statement: &ast::Statement<'a>) {
         match statement {
             Statement::IfStatement(_) => todo!(),
@@ -302,8 +315,8 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Statement::CrashStmnt(_) => todo!(),
             Statement::EmptyStatement(e) => {}
             Statement::TryBlock(_) => todo!(),
-            Statement::Function(_) => todo!(),
-            Statement::TypeAlias(_) => todo!(),
+            Statement::Function(f) => self.function(f),
+            Statement::TypeAlias(t) => self.type_alias(t),
             Statement::Interface(_) => todo!(),
             Statement::Enum(_) => todo!(),
             Statement::Class(_) => todo!(),
@@ -337,29 +350,51 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             ));
             return;
         }
-        let symbol;
+        let mut inferred_symbol;
         // Infer type from assigned expression.
         if let Some(init) = &var_decl.initializer {
             match self.expression(init) {
-                Ok(inferred) => {
-                    if inferred.is_nil() {
-                        symbol = Symbol::unknown(var_decl.span);
+                Ok(i) => {
+                    if i.is_nil() {
+                        inferred_symbol = Symbol::unknown(var_decl.span);
                         self.diagnostics
                             .borrow_mut()
                             .push((SemanticError::AssigningToNil, var_decl.span))
                     } else {
-                        symbol = inferred
+                        inferred_symbol = i
                     }
                 }
                 Err(e) => {
                     self.diagnostics.borrow_mut().push(e);
-                    symbol = Symbol::unknown(var_decl.span)
+                    inferred_symbol = Symbol::unknown(var_decl.span)
                 }
             }
         } else {
-            symbol = Symbol::unknown(var_decl.span);
+            inferred_symbol = Symbol::unknown(var_decl.span);
         }
-        self.stage.borrow_mut().set(name, symbol);
+        // Compare the inferred type with the assigned type label.
+        if let Some(t) = &var_decl.type_label {
+            let given_symbol;
+            match self.type_label(t) {
+                Ok(s) => given_symbol = s,
+                Err(e) => {
+                    given_symbol = Symbol::unknown(var_decl.span);
+                    self.diagnostics.borrow_mut().push(e);
+                }
+            }
+
+            if !(given_symbol._type == inferred_symbol._type || given_symbol.is_unknown()) {
+                self.diagnostics.borrow_mut().push((
+                    SemanticError::InconsistentAssignment(
+                        given_symbol._type.clone(),
+                        inferred_symbol._type,
+                    ),
+                    var_decl.span,
+                ));
+                inferred_symbol = given_symbol;
+            }
+        }
+        self.stage.borrow_mut().set(name, inferred_symbol);
     }
 
     fn breack(&'a self, brk: &ast::Break<'a>) {
@@ -392,7 +427,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn public_mod(&'a self, public_mod: &ast::PublicModifier<'a>) {
-        todo!()
+        self.statement(&public_mod.statement);
     }
 
     fn exp_statement(&'a self, exp_stmnt: &ast::ExpressionStatement<'a>) {
@@ -430,39 +465,85 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         todo!()
     }
 
-    fn function(&'a self, function: &ast::Function<'a>) {
+    fn function(&'a self, function: &ast::Function<'a>) {}
+
+    fn enum_declaration(&'a self, enum_: &ast::Enum<'a>) {
         todo!()
     }
 
-    fn enum_declaration(&'a self, enum_: ast::Enum<'a>) {
+    fn record_declaration(&'a self, record: &ast::Record<'a>) {
         todo!()
     }
 
-    fn record_declaration(&'a self, record: ast::Record<'a>) {
+    fn mapping(&'a self, map: &ast::Mapping<'a>) {
         todo!()
     }
 
-    fn mapping(&'a self, map: ast::Mapping<'a>) {
+    fn variant(&'a self, variant: &ast::Variant<'a>) {
         todo!()
     }
 
-    fn variant(&'a self, variant: ast::Variant<'a>) {
+    fn parameter(&'a self, param: &ast::Parameter<'a>) -> SymbolOrError {
         todo!()
     }
 
-    fn parameter(&'a self, param: ast::Parameter<'a>) {
-        todo!()
-    }
-
+    /// Type checks type aliases.
     fn type_alias(&'a self, type_alias: &ast::TypeAlias<'a>) {
-        todo!()
+        let name = type_alias.name.value;
+        let aliased_symbol;
+        match self.type_label(&type_alias.value) {
+            Ok(s) => aliased_symbol = s,
+            Err(e) => {
+                self.diagnostics.borrow_mut().push(e);
+                aliased_symbol = Symbol::unknown(type_alias.span)
+            }
+        }
+        self.stage.borrow_mut().set(
+            name,
+            Symbol {
+                _type: SymbolType::Alias(Box::new(aliased_symbol)),
+                span: type_alias.span,
+            },
+        );
     }
 
     fn interface(&'a self, interface: &ast::Interface<'a>) {
         todo!()
     }
 
-    fn gen_arg(&'a self, argument: ast::GenericArgument) {
+    fn gen_arg(&'a self, argument: &ast::GenericArgument) {
+        todo!()
+    }
+
+    fn type_label(&'a self, label: &ast::Type<'a>) -> SymbolOrError {
+        match label {
+            ast::Type::Concrete(c) => self.concrete_type(c),
+            ast::Type::Function(f) => self.functional_type(f),
+            ast::Type::Dot(_) => todo!(),
+        }
+    }
+
+    fn concrete_type(&'a self, concrete_type: &ast::ConcreteType<'a>) -> SymbolOrError {
+        match self.stage.borrow().lookup(concrete_type.name.value) {
+            Some(d) => match &d._type {
+                SymbolType::Class(_) => Ok(d.clone()),
+                SymbolType::Alias(a) => Ok(*a.clone()),
+                _ => {
+                    return Err((
+                        SemanticError::ValueUsedAsAlias(concrete_type.name.value.to_string()),
+                        concrete_type.span,
+                    ))
+                }
+            },
+            // Store error if the type is undefined.
+            None => Err((
+                SemanticError::Undeclared(concrete_type.name.value.to_string()),
+                concrete_type.span,
+            )),
+        }
+    }
+
+    fn functional_type(&'a self, functional_type: &ast::FunctionType<'a>) -> SymbolOrError {
         todo!()
     }
 }
