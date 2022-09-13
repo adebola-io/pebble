@@ -137,6 +137,27 @@ fn it_tests_identifiers_across_blocks() {
 }
 
 #[test]
+fn it_faults_heterogenous_arrays() {
+    let mut scanner = Scanner::new(
+        "
+    @let array = [1, 2, 3, \"hello\"];",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(
+            SemanticError::HeterogenousArray(SymbolType::Number, SymbolType::String),
+            [[1, 29], [1, 35]]
+        )]
+    )
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();

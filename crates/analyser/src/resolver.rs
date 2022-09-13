@@ -1,13 +1,12 @@
 #![allow(unused_variables)]
 #![allow(dead_code)]
 
+use crate::{ResolveError, Symbol, SymbolOrError, SymbolType};
 use ast::{Expression, Location, Operator, Statement, Visitor};
 use errors::SemanticError;
 use parser::{Parser, ParserError};
 use std::cell::RefCell;
 use utils::Stage;
-
-use crate::{ResolveError, Symbol, SymbolOrError, SymbolType};
 
 pub struct Resolver<'a> {
     parser: &'a Parser<'a>,
@@ -48,9 +47,9 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::SelfExpression(_) => todo!(),
             Expression::BinaryExpression(b) => self.binary_exp(b),
             Expression::LogicalExpression(l) => self.logical_exp(l),
-            Expression::UnaryExpression(_) => todo!(),
+            Expression::UnaryExpression(u) => self.unary_exp(u),
             Expression::CallExpression(_) => todo!(),
-            Expression::ArrayExpression(_) => todo!(),
+            Expression::ArrayExpression(a) => self.array_exp(a),
             Expression::IndexExpression(_) => todo!(),
             Expression::DotExpression(_) => todo!(),
             Expression::NamespaceExpression(_) => todo!(),
@@ -172,7 +171,22 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
     }
 
     fn array_exp(&'a self, array_exp: &ast::ArrayExpression<'a>) -> SymbolOrError {
-        todo!()
+        if array_exp.elements.len() == 0 {
+            Ok(Symbol::array(SymbolType::Unknown, array_exp.span))
+        } else {
+            // Match the types of all elements in the array against the first element.
+            let first_type = self.expression(&array_exp.elements[0])?._type;
+            for child_expression in &array_exp.elements {
+                let child_symbol = self.expression(child_expression)?;
+                if child_symbol._type != first_type {
+                    return Err((
+                        SemanticError::HeterogenousArray(first_type, child_symbol._type),
+                        child_symbol.span,
+                    ));
+                }
+            }
+            Ok(Symbol::array(first_type, array_exp.span))
+        }
     }
 
     fn tern_exp(&'a self, tern_exp: &ast::TernaryExpression<'a>) -> SymbolOrError {

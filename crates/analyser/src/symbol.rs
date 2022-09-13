@@ -35,6 +35,12 @@ impl Symbol {
             span,
         }
     }
+    pub fn array(inner_type: SymbolType, span: TextSpan) -> Self {
+        Self {
+            _type: SymbolType::Array(Box::new(inner_type)),
+            span,
+        }
+    }
     pub fn is_nil(&self) -> bool {
         matches!(
             self,
@@ -54,6 +60,7 @@ pub enum SymbolType {
     String,
     Number,
     Character,
+    Array(Box<SymbolType>),
     Boolean,
     Custom {},
     Class(ClassType),
@@ -79,17 +86,18 @@ impl Display for SymbolType {
             f,
             "{}",
             match self {
-                SymbolType::Nil => "Nil",
-                SymbolType::Unknown => "Unknown",
-                SymbolType::Module => "Module",
-                SymbolType::String => "String",
-                SymbolType::Number => "Number",
-                SymbolType::Character => "Character",
-                SymbolType::Boolean => "Boolean",
-                SymbolType::Custom {} => "Custom",
-                SymbolType::Class(ClassType { name, .. }) => &name,
-                SymbolType::Function { .. } => "Function",
-                SymbolType::Instance { class } => &class.name,
+                SymbolType::Nil => String::from("Nil"),
+                SymbolType::Unknown => String::from("Unknown"),
+                SymbolType::Module => String::from("Module"),
+                SymbolType::String => String::from("String"),
+                SymbolType::Number => String::from("Number"),
+                SymbolType::Character => String::from("Character"),
+                SymbolType::Boolean => String::from("Boolean"),
+                SymbolType::Custom {} => String::from("Custom"),
+                SymbolType::Array(s) => format!("[{}]", s),
+                SymbolType::Class(ClassType { name, .. }) => name.to_string(),
+                SymbolType::Function { .. } => String::from("Function"),
+                SymbolType::Instance { class } => class.name.to_string(),
             }
         )
     }

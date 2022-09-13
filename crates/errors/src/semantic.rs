@@ -17,6 +17,7 @@ where
     InconsistentInitializer,
     UnusedVariable,
     AssigningToNil,
+    HeterogenousArray(T, T),
 }
 
 impl<T> Display for SemanticError<T>
@@ -28,6 +29,7 @@ where
             f,
             "{}.",
             match self {
+
                 SemanticError::UnsupportedBinaryOperation(op, x, y) => format!(
                     "The operation '{}' is not defined for '{}' and '{}'",
                     op, x, y
@@ -37,12 +39,12 @@ where
                     op, x, y
                 ),
                 SemanticError::ComparisionBetweenDifferentTypes(op, x, y) => format!(
-                    "This operation will always return {} because there is no overlap between the types '{}' and '{}'", 
-                    match op { 
-                        Operator::Equals => "false", 
-                        Operator::NotEquals=> "true", 
+                    "This operation will always return {} because there is no overlap between the types '{}' and '{}'",
+                    match op {
+                        Operator::Equals => "false",
+                        Operator::NotEquals=> "true",
                         _ => unreachable!()
-                    } 
+                    }
                         , x, y
                     ),
                 SemanticError::UndeclaredVariable(x) => format!("Variable '{}' is not defined", x),
@@ -50,6 +52,9 @@ where
                 SemanticError::UnsupportedNegation(_) => todo!(),
                 SemanticError::InconsistentAssignment(_, _) => todo!(),
                 SemanticError::InconsistentInitializer => todo!(),
+                SemanticError::HeterogenousArray(x, y) => format!(
+                    "Elements of type '{}' and '{}' cannot be put in the same array. Arrays can only contain elements of the same type", x, y
+                ),
                 SemanticError::UnusedVariable => todo!(),
                 SemanticError::AssigningToNil => todo!(),
             }
