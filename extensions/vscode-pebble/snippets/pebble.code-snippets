@@ -53,7 +53,7 @@
     "Implementation": {
         "prefix": "@impl",
         "description": "Implement a interface inside a class.",
-        "body": "@implement ${1:Interface};"
+        "body": "@implement ${1:Interface},"
     },
     "Class": {
         "prefix": ["@cl", "@class"],

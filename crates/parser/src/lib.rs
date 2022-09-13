@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
-mod parser;
+mod _parser;
 mod scanner;
 mod test;
 
-pub use parser::{Parser, Provider};
+pub use _parser::{Parser, ParserError, Provider};
 pub use scanner::Scanner;

@@ -13,7 +13,7 @@ use ast::{
 use errors::SyntaxError;
 use utils::Stack;
 
-type ParserError = (SyntaxError, TextSpan);
+pub type ParserError = (SyntaxError, TextSpan);
 type NodeOrError<T> = Result<T, ParserError>;
 
 /// The provider is a pseudo iterator that supplies tokens to the parser.

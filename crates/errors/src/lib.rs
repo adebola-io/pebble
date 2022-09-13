@@ -1,3 +1,4 @@
+use ast::Operator;
 use std::fmt::Display;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -67,11 +68,13 @@ impl Display for SyntaxError {
     }
 }
 
-pub enum TypeError {
-    UnsupportedAddOperation,
-    UnsupportedSubtractOperation,
-    UnsupportedMultiplyOperation,
-    InconsistentAssignment,
+#[derive(Debug, PartialEq)]
+pub enum SemanticError<T> {
+    UnsupportedBinaryOperation(Operator, T, T),
+    UnsupportedLogicalOperation(Operator, T, T),
+    ComparisionBetweenDifferentTypes(Operator, T, T),
+    UnsupportedNegation(T),
+    InconsistentAssignment(String, String),
     InconsistentInitializer,
     UnusedVariable,
     AssigningToNil,

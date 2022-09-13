@@ -70,11 +70,11 @@ impl Scanner {
     }
     /// Marks the current line and column as the start of a token.
     fn mark_start(&mut self) {
-        self.span[0] = self.pos.clone();
+        self.span[0] = self.pos;
     }
     /// Marks the current line and column as the end of a token.
     fn mark_end(&mut self) {
-        self.span[1] = self.pos.clone();
+        self.span[1] = self.pos;
     }
     fn error(&mut self, code: i32) {
         self.errors.insert(self.span, Error::scanner_error(code));

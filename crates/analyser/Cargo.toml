@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 ast = { version = "0.1.0", path = "../ast" }
+macros = { version = "*", path = "../macros" }
+errors = { version = "*", path = "../errors" }
+parser = { version = "*", path = "../parser" }
+utils = { version = "*", path = "../utils" }

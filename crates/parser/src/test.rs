@@ -3,7 +3,7 @@
 use std::{cell::RefCell, marker::PhantomData, vec};
 
 use crate::{
-    parser::{Parser, Provider},
+    _parser::{Parser, Provider},
     scanner::Scanner,
 };
 use ast::{
