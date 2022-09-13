@@ -53,7 +53,7 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
             Expression::IndexExpression(i) => self.index_exp(i),
             Expression::DotExpression(_) => todo!(),
             Expression::NamespaceExpression(_) => todo!(),
-            Expression::RangeExpression(_) => todo!(),
+            Expression::RangeExpression(r) => self.range_exp(r),
             Expression::TernaryExpression(t) => self.tern_exp(t),
             Expression::AssignmentExpression(_) => todo!(),
             Expression::FnExpression(_) => todo!(),
@@ -234,8 +234,15 @@ impl<'a> Visitor<'a, SymbolOrError> for Resolver<'a> {
         Ok(consequent_symbol)
     }
 
+    /// Typechecks a range expression.
     fn range_exp(&'a self, rang_exp: &ast::RangeExpression<'a>) -> SymbolOrError {
-        todo!()
+        let lower_symbol = self.expression(&rang_exp.boundaries[0])?;
+        let upper_symbol = self.expression(&rang_exp.boundaries[1])?;
+        match (&lower_symbol._type, &upper_symbol._type) {
+            (SymbolType::Character, SymbolType::Character)
+            | (SymbolType::Number, SymbolType::Number) => Ok(lower_symbol),
+            _ => return Err((SemanticError::InvalidRangeBoundaries, rang_exp.span)),
+        }
     }
 
     fn fn_exp(&'a self, fn_exp: &ast::FnExpression<'a>) -> SymbolOrError {

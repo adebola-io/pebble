@@ -19,6 +19,7 @@ where
     UnsupportedNegation(T),
     InconsistentAssignment(String, String),
     InconsistentInitializer,
+    InvalidRangeBoundaries,
     UnusedVariable,
     AssigningToNil,
     HeterogenousArray(T, T),
@@ -57,8 +58,9 @@ where
                 SemanticError::InconsistentTernarySides(x, y) => format!(
                     "Expected '{}' for alternate expression, got '{}'. Both sides of a ternary expression must have the same type", x, y
                 ),
-                SemanticError::InvalidIndex(x) => format!("'{}' is not an indexable type", x),
+                SemanticError::InvalidIndex(x) => format!("The type '{}' is not an indexable type", x),
                 SemanticError::InvalidIndexer(x) => format!("The type '{}' cannot be used as an index", x),
+                SemanticError::InvalidRangeBoundaries => format!("Invalid range. The boundaries of a range must be both be either characters or numbers."),
                 SemanticError::UndeclaredVariable(x) => format!("Variable '{}' is not defined", x),
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
                 SemanticError::UnsupportedNegation(_) => todo!(),

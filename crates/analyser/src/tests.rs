@@ -202,6 +202,24 @@ fn it_faults_invalid_index() {
 }
 
 #[test]
+fn it_faults_invalid_range_boundary() {
+    let mut scanner = Scanner::new(
+        "
+    @let halftruth = true..false;",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    let resolver = Resolver::new(&parser);
+    resolver.resolve().unwrap();
+    assert_eq!(
+        resolver.diagnostics.take(),
+        vec![(SemanticError::InvalidRangeBoundaries, [[1, 23], [1, 34]])]
+    )
+}
+
+#[test]
 fn it_tests_boolean_or_number() {
     let mut scanner = Scanner::new("true || 9;");
     scanner.run();

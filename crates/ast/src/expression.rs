@@ -115,8 +115,8 @@ pub struct NamespaceExpression<'a> {
 /// An expression that expresses a numeric or alphabetic range. e.g. `a..b`
 #[derive(Location, Debug, Clone, PartialEq)]
 pub struct RangeExpression<'a> {
-    boundaries: Vec<Expression<'a>>,
-    span: TextSpan,
+    pub boundaries: Vec<Expression<'a>>,
+    pub span: TextSpan,
 }
 
 #[derive(Location, Debug, Clone, PartialEq)]
