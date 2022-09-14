@@ -2,6 +2,7 @@ use std::{fmt::Display, rc::Rc};
 
 use ast::{Operator, TextSpan};
 use errors::SemanticError;
+use utils::Stage;
 
 pub type ResolveError = (SemanticError<SymbolType>, TextSpan);
 pub type SymbolOrError = Result<Symbol, ResolveError>;
@@ -28,52 +29,29 @@ impl Symbol {
             (
                 "Number",
                 Symbol {
-                    _type: SymbolType::Alias(TypeAlias {
-                        actual_symbol: Box::new(Symbol {
-                            _type: SymbolType::Number,
-                            span: [[0, 0], [0, 0]],
-                        }),
-                        arguments: Vec::new(),
-                    }),
+                    _type: SymbolType::Number,
                     span: [[0, 0], [0, 0]],
                 },
             ),
+            ("Nil", Self::nil([[0, 0], [0, 0]])),
             (
                 "String",
-                Symbol {
-                    _type: SymbolType::Alias(TypeAlias {
-                        actual_symbol: Box::new(Symbol {
-                            _type: SymbolType::String,
-                            span: [[0, 0], [0, 0]],
-                        }),
-                        arguments: Vec::new(),
-                    }),
+                Self {
+                    _type: SymbolType::String,
                     span: [[0, 0], [0, 0]],
                 },
             ),
             (
                 "Boolean",
-                Symbol {
-                    _type: SymbolType::Alias(TypeAlias {
-                        actual_symbol: Box::new(Symbol {
-                            _type: SymbolType::Boolean,
-                            span: [[0, 0], [0, 0]],
-                        }),
-                        arguments: Vec::new(),
-                    }),
+                Self {
+                    _type: SymbolType::Boolean,
                     span: [[0, 0], [0, 0]],
                 },
             ),
             (
                 "Character",
-                Symbol {
-                    _type: SymbolType::Alias(TypeAlias {
-                        actual_symbol: Box::new(Symbol {
-                            _type: SymbolType::Character,
-                            span: [[0, 0], [0, 0]],
-                        }),
-                        arguments: Vec::new(),
-                    }),
+                Self {
+                    _type: SymbolType::Character,
                     span: [[0, 0], [0, 0]],
                 },
             ),
@@ -136,11 +114,16 @@ pub enum SymbolType {
     Function(FunctionType),
     Instance { class: Rc<ClassType> },
 }
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct ClassType {
     pub name: String,
-    pub arguments: Vec<Box<Symbol>>,
-    pub properties: Vec<Box<Symbol>>,
+    pub arguments: Vec<ParameterSymbol>,
+    pub props: Stage<String, Symbol, String>,
+}
+impl PartialEq for ClassType {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.arguments == other.arguments
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -151,7 +134,7 @@ pub struct TypeAlias {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionType {
-    pub parameters: Vec<ParameterSymbol>,
+    pub parameter_symbols: Vec<ParameterSymbol>,
     pub return_type: Box<Symbol>,
 }
 
@@ -160,6 +143,15 @@ pub struct ParameterSymbol {
     pub name: String,
     pub _type: SymbolType,
     pub span: TextSpan,
+}
+
+impl ParameterSymbol {
+    pub fn as_symbol(&self) -> Symbol {
+        Symbol {
+            _type: self._type.clone(),
+            span: self.span,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -186,16 +178,16 @@ impl Display for SymbolType {
                 SymbolType::Array(s) => format!("Array<{}>", s._type),
                 SymbolType::Class(ClassType { name, .. }) => name.to_string(),
                 SymbolType::Function(FunctionType {
-                    parameters,
+                    parameter_symbols,
                     return_type,
                 }) => format!(
                     "({}) -> {}",
                     {
                         let mut output = String::new();
                         let mut i = 0;
-                        while i < parameters.len() {
-                            output.push_str(&format!("{}", parameters[i]));
-                            if i < parameters.len() - 1 {
+                        while i < parameter_symbols.len() {
+                            output.push_str(&format!("{}", parameter_symbols[i]));
+                            if i < parameter_symbols.len() - 1 {
                                 output.push_str(", ")
                             }
                             i += 1;
@@ -351,7 +343,7 @@ impl Symbol {
             ))
         }
     }
-    pub fn compare(&self, rhs: Self, operator: &Operator) -> SymbolOrError {
+    pub fn compare(&self, rhs: &Self, operator: &Operator) -> SymbolOrError {
         let span = [self.span[0], rhs.span[0]];
         let mut right_type = &rhs._type;
         let mut left_type = &self._type;
@@ -373,7 +365,7 @@ impl Symbol {
                 SemanticError::UnsupportedBinaryOperation(
                     operator.clone(),
                     self._type.clone(),
-                    rhs._type,
+                    rhs._type.clone(),
                 ),
                 span,
             ))

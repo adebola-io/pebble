@@ -2,13 +2,14 @@ use std::{cell::RefCell, marker::PhantomData};
 
 use crate::scanner::Scanner;
 use ast::{
-    precedence_of, ArrayExpression, Block, BracketKind, Break, Class, ConcreteType, Continue,
-    CrashStatement, Enum, Expression, FnExpression, ForLoop, Function, FunctionType,
-    GenericArgument, Identifier, IfStatement, Import, Injunction, Interface, Keyword, Literal,
-    LiteralKind, Location, Loop, Mapping, Module, Operator, Parameter, PrependStatement,
-    PrintLnStatement, Property, PublicModifier, Punctuation, Record, RecoverBlock, ReturnStatement,
-    SelfExpression, Statement, TestBlock, TextSpan, TextString, Token, TokenIdentifier, TokenKind,
-    TryBlock, Type, TypeAlias, UseImport, VarKind, VariableDeclaration, Variant, WhileStatement,
+    precedence_of, ArrayExpression, Attribute, Block, BracketKind, Break, Class, ConcreteType,
+    Continue, CrashStatement, Enum, Expression, FnExpression, ForLoop, Function, FunctionType,
+    GenericArgument, Identifier, IfStatement, Implement, Import, Injunction, Interface, Keyword,
+    Literal, LiteralKind, Location, Loop, Mapping, Method, Module, Operator, Parameter,
+    PrependStatement, PrintLnStatement, Property, PublicModifier, Punctuation, Record,
+    RecoverBlock, ReturnStatement, SelfExpression, Statement, TestBlock, TextSpan, TextString,
+    Token, TokenIdentifier, TokenKind, TryBlock, Type, TypeAlias, UseImport, VarKind,
+    VariableDeclaration, Variant, WhileStatement,
 };
 use errors::SyntaxError;
 use utils::Stack;
@@ -1019,14 +1020,14 @@ impl<'a> Parser<'a> {
         let return_type = self.maybe_return_type()?;
         let body = self.block()?;
         let end = body.get_range()[1];
-        Ok(Property::Method {
+        Ok(Property::Method(Method {
             name,
             generic_arguments,
             parameters,
             return_type,
             body,
             span: [start, end],
-        })
+        }))
     }
     /// Parses a class attribute.
     fn attribute(&'a self, key: Identifier<'a>) -> NodeOrError<Property<'a>> {
@@ -1045,12 +1046,12 @@ impl<'a> Parser<'a> {
                 None => key.get_range()[1],
             };
         }
-        Ok(Property::Attribute {
+        Ok(Property::Attribute(Attribute {
             key,
             type_label,
             value,
             span: [start, end],
-        })
+        }))
     }
     // Parses an implementation.
     fn implement(&'a self) -> NodeOrError<Property<'a>> {
@@ -1064,10 +1065,10 @@ impl<'a> Parser<'a> {
             let interface = Identifier { value, span: *span };
             self.advance();
             let end = span[1];
-            Ok(Property::Implement {
+            Ok(Property::Implement(Implement {
                 interface,
                 span: [start, end],
-            })
+            }))
         } else {
             Err((SyntaxError::ExpectedInterfaceName, self.token().span))
         }

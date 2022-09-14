@@ -1,12 +1,12 @@
 use crate::{
-    ArrayExpression, AssignmentExpression, BinaryExpression, Block, Boolean, Break, CallExpression,
-    Character, ConcreteType, Continue, CrashStatement, DotExpression, Enum, Expression,
-    ExpressionStatement, FnExpression, ForLoop, Function, FunctionType, GenericArgument,
-    Identifier, IfStatement, IndexExpression, Interface, LogicalExpression, Loop, Mapping,
-    NamespaceExpression, Number, Parameter, PrependStatement, PrintLnStatement, PublicModifier,
-    RangeExpression, Record, ReturnStatement, SelfExpression, Statement, TernaryExpression,
-    TestBlock, TextString, TryBlock, Type, TypeAlias, UnaryExpression, UseImport,
-    VariableDeclaration, Variant, WhileStatement,
+    ArrayExpression, AssignmentExpression, Attribute, BinaryExpression, Block, Boolean, Break,
+    CallExpression, Character, Class, ConcreteType, Continue, CrashStatement, DotExpression, Enum,
+    Expression, ExpressionStatement, FnExpression, ForLoop, Function, FunctionType,
+    GenericArgument, Identifier, IfStatement, Implement, IndexExpression, Interface,
+    LogicalExpression, Loop, Mapping, Method, NamespaceExpression, Number, Parameter,
+    PrependStatement, PrintLnStatement, Property, PublicModifier, RangeExpression, Record,
+    ReturnStatement, SelfExpression, Statement, TernaryExpression, TestBlock, TextString, TryBlock,
+    Type, TypeAlias, UnaryExpression, UseImport, VariableDeclaration, Variant, WhileStatement,
 };
 
 pub trait Visitor<'a, T = ()> {
@@ -51,6 +51,12 @@ pub trait Visitor<'a, T = ()> {
     fn function(&'a self, function: &Function<'a>);
     fn enum_declaration(&'a self, enum_: &Enum<'a>);
     fn record_declaration(&'a self, record: &Record<'a>);
+    fn class_declaration(&'a self, class: &Class<'a>);
+    fn property(&'a self, property: &Property<'a>) -> T;
+    fn method(&'a self, method: &Method<'a>) -> T;
+    fn constructor(&'a self, method: &Method<'a>) -> T;
+    fn attribute(&'a self, attrib: &Attribute<'a>) -> T;
+    fn implement(&'a self, implement: &Implement<'a>) -> T;
     fn mapping(&'a self, map: &Mapping<'a>);
     fn variant(&'a self, variant: &Variant<'a>);
     fn parameter(&'a self, param: &Parameter<'a>) -> T;

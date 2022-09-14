@@ -76,7 +76,7 @@ where
                 SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
                 SemanticError::InconsistentInitializer => todo!(),
                 SemanticError::Uncallable(x) => format!("'{}' is not a callable type", x),
-                SemanticError::UnequalArgs(x, y) => format!("Function required {} arguments but got {}", x, y),
+                SemanticError::UnequalArgs(x, y) => format!("Function or Constructor required {} arguments but got {}", x, y),
                 SemanticError::ParameterMismatch(x, y) => format!("Invalid argument. Expected type '{}' and got '{}'", x, y),
                 SemanticError::HeterogenousArray(x, y) => format!(
                     "Elements of type '{}' and '{}' cannot be put in the same array. Arrays can only contain elements of the same type", x, y
@@ -84,7 +84,7 @@ where
                 SemanticError::AliasUsedAsValue(x) => format!("'{}' is a type, but it is being used as a value", x),
                 SemanticError::ValueUsedAsAlias(x) => format!("'{}' is a value, but it is being used as a type", x),
                 SemanticError::UnusedVariable => todo!(),
-                SemanticError::AssigningToNil => todo!(),
+                SemanticError::AssigningToNil => format!("Cannot assign nil value to variable or constant"),
             }
         )
     }

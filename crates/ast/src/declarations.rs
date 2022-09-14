@@ -84,32 +84,41 @@ pub struct Class<'a> {
 /// The property of a class or interface.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Property<'a> {
-    Method {
-        name: Identifier<'a>,
-        generic_arguments: Option<Vec<GenericArgument<'a>>>,
-        parameters: Vec<Parameter<'a>>,
-        return_type: Option<Type<'a>>,
-        body: Block<'a>,
-        span: TextSpan,
-    },
-    Attribute {
-        key: Identifier<'a>,
-        type_label: Option<Type<'a>>,
-        value: Option<Expression<'a>>,
-        span: TextSpan,
-    },
-    Implement {
-        interface: Identifier<'a>,
-        span: TextSpan,
-    },
+    Method(Method<'a>),
+    Attribute(Attribute<'a>),
+    Implement(Implement<'a>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Method<'a> {
+    pub name: Identifier<'a>,
+    pub generic_arguments: Option<Vec<GenericArgument<'a>>>,
+    pub parameters: Vec<Parameter<'a>>,
+    pub return_type: Option<Type<'a>>,
+    pub body: Block<'a>,
+    pub span: TextSpan,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Attribute<'a> {
+    pub key: Identifier<'a>,
+    pub type_label: Option<Type<'a>>,
+    pub value: Option<Expression<'a>>,
+    pub span: TextSpan,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Implement<'a> {
+    pub interface: Identifier<'a>,
+    pub span: TextSpan,
 }
 
 impl<'a> Location for Property<'a> {
     fn get_range(&self) -> TextSpan {
         match self {
-            Self::Method { span, .. }
-            | Self::Attribute { span, .. }
-            | Self::Implement { span, .. } => *span,
+            Self::Method(Method { span, .. })
+            | Self::Attribute(Attribute { span, .. })
+            | Self::Implement(Implement { span, .. }) => *span,
         }
     }
 }

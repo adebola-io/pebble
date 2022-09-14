@@ -3,7 +3,7 @@
     // "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
     // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
     "editor.fontFamily": "'Cascadia Code', 'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "Nord",
+    "workbench.colorTheme": "GitHub Dark",
     "workbench.iconTheme": "material-icon-theme",
     "workbench.colorCustomizations": {
         "editorInlayHint.background": "#00000000",

@@ -1,1 +1,6 @@
-@let name = "Sefunmi";
+@class Person {
+    name: String,
+    age: Number,
+}
+
+@let person1: Person = Person();
