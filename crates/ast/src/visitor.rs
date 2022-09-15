@@ -76,7 +76,7 @@ pub trait Visitor<'a, T = ()> {
             Statement::UseImport(_) => todo!(),
             Statement::ReturnStatement(_) => todo!(),
             Statement::CrashStmnt(_) => todo!(),
-            Statement::EmptyStatement(_) => todo!(),
+            Statement::EmptyStatement(_) => self.visit_empty_statement(statement),
             Statement::TryBlock(_) => todo!(),
             Statement::Function(_) => todo!(),
             Statement::TypeAlias(_) => todo!(),
@@ -88,7 +88,9 @@ pub trait Visitor<'a, T = ()> {
         }
     }
     fn visit_if_statement(&'a self, if_stmnt: &IfStatement<'a>);
-    fn visit_println_statement(&'a self, println_stmnt: &PrintLnStatement<'a>);
+    fn visit_println_statement(&'a self, println_stmnt: &PrintLnStatement<'a>) {
+        self.visit_expression(&println_stmnt.argument);
+    }
     fn visit_prepend_statement(&'a self, prepend_stmnt: &PrependStatement<'a>);
     fn visit_variable_declaration(&'a self, var_decl: &VariableDeclaration<'a>);
     fn visit_break(&'a self, break_: &Break);
@@ -105,7 +107,7 @@ pub trait Visitor<'a, T = ()> {
     fn visit_use_import(&'a self, use_stmnt: &UseImport<'a>);
     fn visit_return_statement(&'a self, return_stmnt: &ReturnStatement<'a>);
     fn visit_crash(&'a self, crash: &CrashStatement<'a>);
-    fn visit_empty_statement(&'a self, _empty: &ExpressionStatement<'a>) {}
+    fn visit_empty_statement(&'a self, _empty: &Statement<'a>) {}
     fn visit_try_block(&'a self, try_block: &TryBlock<'a>);
     fn visit_function(&'a self, function: &Function<'a>);
     fn visit_enum_declaration(&'a self, enum_: &Enum<'a>);

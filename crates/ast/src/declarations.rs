@@ -196,6 +196,22 @@ pub enum VarKind {
     Const,
 }
 
+impl VarKind {
+    /// Returns `true` if the var kind is [`Const`].
+    ///
+    /// [`Const`]: VarKind::Const
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const)
+    }
+
+    /// Returns `true` if the var kind is [`Let`].
+    ///
+    /// [`Let`]: VarKind::Let
+    pub fn is_let(&self) -> bool {
+        matches!(self, Self::Let)
+    }
+}
+
 /// A testing block, i.e. a group of functions for testing code functionality. e.g.
 /// ```pebble
 /// @tests {

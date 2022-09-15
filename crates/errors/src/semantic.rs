@@ -12,6 +12,7 @@ where
     UnsupportedLogicalOperation(Operator, T, T),
     ComparisionBetweenDifferentTypes(Operator, T, T),
     Undeclared(String),
+    Uninitialized(String),
     AlreadyDeclared(String),
     InvalidTernaryTest(T),
     InvalidIndex(T),
@@ -20,7 +21,9 @@ where
     UnsupportedNegation(T),
     InconsistentAssignment(T, T),
     InvalidRangeBoundaries,
-    UnknownAssignment,
+    UnknownAssignment(String),
+    UnequalGenericArgs(String, usize, usize),
+    UnexpectedGenerics(String),
     UnusedVariable,
     Uncallable(T),
     UnequalArgs(usize, usize),
@@ -42,6 +45,8 @@ where
             f,
             "{}.",
             match self {
+                SemanticError::UnequalGenericArgs(x, y, z) => format!("Unequal generic arguments. Expected {} arguments for '{}' and got {}", y, x, z),
+                SemanticError::UnexpectedGenerics(x) => format!("Unexpected generic arguments for type '{}'", x),
                 SemanticError::Unaddable(x, y) => format!("Cannot add types '{}' and '{}'", x, y),
                 SemanticError::OperationOnNil => format!("Cannot perform operation on possibly nil values"),
                 SemanticError::UnsupportedBinaryOperation(op, x, y) => format!(
@@ -67,12 +72,13 @@ where
                 SemanticError::InconsistentTernarySides(x, y) => format!(
                     "Expected '{}' for alternate expression, got '{}'. Both sides of a ternary expression must have the same type", x, y
                 ),
+                SemanticError::Uninitialized(x) => format!("'{}' is being used before it is initialized", x),
                 SemanticError::InvalidIndex(x) => format!("The type '{}' is not an indexable type", x),
                 SemanticError::InvalidIndexer(x) => format!("The type '{}' cannot be used as an index", x),
                 SemanticError::InvalidRangeBoundaries => format!("Invalid range. The boundaries of a range must be both be either characters or numbers"),
                 SemanticError::Undeclared(x) => format!("'{}' is not defined", x),
                 SemanticError::AlreadyDeclared(x) => format!("'{}' has already been declared", x),
-                SemanticError::UnknownAssignment => format!("Cannot infer value type from usage"),
+                SemanticError::UnknownAssignment(x) => format!("Cannot infer the type of '{}' from its usage.", x),
                 SemanticError::UnsupportedNegation(_) => todo!(),
                 SemanticError::IllegalTestBlock => format!("Invalid @tests block. Test blocks can only be used in the global scope of a module or file"),
                 SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
