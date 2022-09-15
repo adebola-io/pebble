@@ -30,11 +30,7 @@ fn it_faults_number_plus_string() {
     assert_eq!(
         errors,
         vec![(
-            SemanticError::UnsupportedBinaryOperation(
-                Operator::Add,
-                Type::number(),
-                Type::string(),
-            ),
+            SemanticError::UnsupportedOperation(Operator::Add, Type::number(), Type::string(),),
             [[1, 1], [1, 11]]
         )]
     )
@@ -153,7 +149,7 @@ fn it_faults_inconsistent_declaration() {
     assert_eq!(
         errors,
         vec![(
-            SemanticError::InconsistentAssignment(Type::string(), Type::boolean(),),
+            SemanticError::Unassignable(Type::string(), Type::boolean(),),
             [[1, 6], [1, 34]]
         )]
     )
@@ -176,15 +172,11 @@ fn it_faults_uninferable_declaration() {
         errors,
         vec![
             (
-                SemanticError::UnsupportedBinaryOperation(
-                    Operator::Add,
-                    Type::boolean(),
-                    Type::number(),
-                ),
+                SemanticError::UnsupportedOperation(Operator::Add, Type::boolean(), Type::number(),),
                 [[1, 30], [1, 40]]
             ),
             (
-                SemanticError::InconsistentAssignment(Type::number(), Type::Uninferrable),
+                SemanticError::Unassignable(Type::number(), Type::Uninferrable),
                 [[1, 6], [1, 40]]
             )
         ]
@@ -293,7 +285,7 @@ fn it_faults_invalid_ternary_expression() {
                 [[1, 20], [1, 32]]
             ),
             (
-                SemanticError::InconsistentAssignment(Type::Unknown, Type::Uninferrable),
+                SemanticError::Unassignable(Type::Unknown, Type::Uninferrable),
                 [[1, 6], [1, 32]]
             )
         ]

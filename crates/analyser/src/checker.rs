@@ -495,7 +495,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
             Type::Any
         } else if type1 != type2 {
             self.errors.borrow_mut().push((
-                SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
+                SemanticError::UnsupportedOperation(operator, type1, type2),
                 bin_exp.span,
             ));
             Type::Uninferrable
@@ -508,7 +508,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
                         type1
                     } else {
                         self.errors.borrow_mut().push((
-                            SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
+                            SemanticError::UnsupportedOperation(operator, type1, type2),
                             bin_exp.span,
                         ));
                         Type::Uninferrable
@@ -533,7 +533,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
                         type1
                     } else {
                         self.errors.borrow_mut().push((
-                            SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
+                            SemanticError::UnsupportedOperation(operator, type1, type2),
                             bin_exp.span,
                         ));
                         Type::Uninferrable
@@ -568,7 +568,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
             Type::Any
         } else if type1 != type2 {
             self.errors.borrow_mut().push((
-                SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
+                SemanticError::UnsupportedOperation(operator, type1, type2),
                 log_exp.span,
             ));
             Type::Uninferrable
@@ -581,7 +581,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
                         type1
                     } else {
                         self.errors.borrow_mut().push((
-                            SemanticError::UnsupportedLogicalOperation(operator, type1, type2),
+                            SemanticError::UnsupportedOperation(operator, type1, type2),
                             log_exp.span,
                         ));
                         Type::Uninferrable
@@ -599,10 +599,24 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
     // Typecheck unary expression.
     fn visit_unary_expression(&'a self, unary_exp: &ast::UnaryExpression<'a>) -> Type {
         let operand_type = self.visit_expression(&unary_exp.operand);
-        match unary_exp.operator {
-            ast::Operator::LogicalNot => self.resolve_types(&operand_type, &Type::boolean()),
-            _ => self.resolve_types(&operand_type, &Type::number()),
+        let operator_type;
+        let unary_type = match unary_exp.operator {
+            ast::Operator::LogicalNot => {
+                operator_type = Type::boolean();
+                self.resolve_types(&operand_type, &operator_type)
+            }
+            _ => {
+                operator_type = Type::number();
+                self.resolve_types(&operand_type, &operator_type)
+            }
+        };
+        if unary_type.is_uninferrable() {
+            self.errors.borrow_mut().push((
+                SemanticError::UnsupportedUnaryOperation(unary_exp.operator.clone(), operand_type),
+                unary_exp.span,
+            ));
         }
+        unary_type
     }
 
     fn visit_namespace_expression(&'a self, namespace_exp: &ast::NamespaceExpression<'a>) -> Type {
@@ -658,7 +672,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
                     }
                     _ => {
                         self.errors.borrow_mut().push((
-                            SemanticError::UnsupportedBinaryOperation(
+                            SemanticError::UnsupportedOperation(
                                 assign_exp.operator.clone(),
                                 atom.given_type.clone(),
                                 rhs,
@@ -840,7 +854,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
         if final_type.is_uninferrable() {
             if given_type != inferred_type {
                 self.errors.borrow_mut().push((
-                    SemanticError::InconsistentAssignment(given_type, inferred_type),
+                    SemanticError::Unassignable(given_type, inferred_type),
                     var_decl.span,
                 ));
             } else {

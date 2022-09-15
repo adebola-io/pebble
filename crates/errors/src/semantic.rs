@@ -8,9 +8,8 @@ where
     T: Display,
 {
     Unaddable(T, T),
-    UnsupportedBinaryOperation(Operator, T, T),
-    UnsupportedLogicalOperation(Operator, T, T),
-    ComparisionBetweenDifferentTypes(Operator, T, T),
+    UnsupportedOperation(Operator, T, T),
+    UnsupportedUnaryOperation(Operator, T),
     Undeclared(String),
     AssignmentToConst,
     Uninitialized(String),
@@ -19,19 +18,15 @@ where
     InvalidIndex(T),
     InvalidIndexer(T),
     InconsistentTernarySides(T, T),
-    UnsupportedNegation(T),
-    InconsistentAssignment(T, T),
+    Unassignable(T, T),
     InvalidRangeBoundaries,
     UnknownAssignment(String),
     UnequalGenericArgs(String, usize, usize),
     UnexpectedGenerics(String),
-    UnusedVariable,
     Uncallable(T),
     UnequalArgs(usize, usize),
     ParameterMismatch(T, T),
     IllegalTestBlock,
-    AliasUsedAsValue(String),
-    ValueUsedAsAlias(String),
     AssigningToNil,
     OperationOnNil,
     HeterogenousArray(T, T),
@@ -47,52 +42,31 @@ where
             "{}.",
             match self {
                 SemanticError::UnequalGenericArgs(x, y, z) => format!("Unequal generic arguments. Expected {y} arguments for '{x}' and got {z}"),
-                SemanticError::AssignmentToConst => format!("Assignment to constant variable"),
-                SemanticError::UnexpectedGenerics(x) => format!("Unexpected generic arguments for type '{x}'. '{x}' has no generic arguments"),
+                SemanticError::AssignmentToConst => format!("Assignment to constant variable or parameter"),
+                SemanticError::UnexpectedGenerics(x) => format!("Unexpected arguments for type '{x}'. '{x}' has no generic arguments"),
                 SemanticError::Unaddable(x, y) => format!("Cannot add types '{x}' and '{y}'"),
                 SemanticError::OperationOnNil => format!("Cannot perform operation on possibly nil values"),
-                SemanticError::UnsupportedBinaryOperation(op, x, y) => format!(
-                    "The operation '{}' is not defined for types '{}' and '{}'",
-                    op, x, y
-                ),
-                SemanticError::UnsupportedLogicalOperation(op, x, y) => format!(
-                    "Cannot perform the logical operation '{}' on types '{}' and '{}'",
-                    op, x, y
-                ),
-                SemanticError::ComparisionBetweenDifferentTypes(op, x, y) => format!(
-                    "This operation will always return {} because there is no overlap between the types '{}' and '{}'",
-                    match op {
-                        Operator::Equals => "false",
-                        Operator::NotEquals=> "true",
-                        _ => unreachable!()
-                    }
-                        , x, y
-                    ),
-                SemanticError::InvalidTernaryTest(x) => format!(
-                    "Expected Boolean type for ternary operation, got '{}'", x
-                ),
+                SemanticError::UnsupportedOperation(op, x, y) => format!("The operation '{op}' is not defined for types '{x}' and '{y}'"),
+                SemanticError::UnsupportedUnaryOperation(op, x) => format!("The operation {op} is not defined for '{x}'"),
+                SemanticError::InvalidTernaryTest(x) => format!("Expected Boolean type for ternary operation test, got '{x}'"),
                 SemanticError::InconsistentTernarySides(x, y) => format!(
-                    "Expected '{}' for alternate expression, got '{}'. Both sides of a ternary expression must have the same type", x, y
+                    "Expected '{x}' for alternate expression, got '{y}'. Both sides of a ternary expression must have the same type"
                 ),
-                SemanticError::Uninitialized(x) => format!("'{}' is being used before it is initialized", x),
-                SemanticError::InvalidIndex(x) => format!("The type '{}' is not an indexable type", x),
-                SemanticError::InvalidIndexer(x) => format!("The type '{}' cannot be used as an index", x),
+                SemanticError::Uninitialized(x) => format!("'{x}' is being used before it is initialized"),
+                SemanticError::InvalidIndex(x) => format!("The type '{x}' is not an indexable type"),
+                SemanticError::InvalidIndexer(x) => format!("The type '{x}' cannot be used as an index"),
                 SemanticError::InvalidRangeBoundaries => format!("Invalid range. The boundaries of a range must be both be either characters or numbers"),
-                SemanticError::Undeclared(x) => format!("'{}' is not defined", x),
-                SemanticError::AlreadyDeclared(x) => format!("'{}' has either already been declared or just initialized in this scope", x),
-                SemanticError::UnknownAssignment(x) => format!("Cannot infer the type of '{}' from its usage.", x),
-                SemanticError::UnsupportedNegation(_) => todo!(),
+                SemanticError::Undeclared(x) => format!("'{x}' is not defined"),
+                SemanticError::AlreadyDeclared(x) => format!("'{x}' has either already been declared or just initialized in this scope"),
+                SemanticError::UnknownAssignment(x) => format!("Cannot infer the type of '{x}' from its usage."),
                 SemanticError::IllegalTestBlock => format!("Invalid @tests block. Test blocks can only be used in the global scope of a module or file"),
-                SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
-                SemanticError::Uncallable(x) => format!("'{}' is not a callable type", x),
-                SemanticError::UnequalArgs(x, y) => format!("Function or Constructor required {} arguments but got {}", x, y),
-                SemanticError::ParameterMismatch(x, y) => format!("Invalid argument. Expected type '{}' and got '{}'", x, y),
+                SemanticError::Unassignable(x, y) => format!("Type '{y}' cannot be assigned to type '{x}'"),
+                SemanticError::Uncallable(x) => format!("'{x}' is not a callable type"),
+                SemanticError::UnequalArgs(x, y) => format!("Function or Constructor required {x} arguments but got {y}"),
+                SemanticError::ParameterMismatch(x, y) => format!("Invalid argument. Expected type '{x}' and got '{y}'"),
                 SemanticError::HeterogenousArray(x, y) => format!(
-                    "Elements of type '{}' and '{}' cannot be put in the same array. Arrays can only contain elements of the same type", x, y
+                    "Elements of type '{x}' and '{y}' cannot be put in the same array. Arrays can only contain elements of the same type",
                 ),
-                SemanticError::AliasUsedAsValue(x) => format!("'{}' is a type, but it is being used as a value", x),
-                SemanticError::ValueUsedAsAlias(x) => format!("'{}' is a value, but it is being used as a type", x),
-                SemanticError::UnusedVariable => todo!(),
                 SemanticError::AssigningToNil => format!("Cannot assign nil value to variable or constant"),
             }
         )
