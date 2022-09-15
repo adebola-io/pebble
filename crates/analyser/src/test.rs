@@ -208,3 +208,23 @@ fn it_validates_logical_operation() {
     let errors = Checker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
 }
+
+#[test]
+fn it_validates_array_expression() {
+    let mut scanner = Scanner::new(
+        "
+    @let array: Array<String> = [\"This\", \"is\", \"an\", \"array\"];
+    @let arrayRef = array;
+    @let arrayRef2: Array<String> = array;
+    @let array2 = [1, 3, 4, 5, 6];
+    @let a: Array<Number> = array2;
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = Checker::check(parser.statements.take());
+    assert_eq!(errors.len(), 0)
+}

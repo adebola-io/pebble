@@ -9,7 +9,7 @@ use std::{
     string,
 };
 
-use ast::{Expression, Identifier, Statement, TextSpan, Visitor};
+use ast::{Expression, Identifier, Location, Statement, TextSpan, Visitor};
 use errors::SemanticError;
 use utils::Stage;
 
@@ -267,7 +267,7 @@ impl<'a> Checker<'a> {
                     return Type::from_class(class, None);
                 }
                 // Some generics.
-                let generics = class.generics.unwrap();
+                let generics = class.generics.as_ref().unwrap();
                 let generic_length = generics.len();
 
                 // Unequal generic arguments.
@@ -282,7 +282,13 @@ impl<'a> Checker<'a> {
                     ));
                     return Type::Uninferable;
                 }
-                todo!()
+
+                let mut arguments = Vec::new();
+                for input in &concrete.arguments {
+                    let argument = self.create_instance(input);
+                    arguments.push(argument);
+                }
+                return Type::from_class(class, Some(arguments));
             }
             ast::Type::Function(_) => todo!(),
             ast::Type::Dot(_) => todo!(),
@@ -499,8 +505,32 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
         todo!()
     }
 
+    // Typecheck array expression.
     fn visit_array_expression(&'a self, array_exp: &ast::ArrayExpression<'a>) -> Type {
-        todo!()
+        if array_exp.elements.len() == 0 {
+            return Type::array(Type::Unknown);
+        }
+        // Compare all known element types to the first type.
+        let first_type = self.visit_expression(&array_exp.elements[0]);
+        for element in &array_exp.elements {
+            let element_type = self.resolve_types(&first_type, &self.visit_expression(element));
+            if element_type.is_any() {
+                return Type::array(Type::Any);
+            } else if element_type.is_nil() {
+                self.errors
+                    .borrow_mut()
+                    .push((SemanticError::AssigningToNil, element.get_range()));
+                return Type::array(Type::Uninferable);
+            } else if element_type.is_uninferable() {
+                if first_type != element_type {
+                    self.errors.borrow_mut().push((
+                        SemanticError::HeterogenousArray(first_type.clone(), element_type),
+                        array_exp.span,
+                    ))
+                }
+            }
+        }
+        Type::array(first_type)
     }
 
     fn visit_ternary_expression(&'a self, tern_exp: &ast::TernaryExpression<'a>) -> Type {
