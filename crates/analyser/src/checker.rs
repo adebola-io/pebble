@@ -6,6 +6,7 @@ use std::{
     collections::HashMap,
     fmt::Display,
     hash::Hash,
+    ops::Deref,
     string,
 };
 
@@ -13,11 +14,25 @@ use ast::{Expression, Identifier, Location, Statement, TextSpan, Visitor};
 use errors::SemanticError;
 use utils::Stage;
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Atom<'a> {
     source_node: Identifier<'a>,
     given_type: Type,
     is_initialized: bool,
     is_constant: bool,
+}
+impl<'a> Default for Atom<'a> {
+    fn default() -> Self {
+        Atom {
+            source_node: Identifier {
+                value: "",
+                span: [[0, 0], [0, 0]],
+            },
+            given_type: Type::Unknown,
+            is_initialized: false,
+            is_constant: false,
+        }
+    }
 }
 
 type TypeErrors = Vec<(SemanticError<Type>, TextSpan)>;
@@ -57,6 +72,13 @@ impl Type {
     /// [`Uninferrable`]: Type::Uninferrable
     pub fn is_uninferrable(&self) -> bool {
         matches!(self, Self::Uninferrable)
+            || matches!(
+                self,
+                Self::Instance {
+                    arguments: Some(arg),
+                    ..
+                } if arg.iter().find(|t| t.is_uninferrable()).is_some()
+            )
     }
 
     /// Returns `true` if the type is [`Any`].
@@ -71,6 +93,13 @@ impl Type {
     /// [`Never`]: Type::Never
     pub fn is_never(&self) -> bool {
         matches!(self, Self::Never)
+            || matches!(
+                self,
+                Self::Instance {
+                    arguments: Some(arg),
+                    ..
+                } if arg.iter().find(|t| t.is_never()).is_some()
+            )
     }
 
     /// Returns `true` if the type is [`Nil`].
@@ -78,6 +107,13 @@ impl Type {
     /// [`Nil`]: Type::Nil
     pub fn is_nil(&self) -> bool {
         matches!(self, Self::Nil)
+            || matches!(
+                self,
+                Self::Instance {
+                    arguments: Some(arg),
+                    ..
+                } if arg.iter().find(|t| t.is_nil()).is_some()
+            )
     }
 }
 
@@ -161,6 +197,10 @@ impl Type {
                 arguments
             } if name == "Array"
         )
+    }
+
+    pub fn is_indefinite(&self) -> bool {
+        self.is_any() || self.is_uninferrable() || self.is_never() || self.is_nil()
     }
     pub fn from_class(class: TypeClass, arguments: Option<Vec<Self>>) -> Self {
         Type::Instance { class, arguments }
@@ -560,9 +600,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
     fn visit_unary_expression(&'a self, unary_exp: &ast::UnaryExpression<'a>) -> Type {
         let operand_type = self.visit_expression(&unary_exp.operand);
         match unary_exp.operator {
-            ast::Operator::LogicalNot => self
-                .resolve_types(&operand_type, &Type::boolean())
-                .to_owned(),
+            ast::Operator::LogicalNot => self.resolve_types(&operand_type, &Type::boolean()),
             _ => self.resolve_types(&operand_type, &Type::number()),
         }
     }
@@ -573,7 +611,86 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
 
     // Typecheck assignment expression.
     fn visit_assignment_expression(&'a self, assign_exp: &ast::AssignmentExpression<'a>) -> Type {
-        todo!()
+        if let ast::Expression::IdentifierExpression(identifier) = &assign_exp.operands[0] {
+            let atom_option = self.values.borrow().lookup(identifier.value).cloned();
+            // left hand side does not exist.
+            if atom_option.is_none() {
+                self.errors.borrow_mut().push((
+                    SemanticError::Undeclared(String::from(identifier.value)),
+                    identifier.span,
+                ));
+                return Type::Uninferrable;
+            }
+
+            let mut atom = atom_option.unwrap();
+
+            // Left hand side is constant.
+            if atom.is_constant {
+                self.errors
+                    .borrow_mut()
+                    .push((SemanticError::AssignmentToConst, assign_exp.span));
+                return atom.given_type;
+            }
+
+            let assignment_type = {
+                let rhs = self.visit_expression(&assign_exp.operands[1]);
+                let result_type = self.resolve_types(&atom.given_type, &rhs);
+                match assign_exp.operator {
+                    ast::Operator::Assign => result_type,
+                    ast::Operator::AddAssign
+                        if result_type.is_string()
+                            || result_type.is_number()
+                            || result_type.is_any() =>
+                    {
+                        result_type
+                    }
+                    ast::Operator::SubtractAssign
+                    | ast::Operator::DivideAssign
+                    | ast::Operator::MultiplyAssign
+                        if result_type.is_number() || result_type.is_any() =>
+                    {
+                        result_type
+                    }
+                    ast::Operator::LogicalAndAssign | ast::Operator::LogicalOrAssign
+                        if result_type.is_boolean() || result_type.is_any() =>
+                    {
+                        result_type
+                    }
+                    _ => {
+                        self.errors.borrow_mut().push((
+                            SemanticError::UnsupportedBinaryOperation(
+                                assign_exp.operator.clone(),
+                                atom.given_type.clone(),
+                                rhs,
+                            ),
+                            assign_exp.span,
+                        ));
+                        atom.given_type.clone()
+                    }
+                }
+            };
+
+            // Initialize uninitialized variable. Only initialize if the operator is =.
+            if !atom.is_initialized {
+                if let ast::Operator::Assign = assign_exp.operator {
+                    atom.is_initialized = true;
+                } else {
+                    self.errors.borrow_mut().push((
+                        SemanticError::Uninitialized(String::from(identifier.value)),
+                        identifier.span,
+                    ));
+                }
+            };
+
+            if !assignment_type.is_indefinite() {
+                atom.given_type = assignment_type.clone()
+            }
+            self.values.borrow_mut().set(identifier.value, atom);
+
+            assignment_type
+        } else {
+            Type::Uninferrable
+        }
     }
 
     // Typecheck an index expression.
@@ -642,7 +759,7 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
         let alternate_type = self.visit_expression(&tern_exp.alternate);
 
         // Confirm that the test expression is boolean.
-        if !test_type.is_boolean() {
+        if !(test_type.is_boolean() || test_type.is_any()) {
             self.errors.borrow_mut().push((
                 SemanticError::InvalidTernaryTest(test_type),
                 tern_exp.test.get_range(),

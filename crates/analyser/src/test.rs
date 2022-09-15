@@ -339,3 +339,28 @@ fn it_validates_unary_expression() {
     let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors, vec![])
 }
+
+#[test]
+fn it_validates_assignment_expression() {
+    let mut scanner = Scanner::new(
+        "
+    @let empty_variable: String;
+    empty_variable = \"hello, \";
+
+    @let s: String = empty_variable;
+    s += \"world! \";
+
+    @let empty_array = [];
+    empty_array = [1, 2, 3];
+    empty_array = [];
+    @let a: Array<Number> = empty_array;
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = TypeChecker::check(parser.statements.take());
+    assert_eq!(errors, vec![])
+}
