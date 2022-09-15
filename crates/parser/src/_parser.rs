@@ -1354,10 +1354,7 @@ impl<'a> Parser<'a> {
         }
         let end = self.token().span[1];
         self.advance();
-        let break_stat = Statement::Break(Break {
-            span: [start, end],
-            phantom: PhantomData,
-        });
+        let break_stat = Statement::Break(Break { span: [start, end] });
         Ok(break_stat)
     }
     /// Parses a crash statemnet.

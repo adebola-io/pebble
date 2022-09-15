@@ -7,6 +7,7 @@ pub enum SemanticError<T>
 where
     T: Display,
 {
+    Unaddable(T, T),
     UnsupportedBinaryOperation(Operator, T, T),
     UnsupportedLogicalOperation(Operator, T, T),
     ComparisionBetweenDifferentTypes(Operator, T, T),
@@ -18,7 +19,6 @@ where
     InconsistentTernarySides(T, T),
     UnsupportedNegation(T),
     InconsistentAssignment(T, T),
-    InconsistentInitializer,
     InvalidRangeBoundaries,
     UnknownAssignment,
     UnusedVariable,
@@ -29,6 +29,7 @@ where
     AliasUsedAsValue(String),
     ValueUsedAsAlias(String),
     AssigningToNil,
+    OperationOnNil,
     HeterogenousArray(T, T),
 }
 
@@ -41,7 +42,8 @@ where
             f,
             "{}.",
             match self {
-
+                SemanticError::Unaddable(x, y) => format!("Cannot add types '{}' and '{}'", x, y),
+                SemanticError::OperationOnNil => format!("Cannot perform operation on possibly nil values"),
                 SemanticError::UnsupportedBinaryOperation(op, x, y) => format!(
                     "The operation '{}' is not defined for types '{}' and '{}'",
                     op, x, y
@@ -74,7 +76,6 @@ where
                 SemanticError::UnsupportedNegation(_) => todo!(),
                 SemanticError::IllegalTestBlock => format!("Invalid @tests block. Test blocks can only be used in the global scope of a module or file"),
                 SemanticError::InconsistentAssignment(x, y) => format!("Type '{}' cannot be assigned to type '{}'", y, x),
-                SemanticError::InconsistentInitializer => todo!(),
                 SemanticError::Uncallable(x) => format!("'{}' is not a callable type", x),
                 SemanticError::UnequalArgs(x, y) => format!("Function or Constructor required {} arguments but got {}", x, y),
                 SemanticError::ParameterMismatch(x, y) => format!("Invalid argument. Expected type '{}' and got '{}'", x, y),

@@ -118,10 +118,14 @@ pub struct CrashStatement<'a> {
 }
 
 /// A break statement that halts a loop.
-#[derive(Location, Debug, Clone, PartialEq)]
-pub struct Break<'a> {
+#[derive(Debug, Clone, PartialEq)]
+pub struct Break {
     pub span: TextSpan,
-    pub phantom: PhantomData<&'a i32>,
+}
+impl Location for Break {
+    fn get_range(&self) -> TextSpan {
+        self.span
+    }
 }
 
 /// A continue statement that skips over the next iteration in the loop.

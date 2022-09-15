@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use std::{cell::RefCell, marker::PhantomData, vec};
+use std::{cell::RefCell, vec};
 
 use crate::{
     _parser::{Parser, Provider},
@@ -392,7 +392,7 @@ fn it_parses_numeric_literal() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_num_expr("2", [[1, 1], [1, 2]]))
@@ -406,7 +406,7 @@ fn it_parses_boolean_literal() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_bool_expr("true", [[1, 1], [1, 5]]))
@@ -420,7 +420,7 @@ fn it_parses_string_literal() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_str_expr(
@@ -437,7 +437,7 @@ fn it_parses_binary_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_bin_expr(
@@ -455,7 +455,7 @@ fn it_parses_continuous_binary_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_bin_expr(
@@ -477,7 +477,7 @@ fn it_parses_binary_expression_with_multiple_operands() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_bin_expr(
@@ -499,7 +499,7 @@ fn it_parses_identifier() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_ident_expr(
@@ -516,7 +516,7 @@ fn it_parses_call_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_call_expr(
@@ -534,7 +534,7 @@ fn it_parses_call_expression_with_arguments() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_call_expr(
@@ -555,7 +555,7 @@ fn it_parses_dot_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_dot_expr(
@@ -572,7 +572,7 @@ fn it_parses_namespace_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_namespace_expr(
@@ -589,7 +589,7 @@ fn it_parses_index_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_index_expr(
@@ -607,7 +607,7 @@ fn it_parses_complex_expression_1() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_index_expr(
@@ -643,7 +643,7 @@ fn it_parses_unary_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_bin_expr(
@@ -665,7 +665,7 @@ fn it_parses_range_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_call_expr(
@@ -686,7 +686,7 @@ fn it_parses_logical_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_logical_expr(
@@ -704,7 +704,7 @@ fn it_parses_ternary_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_ternary_expr(
@@ -732,7 +732,7 @@ fn it_parses_nested_ternary_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_ternary_expr(
@@ -784,7 +784,7 @@ fn it_parses_assignment_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_assign_expr(
@@ -802,7 +802,7 @@ fn it_parses_nested_assignment_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_assign_expr(
@@ -824,7 +824,7 @@ fn it_parses_grouped_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::create_bin_expr(
@@ -853,7 +853,7 @@ fn it_parses_if_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::IfStatement(IfStatement {
@@ -886,7 +886,7 @@ fn it_parses_if_statement_without_block() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::IfStatement(IfStatement {
@@ -915,7 +915,7 @@ fn it_parses_if_statement_without_else() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::IfStatement(IfStatement {
@@ -938,7 +938,7 @@ fn it_parses_print_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::PrintLnStatement(PrintLnStatement {
@@ -955,7 +955,7 @@ fn it_parses_prepend_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::PrependStatement(PrependStatement {
@@ -972,7 +972,7 @@ fn it_parses_test_block() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::TestBlock(TestBlock {
@@ -992,7 +992,7 @@ fn it_parses_while_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::WhileStatement(WhileStatement {
@@ -1014,7 +1014,7 @@ fn it_parses_return_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::ReturnStatement(ReturnStatement {
@@ -1034,7 +1034,7 @@ fn it_parses_return_statement_without_argument() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::ReturnStatement(ReturnStatement {
@@ -1051,7 +1051,7 @@ fn it_parses_loop_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::LoopStmnt(Loop {
@@ -1076,12 +1076,11 @@ fn it_parses_break_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::Break(Break {
             span: [[1, 1], [1, 6]],
-            phantom: PhantomData
         })
     )
 }
@@ -1093,7 +1092,7 @@ fn it_parses_crash_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::CrashStmnt(CrashStatement {
@@ -1117,7 +1116,7 @@ fn it_parses_try_recover_block() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::TryBlock(TryBlock {
@@ -1152,7 +1151,7 @@ fn it_parses_use_import() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::UseImport(UseImport {
@@ -1212,7 +1211,7 @@ fn it_parses_plain_function() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::Function(Function {
@@ -1285,7 +1284,7 @@ fn it_parses_functional_expression() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::create_expr_stmnt(Expression::CallExpression(CallExpression {
@@ -1321,7 +1320,7 @@ fn it_parses_let_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::VariableDeclaration(VariableDeclaration {
@@ -1355,7 +1354,7 @@ fn it_parses_const_statement() {
     let provider = Provider { scanner, index: 0 };
     let parser = Parser::new(provider);
     parser.parse();
-    let statements = parser.statements.borrow().clone();
+    let statements = parser.statements.take();
     assert_eq!(
         statements[0],
         Statement::VariableDeclaration(VariableDeclaration {

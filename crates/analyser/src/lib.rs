@@ -1,10 +1,9 @@
-mod resolver;
-mod symbol;
-mod tests;
+mod checker;
+mod symbol_old;
+mod test;
 mod trimmer;
 mod value;
 
-pub use resolver::*;
-pub use symbol::*;
+pub use symbol_old::*;
 pub use trimmer::*;
 pub use value::*;

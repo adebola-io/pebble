@@ -11,7 +11,7 @@ pub enum Statement<'a> {
     PrintLnStatement(PrintLnStatement<'a>),
     PrependStatement(PrependStatement<'a>),
     VariableDeclaration(VariableDeclaration<'a>),
-    Break(Break<'a>),
+    Break(Break),
     Continue(Continue<'a>),
     TestBlock(TestBlock<'a>),
     LoopStmnt(Loop<'a>),
