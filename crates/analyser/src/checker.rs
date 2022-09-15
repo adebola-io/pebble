@@ -216,6 +216,7 @@ impl Display for Type {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeClass {
     pub name: String,
+    pub is_alias: Option<Box<TypeClass>>,
     pub generics: Option<Vec<Type>>,
     pub interfaces: Vec<Interface>,
     pub properties: HashMap<String, Type>,
@@ -225,6 +226,7 @@ impl TypeClass {
     fn string_primitive() -> Self {
         TypeClass {
             name: String::from("String"),
+            is_alias: None,
             generics: None,
             interfaces: Vec::new(),
             properties: HashMap::new(),
@@ -233,6 +235,7 @@ impl TypeClass {
     fn number_primitive() -> Self {
         TypeClass {
             name: String::from("Number"),
+            is_alias: None,
             generics: None,
             interfaces: Vec::new(),
             properties: HashMap::new(),
@@ -241,6 +244,7 @@ impl TypeClass {
     fn character_primitive() -> Self {
         TypeClass {
             name: String::from("Character"),
+            is_alias: None,
             generics: None,
             interfaces: Vec::new(),
             properties: HashMap::new(),
@@ -249,6 +253,7 @@ impl TypeClass {
     fn boolean_primitive() -> Self {
         TypeClass {
             name: String::from("Boolean"),
+            is_alias: None,
             generics: None,
             interfaces: Vec::new(),
             properties: HashMap::new(),
@@ -257,6 +262,7 @@ impl TypeClass {
     fn array_primitive() -> Self {
         TypeClass {
             name: String::from("Array"),
+            is_alias: None,
             generics: Some(vec![Type::Generic {
                 name: String::from("T"),
                 implements: Vec::new(),
@@ -977,8 +983,9 @@ impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
         todo!()
     }
 
+    // Typecheck type aliases
     fn visit_type_alias(&'a self, type_alias: &ast::TypeAlias<'a>) {
-        todo!()
+        if let Some(v) = self.classes.borrow().lookup(type_alias.name.value) {}
     }
 
     fn visit_type_label(&'a self, label: &ast::Type<'a>) -> Type {

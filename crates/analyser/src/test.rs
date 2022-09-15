@@ -345,6 +345,7 @@ fn it_validates_assignment_expression() {
     @let empty_array = [];
     empty_array = [1, 2, 3];
     empty_array = [];
+    empty_array = [true, false];
     @let a: Array<Number> = empty_array;
      ",
     );
