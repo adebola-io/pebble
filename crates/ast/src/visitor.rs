@@ -26,12 +26,12 @@ pub trait Visitor<'a, T = ()> {
             Expression::IndexExpression(index_exp) => self.visit_index_expression(index_exp),
             Expression::DotExpression(dot_exp) => self.visit_dot_expression(dot_exp),
             Expression::NamespaceExpression(namespace_exp) => {
-                self.visit_namespace_exp(namespace_exp)
+                self.visit_namespace_expression(namespace_exp)
             }
             Expression::RangeExpression(rang_exp) => self.visit_range_expression(rang_exp),
             Expression::TernaryExpression(tern_exp) => self.visit_ternary_expression(tern_exp),
             Expression::AssignmentExpression(assign_exp) => {
-                self.visit_assign_expression(assign_exp)
+                self.visit_assignment_expression(assign_exp)
             }
             Expression::FnExpression(fn_exp) => self.visit_function_expression(fn_exp),
         }
@@ -46,8 +46,8 @@ pub trait Visitor<'a, T = ()> {
     fn visit_logical_expression(&'a self, log_exp: &LogicalExpression<'a>) -> T;
     fn visit_dot_expression(&'a self, dot_exp: &DotExpression<'a>) -> T;
     fn visit_unary_expression(&'a self, unary_exp: &UnaryExpression<'a>) -> T;
-    fn visit_namespace_exp(&'a self, namespace_exp: &NamespaceExpression<'a>) -> T;
-    fn visit_assign_expression(&'a self, assign_exp: &AssignmentExpression<'a>) -> T;
+    fn visit_namespace_expression(&'a self, namespace_exp: &NamespaceExpression<'a>) -> T;
+    fn visit_assignment_expression(&'a self, assign_exp: &AssignmentExpression<'a>) -> T;
     fn visit_index_expression(&'a self, index_exp: &IndexExpression<'a>) -> T;
     fn visit_call_expression(&'a self, call_exp: &CallExpression<'a>) -> T;
     fn visit_array_expression(&'a self, array_exp: &ArrayExpression<'a>) -> T;

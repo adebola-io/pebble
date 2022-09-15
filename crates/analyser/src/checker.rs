@@ -25,7 +25,7 @@ type TypeErrors = Vec<(SemanticError<Type>, TextSpan)>;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Unknown,
-    Uninferable,
+    Uninferrable,
     Any,
     Never,
     Nil,
@@ -52,11 +52,11 @@ impl Type {
         matches!(self, Self::Unknown)
     }
 
-    /// Returns `true` if the type is [`Uninferable`].
+    /// Returns `true` if the type is [`Uninferrable`].
     ///
-    /// [`Uninferable`]: Type::Uninferable
-    pub fn is_uninferable(&self) -> bool {
-        matches!(self, Self::Uninferable)
+    /// [`Uninferrable`]: Type::Uninferrable
+    pub fn is_uninferrable(&self) -> bool {
+        matches!(self, Self::Uninferrable)
     }
 
     /// Returns `true` if the type is [`Any`].
@@ -120,6 +120,16 @@ impl Type {
                 class: TypeClass { name, .. },
                 arguments
             } if name == "Number"
+        )
+    }
+
+    pub fn is_character(&self) -> bool {
+        matches!(
+            self,
+            Type::Instance {
+                class: TypeClass { name, .. },
+                arguments
+            } if name == "Character"
         )
     }
 
@@ -238,16 +248,16 @@ pub enum BlockContext {
     FunctionDeclaration,
 }
 
-pub struct Checker<'a> {
+pub struct TypeChecker<'a> {
     values: RefCell<Stage<&'a str, Atom<'a>>>,
     classes: RefCell<Stage<&'a str, TypeClass>>,
     errors: RefCell<TypeErrors>,
 }
 
-impl<'a> Checker<'a> {
+impl<'a> TypeChecker<'a> {
     /// Type checks a sequence of statements and returns a list of errors encountered.
     pub fn check(statements: Vec<Statement<'a>>) -> TypeErrors {
-        let checker = Checker {
+        let checker = TypeChecker {
             values: RefCell::new(Stage::new()),
             classes: RefCell::new(Stage::new()),
             errors: RefCell::new(vec![]),
@@ -262,7 +272,7 @@ impl<'a> Checker<'a> {
     }
 }
 
-impl<'a> Checker<'a> {
+impl<'a> TypeChecker<'a> {
     /// Creates all primitive types.
     fn set_primitives(&'a self) {
         let primitives = [
@@ -288,7 +298,7 @@ impl<'a> Checker<'a> {
                     self.errors
                         .borrow_mut()
                         .push((SemanticError::Undeclared(String::from(name)), concrete.span));
-                    return Type::Uninferable;
+                    return Type::Uninferrable;
                 }
 
                 let class = class_option.unwrap();
@@ -302,7 +312,7 @@ impl<'a> Checker<'a> {
                             SemanticError::UnexpectedGenerics(String::from(name)),
                             concrete.span,
                         ));
-                        return Type::Uninferable;
+                        return Type::Uninferrable;
                     }
                     return Type::from_class(class, None);
                 }
@@ -320,7 +330,7 @@ impl<'a> Checker<'a> {
                         ),
                         concrete.span,
                     ));
-                    return Type::Uninferable;
+                    return Type::Uninferrable;
                 }
 
                 let mut arguments = Vec::new();
@@ -334,18 +344,17 @@ impl<'a> Checker<'a> {
             ast::Type::Dot(_) => todo!(),
         }
     }
-
     /// Checks if two types can be coerced into each other, with the first type taking precedence over the other.
     fn resolve_types(&'a self, type1: &Type, type2: &Type) -> Type {
         match (type1, type2) {
             // If at least type is uninferable.
-            (_, Type::Uninferable) | (Type::Uninferable, _) => Type::Uninferable,
+            (_, Type::Uninferrable) | (Type::Uninferrable, _) => Type::Uninferrable,
             // If the second type is never.
             (x, Type::Never) => x.clone(),
             // If either type is unknown.
             (x, Type::Unknown) | (Type::Unknown, x) => {
                 if x.is_unknown() {
-                    Type::Uninferable
+                    Type::Uninferrable
                 } else {
                     x.clone()
                 }
@@ -356,13 +365,35 @@ impl<'a> Checker<'a> {
             (_, Type::Any) | (Type::Any, _) => Type::Any,
             // If both types are equal.
             (x, y) if x == y => x.clone(),
+            // For types with unknown arguments. Assumes that both sides are the same class and have equal number of arguments.
+            (
+                Type::Instance {
+                    arguments: Some(x),
+                    class: class1,
+                },
+                Type::Instance {
+                    arguments: Some(y),
+                    class: class2,
+                },
+            ) => {
+                if (class1 != class2) {
+                    return Type::Uninferrable;
+                }
+                let mut resolved_arguments = vec![];
+                let mut i = 0;
+                while i < x.len() {
+                    resolved_arguments.push(self.resolve_types(&x[i], &y[i]));
+                    i += 1;
+                }
+                Type::from_class(class1.clone(), Some(resolved_arguments))
+            }
             // Otherwise
-            _ => Type::Uninferable,
+            _ => Type::Uninferrable,
         }
     }
 }
 
-impl<'a> Visitor<'a, Type> for Checker<'a> {
+impl<'a> Visitor<'a, Type> for TypeChecker<'a> {
     /// Typecheck an identifier.
     fn visit_ident(&'a self, ident: &Identifier<'a>) -> Type {
         if let Some(atom) = self.values.borrow().lookup(ident.value) {
@@ -378,7 +409,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                 SemanticError::Undeclared(String::from(ident.value)),
                 ident.span,
             ));
-            Type::Uninferable
+            Type::Uninferrable
         }
     }
 
@@ -409,17 +440,17 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
         let operator = bin_exp.operator.clone();
         if type1.is_unknown()
             || type2.is_unknown()
-            || type1.is_uninferable()
-            || type2.is_uninferable()
+            || type1.is_uninferrable()
+            || type2.is_uninferrable()
         {
-            Type::Uninferable
+            Type::Uninferrable
         }
         // Block operation on nil values.
         else if type1.is_nil() || type2.is_nil() {
             self.errors
                 .borrow_mut()
                 .push((SemanticError::OperationOnNil, bin_exp.span));
-            Type::Uninferable
+            Type::Uninferrable
         } else if type1.is_any() || type2.is_any() {
             Type::Any
         } else if type1 != type2 {
@@ -427,7 +458,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                 SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
                 bin_exp.span,
             ));
-            Type::Uninferable
+            Type::Uninferrable
         } else {
             match operator {
                 ast::Operator::Add => {
@@ -440,7 +471,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                             SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
                             bin_exp.span,
                         ));
-                        Type::Uninferable
+                        Type::Uninferrable
                     }
                 }
                 // With operator x, number x number = number
@@ -465,7 +496,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                             SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
                             bin_exp.span,
                         ));
-                        Type::Uninferable
+                        Type::Uninferrable
                     }
                 }
                 // Already checked for equality.
@@ -482,17 +513,17 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
         let operator = log_exp.operator.clone();
         if type1.is_unknown()
             || type2.is_unknown()
-            || type1.is_uninferable()
-            || type2.is_uninferable()
+            || type1.is_uninferrable()
+            || type2.is_uninferrable()
         {
-            Type::Uninferable
+            Type::Uninferrable
         }
         // Block operation on nil values.
         else if type1.is_nil() || type2.is_nil() {
             self.errors
                 .borrow_mut()
                 .push((SemanticError::OperationOnNil, log_exp.span));
-            Type::Uninferable
+            Type::Uninferrable
         } else if type1.is_any() || type2.is_any() {
             Type::Any
         } else if type1 != type2 {
@@ -500,7 +531,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                 SemanticError::UnsupportedBinaryOperation(operator, type1, type2),
                 log_exp.span,
             ));
-            Type::Uninferable
+            Type::Uninferrable
         } else {
             match log_exp.operator {
                 ast::Operator::LogicalAnd | ast::Operator::LogicalOr => {
@@ -513,7 +544,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                             SemanticError::UnsupportedLogicalOperation(operator, type1, type2),
                             log_exp.span,
                         ));
-                        Type::Uninferable
+                        Type::Uninferrable
                     }
                 }
                 _ => unreachable!(),
@@ -525,15 +556,23 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
         todo!()
     }
 
+    // Typecheck unary expression.
     fn visit_unary_expression(&'a self, unary_exp: &ast::UnaryExpression<'a>) -> Type {
+        let operand_type = self.visit_expression(&unary_exp.operand);
+        match unary_exp.operator {
+            ast::Operator::LogicalNot => self
+                .resolve_types(&operand_type, &Type::boolean())
+                .to_owned(),
+            _ => self.resolve_types(&operand_type, &Type::number()),
+        }
+    }
+
+    fn visit_namespace_expression(&'a self, namespace_exp: &ast::NamespaceExpression<'a>) -> Type {
         todo!()
     }
 
-    fn visit_namespace_exp(&'a self, namespace_exp: &ast::NamespaceExpression<'a>) -> Type {
-        todo!()
-    }
-
-    fn visit_assign_expression(&'a self, assign_exp: &ast::AssignmentExpression<'a>) -> Type {
+    // Typecheck assignment expression.
+    fn visit_assignment_expression(&'a self, assign_exp: &ast::AssignmentExpression<'a>) -> Type {
         todo!()
     }
 
@@ -546,7 +585,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
             self.errors
                 .borrow_mut()
                 .push((SemanticError::InvalidIndex(accessor_type), index_exp.span));
-            return Type::Uninferable;
+            return Type::Uninferrable;
         }
         if !property_type.is_number() {
             self.errors
@@ -583,8 +622,8 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                 self.errors
                     .borrow_mut()
                     .push((SemanticError::AssigningToNil, element.get_range()));
-                return Type::array(Type::Uninferable);
-            } else if element_type.is_uninferable() {
+                return Type::array(Type::Uninferrable);
+            } else if element_type.is_uninferrable() {
                 if first_type != element_type {
                     self.errors.borrow_mut().push((
                         SemanticError::HeterogenousArray(first_type.clone(), element_type),
@@ -596,12 +635,44 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
         Type::array(first_type)
     }
 
+    // Typecheck ternary expression.
     fn visit_ternary_expression(&'a self, tern_exp: &ast::TernaryExpression<'a>) -> Type {
-        todo!()
+        let test_type = self.visit_expression(&tern_exp.test);
+        let consequent_type = self.visit_expression(&tern_exp.consequent);
+        let alternate_type = self.visit_expression(&tern_exp.alternate);
+
+        // Confirm that the test expression is boolean.
+        if !test_type.is_boolean() {
+            self.errors.borrow_mut().push((
+                SemanticError::InvalidTernaryTest(test_type),
+                tern_exp.test.get_range(),
+            ))
+        }
+        // Confirm that the consequent and alternate expressions produce values of the same type.
+        let ternary_type = self.resolve_types(&consequent_type, &alternate_type);
+        if consequent_type != alternate_type && ternary_type.is_uninferrable() {
+            self.errors.borrow_mut().push((
+                SemanticError::InconsistentTernarySides(consequent_type, alternate_type),
+                tern_exp.span,
+            ));
+        }
+        ternary_type
     }
 
+    // Typecheck range expression.
     fn visit_range_expression(&'a self, rang_exp: &ast::RangeExpression<'a>) -> Type {
-        todo!()
+        let lower_type = self.visit_expression(&rang_exp.boundaries[0]);
+        let upper_type = self.visit_expression(&rang_exp.boundaries[1]);
+
+        let range_type = self.resolve_types(&lower_type, &upper_type);
+        if (lower_type != upper_type && range_type.is_uninferrable())
+            || !(range_type.is_number() || range_type.is_character())
+        {
+            self.errors
+                .borrow_mut()
+                .push((SemanticError::InvalidRangeBoundaries, rang_exp.span))
+        }
+        range_type
     }
 
     fn visit_function_expression(&'a self, fn_exp: &ast::FnExpression<'a>) -> Type {
@@ -649,7 +720,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
 
         let final_type = self.resolve_types(&given_type, &inferred_type);
 
-        if final_type.is_uninferable() {
+        if final_type.is_uninferrable() {
             if given_type != inferred_type {
                 self.errors.borrow_mut().push((
                     SemanticError::InconsistentAssignment(given_type, inferred_type),
@@ -665,7 +736,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
             self.errors
                 .borrow_mut()
                 .push((SemanticError::OperationOnNil, var_decl.span));
-            given_type = Type::Uninferable;
+            given_type = Type::Uninferrable;
         }
 
         self.values.borrow_mut().set(

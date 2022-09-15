@@ -4,7 +4,7 @@ use ast::Operator;
 use errors::SemanticError;
 use parser::{Parser, Provider, Scanner};
 
-use crate::checker::{Checker, Type};
+use crate::checker::{Type, TypeChecker};
 
 #[test]
 fn it_validates_number_plus_number() {
@@ -14,7 +14,7 @@ fn it_validates_number_plus_number() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
 }
 
@@ -26,7 +26,7 @@ fn it_faults_number_plus_string() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(
         errors,
         vec![(
@@ -53,7 +53,7 @@ fn it_remembers_declared_values() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
 }
 
@@ -69,7 +69,7 @@ fn it_faults_undeclared_values() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(
         errors,
         vec![(
@@ -92,7 +92,7 @@ fn it_faults_use_of_uninitialized_values() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(
         errors,
         vec![(
@@ -115,7 +115,7 @@ fn it_remembers_primitives() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
 }
 
@@ -133,7 +133,7 @@ fn it_matches_type_to_value() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
 }
 
@@ -149,7 +149,7 @@ fn it_faults_inconsistent_declaration() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(
         errors,
         vec![(
@@ -171,7 +171,7 @@ fn it_faults_uninferable_declaration() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(
         errors,
         vec![
@@ -184,7 +184,7 @@ fn it_faults_uninferable_declaration() {
                 [[1, 30], [1, 40]]
             ),
             (
-                SemanticError::InconsistentAssignment(Type::number(), Type::Uninferable),
+                SemanticError::InconsistentAssignment(Type::number(), Type::Uninferrable),
                 [[1, 6], [1, 40]]
             )
         ]
@@ -205,7 +205,7 @@ fn it_validates_logical_operation() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
 }
 
@@ -218,6 +218,7 @@ fn it_validates_array_expression() {
     @let array_ref2: Array<String> = array;
     @let array2 = [1, 3, 4, 5, 6];
     @let a: Array<Number> = array2;
+    @let array3: Array<String> = [];
      ",
     );
     scanner.run();
@@ -225,8 +226,8 @@ fn it_validates_array_expression() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
-    assert_eq!(errors.len(), 0)
+    let errors = TypeChecker::check(parser.statements.take());
+    assert_eq!(errors, vec![])
 }
 
 #[test]
@@ -246,6 +247,95 @@ fn it_validates_index_expression() {
     let parser = Parser::new(provider);
     parser.parse();
     assert_eq!(parser.diagnostics.take().len(), 0);
-    let errors = Checker::check(parser.statements.take());
+    let errors = TypeChecker::check(parser.statements.take());
+    assert_eq!(errors, vec![])
+}
+
+#[test]
+fn it_validates_ternary_expression() {
+    let mut scanner = Scanner::new(
+        "
+    @let is_ready = false;
+    @let loaded: String = is_ready ? \"Loading successful.\" : \"Loading...\";
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = TypeChecker::check(parser.statements.take());
+    assert_eq!(errors, vec![])
+}
+
+#[test]
+fn it_faults_invalid_ternary_expression() {
+    let mut scanner = Scanner::new(
+        "
+    @let loader = 9 ? 4 : true;
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = TypeChecker::check(parser.statements.take());
+    assert_eq!(
+        errors,
+        vec![
+            (
+                SemanticError::InvalidTernaryTest(Type::number()),
+                [[1, 20], [1, 21]]
+            ),
+            (
+                SemanticError::InconsistentTernarySides(Type::number(), Type::boolean()),
+                [[1, 20], [1, 32]]
+            ),
+            (
+                SemanticError::InconsistentAssignment(Type::Unknown, Type::Uninferrable),
+                [[1, 6], [1, 32]]
+            )
+        ]
+    )
+}
+
+#[test]
+fn it_validates_range_boundaries() {
+    let mut scanner = Scanner::new(
+        "
+    @let decimal = 3..4;
+    @let decimal_array: Array<Number> = [decimal];
+    @let decimal_number: Number = decimal_array[1];
+
+    @let char: Character = 'a'..'z'; 
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = TypeChecker::check(parser.statements.take());
+    assert_eq!(errors, vec![])
+}
+
+#[test]
+fn it_validates_unary_expression() {
+    let mut scanner = Scanner::new(
+        "
+    @let boolean_value = !true;
+    @let boolean_value_2: Boolean = !!boolean_value;
+    
+    @let numeric_value = 101;
+    @let num_value_2 = ~numeric_value;
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = TypeChecker::check(parser.statements.take());
     assert_eq!(errors, vec![])
 }
