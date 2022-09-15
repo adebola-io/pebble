@@ -112,6 +112,46 @@ impl Type {
             arguments: Some(vec![arg]),
         }
     }
+
+    pub fn is_number(&self) -> bool {
+        matches!(
+            self,
+            Type::Instance {
+                class: TypeClass { name, .. },
+                arguments
+            } if name == "Number"
+        )
+    }
+
+    pub fn is_string(&self) -> bool {
+        matches!(
+            self,
+            Type::Instance {
+                class: TypeClass { name, .. },
+                arguments
+            } if name == "String"
+        )
+    }
+
+    pub fn is_boolean(&self) -> bool {
+        matches!(
+            self,
+            Type::Instance {
+                class: TypeClass { name, .. },
+                arguments
+            } if name == "Boolean"
+        )
+    }
+
+    pub fn is_array(&self) -> bool {
+        matches!(
+            self,
+            Type::Instance {
+                class: TypeClass { name, .. },
+                arguments
+            } if name == "Array"
+        )
+    }
     pub fn from_class(class: TypeClass, arguments: Option<Vec<Self>>) -> Self {
         Type::Instance { class, arguments }
     }
@@ -393,7 +433,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                 ast::Operator::Add => {
                     // string + string = string
                     // number + number = number
-                    if type1 == Type::string() || type1 == Type::number() {
+                    if type1.is_string() || type1.is_number() {
                         type1
                     } else {
                         self.errors.borrow_mut().push((
@@ -466,7 +506,7 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
                 ast::Operator::LogicalAnd | ast::Operator::LogicalOr => {
                     // boolean || boolean = boolean
                     // boolean && boolean = boolean
-                    if type1 == Type::boolean() {
+                    if type1.is_boolean() {
                         type1
                     } else {
                         self.errors.borrow_mut().push((
@@ -497,8 +537,31 @@ impl<'a> Visitor<'a, Type> for Checker<'a> {
         todo!()
     }
 
+    // Typecheck an index expression.
     fn visit_index_expression(&'a self, index_exp: &ast::IndexExpression<'a>) -> Type {
-        todo!()
+        let accessor_type = self.visit_expression(&index_exp.accessor_and_property[0]);
+        let property_type = self.visit_expression(&index_exp.accessor_and_property[1]);
+
+        if !accessor_type.is_array() {
+            self.errors
+                .borrow_mut()
+                .push((SemanticError::InvalidIndex(accessor_type), index_exp.span));
+            return Type::Uninferable;
+        }
+        if !property_type.is_number() {
+            self.errors
+                .borrow_mut()
+                .push((SemanticError::InvalidIndexer(property_type), index_exp.span));
+        }
+        // Retrieve the argument passed to the array.
+        if let Type::Instance {
+            arguments: Some(v), ..
+        } = accessor_type
+        {
+            return v[0].clone();
+        } else {
+            unreachable!()
+        }
     }
 
     fn visit_call_expression(&'a self, call_exp: &ast::CallExpression<'a>) -> Type {

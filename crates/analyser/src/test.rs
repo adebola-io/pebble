@@ -214,8 +214,8 @@ fn it_validates_array_expression() {
     let mut scanner = Scanner::new(
         "
     @let array: Array<String> = [\"This\", \"is\", \"an\", \"array\"];
-    @let arrayRef = array;
-    @let arrayRef2: Array<String> = array;
+    @let array_ref = array;
+    @let array_ref2: Array<String> = array;
     @let array2 = [1, 3, 4, 5, 6];
     @let a: Array<Number> = array2;
      ",
@@ -227,4 +227,25 @@ fn it_validates_array_expression() {
     assert_eq!(parser.diagnostics.take().len(), 0);
     let errors = Checker::check(parser.statements.take());
     assert_eq!(errors.len(), 0)
+}
+
+#[test]
+fn it_validates_index_expression() {
+    let mut scanner = Scanner::new(
+        "
+    @let array: Array<String> = [\"This\", \"is\", \"an\", \"array\"];
+    @let element = array[0];
+    @let element_ref: String = element;
+
+    @let array2 = [[1,1], [0, 0], [0, 0], [2, 3]];
+    @let element2: Number = array2[1][2];
+     ",
+    );
+    scanner.run();
+    let provider = Provider { scanner, index: 0 };
+    let parser = Parser::new(provider);
+    parser.parse();
+    assert_eq!(parser.diagnostics.take().len(), 0);
+    let errors = Checker::check(parser.statements.take());
+    assert_eq!(errors, vec![])
 }
