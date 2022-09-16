@@ -3,7 +3,7 @@
 3. All outer variables and parameters in a function are read-only, even if they are destructured or reassigned.
 4. Outer variables cannot be accessed from functions. However, other functions, constants, records, classes, enums and interfaces can be accessed.
 5. Implementations are done on the class body.
-6. Variables cannot be destructured from constants.
+6. Constants cannot be assigned to variables without getting cloned.
 7. Interfaces can implement other interfaces.
 8. Circular and Recursive interface implementations are not possible.
 9. Re-implementing an interface on a sub-class should trigger a warning.

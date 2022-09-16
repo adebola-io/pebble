@@ -1,9 +1,9 @@
 {
     // "editor.fontFamily": "'Fira Code', 'Source Code Pro', 'Consolas', 'Courier New', monospace",
-    // "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
+    "editor.fontFamily": "'Source Code Pro', 'Consolas', 'Courier New', monospace",
     // "editor.fontFamily": "'Consolas', 'Courier New', monospace",
-    "editor.fontFamily": "'Cascadia Code', 'Consolas', 'Courier New', monospace",
-    "workbench.colorTheme": "Noctis Sereno",
+    // "editor.fontFamily": "'Cascadia Code', 'Consolas', 'Courier New', monospace",
+    "workbench.colorTheme": "GitHub Dark",
     "workbench.iconTheme": "material-icon-theme",
     "workbench.colorCustomizations": {
         "editorInlayHint.background": "#00000000",
@@ -14,9 +14,7 @@
     "prettier.tabWidth": 4,
     "editor.stickyScroll.enabled": true,
     "editor.inlayHints.fontSize": 10,
-    "rust-analyzer.inlayHints.typeHints.enable": true,
-    "rust-analyzer.inlayHints.parameterHints.enable": true,
-    "rust-analyzer.inlayHints.closingBraceHints.enable": true,
+    "editor.inlayHints.enabled": "off",
     "editor.tokenColorCustomizations": {
         "[Red]": {
             "textMateRules": [

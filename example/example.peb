@@ -1,6 +1,5 @@
-@class Person {
-    name: String,
-    age: Number,
-}
+@use { Token } from "./ast.peb";
 
-@let person1: Person = Person();
+@public @class Parser {
+   tokens: Array<Token>
+}
